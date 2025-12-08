@@ -1,0 +1,164 @@
+import React, { useEffect, useState } from 'react';
+import { FaPlay, FaEdit, FaEye, FaInfoCircle, FaHistory } from 'react-icons/fa';
+import '../styles/MainContent.css';
+
+const ActionCard = ({ type, title, description, buttonText, onButtonClick }) => {
+    const cardClass = `card card-${type}`;
+    const btnClass = `btn ${type === 'generate' ? 'btn-primary' : type === 'extracurricular' ? 'btn-secondary' : 'btn-accent'}`;
+
+    const getButtonIcon = () => {
+        switch(type) {
+            case 'generate': return <FaPlay />;
+            case 'extracurricular': return <FaEdit />;
+            case 'view': return <FaEye />;
+            default: return <FaPlay />;
+        }
+    };
+
+    return (
+        <div className={cardClass}>
+            <h2>{title}</h2>
+            <p>{description}</p>
+            <div className="card-button-wrapper">
+                <button className={btnClass} onClick={onButtonClick}>
+                    {getButtonIcon()}
+                    {buttonText}
+                </button>
+            </div>
+        </div>
+    );
+};
+
+const StatusColumn = () => {
+    return (
+        <div className="status-column">
+            <h2 className="column-title">
+                <FaInfoCircle className="column-icon" />
+                Текущее состояние
+            </h2>
+            <ul className="status-list">
+                <li>
+                    <span className="status-indicator status-ok"></span>
+                    Расписание на 2023/24 учебный год: <strong>Сгенерировано</strong>
+                </li>
+                <li>
+                    <span className="status-indicator status-info"></span>
+                    Внешкольные занятия: <strong>Добавлено 5 мероприятий</strong>
+                </li>
+                <li>
+                    <span className="status-indicator status-ok"></span>
+                    Последняя генерация: <strong>25.10.2023, 14:30</strong>
+                </li>
+                <li>
+                    <span className="status-indicator status-warning"></span>
+                    Следующее обновление: <strong>—</strong>
+                </li>
+            </ul>
+        </div>
+    );
+};
+
+const ActivityColumn = () => {
+    const activities = [
+        { time: '[25.10.23 14:30]', text: 'Расписание для 5"А" класса было отредактировано вручную.' },
+        { time: '[25.10.23 14:25]', text: 'Запущена автоматическая генерация расписаний.' },
+        { time: '[24.10.23 16:15]', text: 'Добавлено внешкольное занятие "Шахматный клуб (Пн, Ср 15:00)".' },
+        { time: '[24.10.23 10:00]', text: 'В систему загружен новый список учителей.' },
+        { time: '[23.10.23 09:30]', text: 'Обновлены данные по кабинетам для занятий.' }
+    ];
+
+    return (
+        <div className="activity-column">
+            <h2 className="column-title">
+                <FaHistory className="column-icon" />
+                Журнал событий
+            </h2>
+            <div className="activity-log">
+                {activities.map((activity, index) => (
+                    <div key={index} className="log-entry">
+                        <span className="log-time">{activity.time}</span>
+                        {activity.text}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const MainContent = () => {
+    const [currentDate, setCurrentDate] = useState('');
+
+    useEffect(() => {
+        updateCurrentDate();
+    }, []);
+
+    const updateCurrentDate = () => {
+        const now = new Date();
+        const options = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        };
+        const dateString = now.toLocaleDateString('ru-RU', options);
+        setCurrentDate(dateString);
+    };
+
+    const handleCardClick = (cardType) => {
+        let message = '';
+        switch(cardType) {
+            case 'generate':
+                message = 'Запуск генератора расписаний...';
+                break;
+            case 'extracurricular':
+                message = 'Переход к управлению внешкольными занятиями...';
+                break;
+            case 'view':
+                message = 'Открытие списка расписаний...';
+                break;
+        }
+        alert(message);
+    };
+
+    return (
+        <main className="main-content">
+            <section className="quick-actions">
+                <div className="date-section">
+                    <h1 className="section-title">{currentDate}</h1>
+                </div>
+                <div className="action-cards">
+                    <ActionCard
+                        type="generate"
+                        title="Автогенерация"
+                        description="Автоматическое создание расписаний на учебный год для всех классов с учетом всех параметров."
+                        buttonText="Запустить генератор"
+                        onButtonClick={() => handleCardClick('generate')}
+                    />
+                    
+                    <ActionCard
+                        type="extracurricular"
+                        title="Внешкольные занятия"
+                        description="Ручное добавление, редактирование и удаление кружков, секций и мероприятий."
+                        buttonText="Управлять занятиями"
+                        onButtonClick={() => handleCardClick('extracurricular')}
+                    />
+                    
+                    <ActionCard
+                        type="view"
+                        title="Просмотр расписаний"
+                        description="Просмотр, печать и экспорт готовых расписаний для всех классов."
+                        buttonText="Открыть список"
+                        onButtonClick={() => handleCardClick('view')}
+                    />
+                </div>
+            </section>
+
+            <section className="dashboard-info">
+                <StatusColumn />
+                <ActivityColumn />
+            </section>
+        </main>
+    );
+};
+
+export default MainContent;

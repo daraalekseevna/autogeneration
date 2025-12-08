@@ -1,0 +1,226 @@
+/* Header.css */
+.admin-header {
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--gray);
+    background-color: var(--white);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.logo-image {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.school-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.school-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #21435A;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.school-location {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #21435A;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.header-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.system-title {
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: #21435A;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.current-date {
+    color: #21435A;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.date-icon {
+    font-size: 1rem;
+    color: #21435A;
+}
+
+.header-right {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.admin-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--gray);
+    background-color: #f8f9fa;
+}
+
+.admin-text {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #21435A;
+    white-space: nowrap;
+}
+
+.admin-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #21435A;
+}
+
+@media (max-width: 1100px) {
+    .admin-header {
+        padding: 1rem 1.5rem;
+    }
+    
+    .school-name {
+        font-size: 1rem;
+    }
+    
+    .school-location {
+        font-size: 0.9rem;
+    }
+    
+    .system-title {
+        font-size: 1.3rem;
+    }
+    
+    .admin-text {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 900px) {
+    .admin-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+        padding: 1rem;
+    }
+    
+    .header-left,
+    .header-center,
+    .header-right {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .header-left {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .admin-section {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-header {
+        padding: 1rem;
+    }
+    
+    .logo-image {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .school-name {
+        font-size: 0.95rem;
+    }
+    
+    .school-location {
+        font-size: 0.85rem;
+    }
+    
+    .system-title {
+        font-size: 1.2rem;
+    }
+    
+    .admin-text {
+        font-size: 0.9rem;
+    }
+    
+    .admin-avatar {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .admin-section {
+        padding: 0.4rem 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .school-name {
+        font-size: 0.9rem;
+    }
+    
+    .school-location {
+        font-size: 0.8rem;
+    }
+    
+    .system-title {
+        font-size: 1.1rem;
+    }
+    
+    .admin-text {
+        font-size: 0.85rem;
+    }
+    
+    .current-date {
+        font-size: 0.85rem;
+    }
+    
+    .admin-avatar {
+        width: 35px;
+        height: 35px;
+    }
+}
