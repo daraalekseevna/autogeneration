@@ -1,9 +1,18 @@
-/* global.css */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
-
+/* global.css или добавить в App.css */
 :root {
     --font-family: "MS Reference Sans Serif", sans-serif;
     --second-family: "Montserrat", sans-serif;
+    --primary: #21435A;
+    --primary-light: #21435A;
+    --secondary: #21435A;
+    --secondary-light: #21435A;
+    --accent: #21435A;
+    --accent-light: #21435A;
+    --dark: #21435A;
+    --light: #f5f5f5;
+    --white: #ffffff;
+    --gray: #e0e0e0;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 * {

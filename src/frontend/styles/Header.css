@@ -1,17 +1,16 @@
 /* Header.css */
+@import url('https://fonts.cdnfonts.com/css/ms-reference-sans-serif');
+
 .admin-header {
     padding: 1.5rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 100;
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
-    border-bottom: 1px solid var(--gray);
-    background-color: var(--white);
+    border-bottom: 1px solid rgba(135, 130, 130, 1);
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .header-left {
@@ -22,8 +21,8 @@
 }
 
 .logo-image {
-    width: 70px;
-    height: 70px;
+    width: 40px;
+    height: 40px;
     object-fit: contain;
     flex-shrink: 0;
 }
@@ -39,17 +38,17 @@
     font-size: 1.1rem;
     color: #21435A;
     line-height: 1.2;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    /*letter-spacing: 0.5px;*/
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .school-location {
     font-weight: 600;
     font-size: 1rem;
     color: #21435A;
-    line-height: 1.2;
-    text-transform: uppercase;
+    line-height: 1;
     letter-spacing: 1px;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .header-center {
@@ -67,6 +66,7 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     text-align: center;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .current-date {
@@ -77,6 +77,7 @@
     gap: 0.5rem;
     white-space: nowrap;
     font-weight: 500;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .date-icon {
@@ -95,9 +96,7 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.5rem 1rem;
-    border-radius: 8px;
-    border: 1px solid var(--gray);
-    background-color: #f8f9fa;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .admin-text {
@@ -105,14 +104,12 @@
     font-size: 1rem;
     color: #21435A;
     white-space: nowrap;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .admin-avatar {
-    width: 45px;
+    width: 35px;
     height: 45px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #21435A;
 }
 
 @media (max-width: 1100px) {

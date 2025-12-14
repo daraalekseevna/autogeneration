@@ -1,0 +1,773 @@
+/* MainContent.css */
+@import url('https://fonts.cdnfonts.com/css/ms-reference-sans-serif');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+:root {
+    --primary: #21435A;
+   /* --primary-light: #762599b7;*/
+    --secondary: #21435A;
+    /*--secondary-light: #21435ada;*/
+    --accent: #21435A;
+  /*  --accent-light: #762599b7;*/
+    --dark: #21435A;
+    --light: #f5f5f5;
+    --white: #ffffff;
+    --gray: #e0e0e0;
+    --gray-dark: #8a8a8a;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0);
+    --shadow-hover: 0 8px 24px rgba(255, 255, 255, 0);
+    --purple-1: rgba(106, 13, 173, 0.534);
+    --purple-2: rgba(137, 43, 226, 0.521);
+    --purple-3: rgba(76, 0, 130, 0.616);
+    --blue-1: rgba(0, 153, 255, 0.541);
+    --blue-2: rgb(68, 153, 209);
+    --blue-3: rgb(107, 163, 202);
+}
+
+body {
+    background-color: var(--light);
+    color: var(--dark);
+    line-height: 1.6;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Анимированный фон с размытыми кругами */
+.animated-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    background: linear-gradient(135deg, 
+        rgba(245, 245, 245, 0.144) 0%, 
+        rgba(232, 240, 254, 0.788) 50%, 
+        rgba(245, 240, 255, 0.5) 100%);
+}
+
+/* Стили для размытых кривых кругов */
+.glass-circle {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(35px);
+    opacity: 0.6;
+    mix-blend-mode: soft-light;
+    animation: float 5s infinite ease-in-out;
+    transform-origin: center;
+}
+
+/* Круги с разными размерами, формами и цветами */
+
+/* Большие основные круги */
+.glass-circle:nth-child(1) {
+    width: 500px;
+    height: 480px;
+    top: 10%;
+    left: 5%;
+    background: radial-gradient(
+        circle at 30% 30%,
+        var(--purple-1) 0%,
+        var(--blue-1) 40%,
+        transparent 70%
+    );
+    animation-delay: 0s;
+    animation-duration: 30s;
+    border-radius: 43% 57% 52% 48% / 48% 43% 57% 52%;
+}
+
+.glass-circle:nth-child(2) {
+    width: 450px;
+    height: 420px;
+    top: 60%;
+    right: 8%;
+    background: radial-gradient(
+        circle at 70% 20%,
+        var(--blue-2) 0%,
+        var(--purple-2) 40%,
+        transparent 70%
+    );
+    animation-delay: -7s;
+    animation-duration: 28s;
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    filter: blur(40px);
+}
+
+.glass-circle:nth-child(3) {
+    width: 380px;
+    height: 400px;
+    bottom: 15%;
+    left: 12%;
+    background: radial-gradient(
+        circle at 50% 50%,
+        var(--purple-3) 0%,
+        var(--blue-3) 40%,
+        transparent 70%
+    );
+    animation-delay: -12s;
+    animation-duration: 32s;
+    border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+    filter: blur(30px);
+}
+
+/* Средние круги */
+.glass-circle:nth-child(4) {
+    width: 320px;
+    height: 300px;
+    top: 25%;
+    right: 22%;
+    background: linear-gradient(
+        135deg,
+        var(--purple-1) 0%,
+        var(--blue-2) 50%,
+        transparent 100%
+    );
+    animation-delay: -5s;
+    animation-duration: 26s;
+    border-radius: 55% 45% 65% 35% / 45% 55% 45% 55%;
+    filter: blur(38px);
+}
+
+.glass-circle:nth-child(5) {
+    width: 280px;
+    height: 260px;
+    bottom: 35%;
+    right: 28%;
+    background: radial-gradient(
+        circle at 80% 50%,
+        var(--blue-1) 0%,
+        var(--purple-2) 40%,
+        transparent 70%
+    );
+    animation-delay: -15s;
+    animation-duration: 29s;
+    border-radius: 70% 30% 50% 50% / 60% 40% 60% 40%;
+    filter: blur(32px);
+}
+
+/* Меньшие круги для глубины */
+.glass-circle:nth-child(6) {
+    width: 220px;
+    height: 240px;
+    top: 70%;
+    left: 35%;
+    background: radial-gradient(
+        circle at 40% 60%,
+        var(--purple-2) 0%,
+        var(--blue-3) 40%,
+        transparent 70%
+    );
+    animation-delay: -20s;
+    animation-duration: 27s;
+    border-radius: 45% 55% 35% 65% / 55% 45% 55% 45%;
+    filter: blur(45px);
+    opacity: 0.5;
+}
+
+.glass-circle:nth-child(7) {
+    width: 180px;
+    height: 160px;
+    top: 15%;
+    left: 40%;
+    background: linear-gradient(
+        45deg,
+        var(--purple-3) 0%,
+        var(--blue-1) 60%,
+        transparent 100%
+    );
+    animation-delay: -8s;
+    animation-duration: 24s;
+    border-radius: 65% 35% 45% 55% / 35% 65% 35% 65%;
+    filter: blur(50px);
+    opacity: 0.4;
+}
+
+/* Очень большие размытые фоновые круги */
+.glass-circle:nth-child(8) {
+    width: 650px;
+    height: 620px;
+    top: -100px;
+    left: -150px;
+    background: radial-gradient(
+        circle at center,
+        var(--purple-1) 0%,
+        transparent 60%
+    );
+    animation-delay: -25s;
+    animation-duration: 35s;
+    border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+    filter: blur(60px);
+    opacity: 0.3;
+}
+
+.glass-circle:nth-child(9) {
+    width: 550px;
+    height: 580px;
+    bottom: -120px;
+    right: -100px;
+    background: radial-gradient(
+        circle at center,
+        var(--blue-2) 0%,
+        transparent 70%
+    );
+    animation-delay: -18s;
+    animation-duration: 33s;
+    border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+    filter: blur(55px);
+    opacity: 0.25;
+}
+
+/* Круги с градиентами фиолетовый-синий */
+.glass-circle:nth-child(10) {
+    width: 300px;
+    height: 320px;
+    top: 40%;
+    left: 60%;
+    background: linear-gradient(
+        120deg,
+        var(--purple-1) 0%,
+        var(--blue-2) 30%,
+        var(--purple-3) 70%,
+        transparent 100%
+    );
+    animation-delay: -10s;
+    animation-duration: 31s;
+    border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%;
+    filter: blur(42px);
+    opacity: 0.55;
+}
+
+/* Анимация плавающих кругов */
+@keyframes float {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+    20% {
+        transform: translate(40px, 30px) rotate(2deg) scale(1.03);
+    }
+    40% {
+        transform: translate(-25px, 45px) rotate(-3deg) scale(0.98);
+    }
+    60% {
+        transform: translate(35px, -25px) rotate(4deg) scale(1.02);
+    }
+    80% {
+        transform: translate(-20px, -35px) rotate(-2deg) scale(0.99);
+    }
+}
+
+/* Добавляем эффект пульсации для некоторых кругов */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.glass-circle:nth-child(1),
+.glass-circle:nth-child(4),
+.glass-circle:nth-child(7) {
+    animation: float 25s infinite ease-in-out, pulse 8s infinite ease-in-out;
+}
+
+.app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+    max-width: 1400px;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: relative;
+    z-index: 1;
+}
+
+.main-content {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 1.5rem;
+    margin-top: 2rem;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.main-content-page {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.main-content-container {
+    flex: 1;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: relative;
+}
+
+/* Улучшаем читаемость контента поверх размытого фона */
+.card,
+.status-column,
+.activity-column {
+    background-color: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 
+        0 4px 20px rgba(0, 0, 0, 0.08),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.card:hover,
+.status-column:hover,
+.activity-column:hover {
+    background-color: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+.page-header {
+    width: 100%;
+    margin-bottom: 2rem;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.title-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.current-date-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary); /* Цвет #21435A */
+    font-size: 1.2rem; /* Чуть больше шрифт */
+    margin-bottom: 2.5rem; /* Чуть ниже */
+    margin-top: 1rem; /* Отступ сверху */
+    font-weight: 500;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.quick-actions {
+    margin-bottom: 3rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.action-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    width: 100%;
+    max-width: 1200px;
+    justify-content: center;
+    margin: 0 auto;
+    position: relative;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Стили для заголовка "Главное меню" над первой карточкой */
+.action-cards::before {
+    content: "Главное меню";
+    position: absolute;
+    top: -60px;
+    left: 0;
+    width: 100%;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--dark);
+    text-align: left;
+    padding-left: 10px;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.card {
+    border-radius: 12px;
+    padding: 2rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto;
+    text-align: left;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+}
+
+.card h2 {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    color: var(--dark);
+    text-align: left;
+    width: 100%;
+    min-height: 3.5rem;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    line-height: 1.3;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card p {
+    margin-bottom: 1.5rem;
+    color: #21435A;
+    flex-grow: 1;
+    text-align: left;
+    line-height: 1.6;
+    min-height: 4.5rem;
+    display: flex;
+    align-items: flex-start;
+    font-size: 1rem;
+    opacity: 0.9;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card-button-wrapper {
+    width: 100%;
+    margin-top: auto;
+    display: flex;
+    justify-content: center;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.btn {
+    padding: 0.85rem 2rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    font-size: 1rem;
+    height: 48px;
+    min-width: 200px;
+    text-align: center;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-light);
+    
+}
+
+.btn-secondary {
+    background-color: var(--secondary);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: var(--secondary-light);
+  
+}
+
+.btn-accent {
+    background-color: var(--accent);
+    color: white;
+}
+
+.btn-accent:hover {
+    background-color: var(--accent-light);
+    
+}
+
+.dashboard-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+    width: 100%;
+    max-width: 1200px;
+    justify-content: center;
+    margin: 0 auto;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.status-column, .activity-column {
+    border-radius: 12px;
+    padding: 2rem;
+    width: 100%;
+    margin: 0 auto;
+    text-align: left;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.column-title {
+    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    text-align: left;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.column-icon {
+    color: var(--primary);
+    font-size: 1.2rem;
+}
+
+.status-list {
+    list-style: none;
+    text-align: left;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.status-list li {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--gray);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1rem;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.status-list li:last-child {
+    border-bottom: none;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.status-ok {
+    background-color: #21435A;
+}
+
+.status-info {
+    background-color: #21435A;
+}
+
+.status-warning {
+    background-color: #21435A;
+}
+
+.activity-log {
+    max-height: 300px;
+    overflow-y: auto;
+    text-align: left;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.log-entry {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--gray);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+.log-time {
+    color: var(--primary);
+    font-weight: 600;
+    margin-right: 0.75rem;
+    display: inline-block;
+    min-width: 120px;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+@media (max-width: 1200px) {
+    .action-cards {
+        grid-template-columns: repeat(2, minmax(320px, 1fr));
+        max-width: 800px;
+    }
+    
+    .action-cards::before {
+        padding-left: 0;
+        text-align: center;
+    }
+    
+    .dashboard-info {
+        grid-template-columns: 1fr;
+        max-width: 700px;
+    }
+}
+
+@media (max-width: 768px) {
+    .action-cards {
+        grid-template-columns: 1fr;
+        max-width: 450px;
+    }
+    
+    .action-cards::before {
+        top: -50px;
+        font-size: 1rem;
+        text-align: center;
+    }
+    
+    .dashboard-info {
+        grid-template-columns: 1fr;
+        max-width: 450px;
+    }
+    
+    .main-content-container {
+        padding: 0 1rem;
+    }
+    
+    .card {
+        padding: 1.75rem;
+        max-width: 100%;
+    }
+    
+    .card h2 {
+        font-size: 1rem;
+        min-height: 3rem;
+    }
+    
+    .card p {
+        min-height: 4rem;
+        font-size: 0.95rem;
+    }
+    
+    .btn {
+        height: 44px;
+        font-size: 0.95rem;
+        padding: 0.75rem 1.5rem;
+    }
+    
+    .status-column, .activity-column {
+        padding: 1.75rem;
+    }
+    
+    .current-date-display {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* Уменьшаем круги на мобильных устройствах */
+    .glass-circle:nth-child(1),
+    .glass-circle:nth-child(2),
+    .glass-circle:nth-child(3) {
+        width: 250px;
+        height: 230px;
+        filter: blur(25px);
+    }
+    
+    .glass-circle:nth-child(4),
+    .glass-circle:nth-child(5),
+    .glass-circle:nth-child(6) {
+        width: 180px;
+        height: 160px;
+        filter: blur(20px);
+    }
+    
+    .glass-circle:nth-child(7),
+    .glass-circle:nth-child(10) {
+        width: 120px;
+        height: 110px;
+        filter: blur(18px);
+    }
+    
+    .glass-circle:nth-child(8),
+    .glass-circle:nth-child(9) {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .action-cards {
+        max-width: 100%;
+    }
+    
+    .action-cards::before {
+        top: -45px;
+        font-size: 1rem;
+    }
+    
+    .card {
+        padding: 1.5rem;
+    }
+    
+    .btn {
+        height: 42px;
+        font-size: 0.9rem;
+        min-width: 180px;
+        width: 100%;
+    }
+    
+    .main-content-container {
+        padding: 0 1rem;
+        margin-top: 1rem;
+    }
+    
+    .card h2 {
+        min-height: 2.5rem;
+        font-size: 1rem;
+    }
+    
+    .card p {
+        min-height: 3.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .dashboard-info {
+        gap: 1.5rem;
+    }
+    
+    .log-time {
+        min-width: 100px;
+        font-size: 0.85rem;
+    }
+    
+    .log-entry {
+        font-size: 0.9rem;
+    }
+    
+    .current-date-display {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+        margin-top: 0.5rem;
+    }
+}

@@ -1,0 +1,23 @@
+/* index.css или App.css */
+@import url('https://fonts.cdnfonts.com/css/ms-reference-sans-serif');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Убедитесь, что все элементы наследуют шрифт */
+input, button, textarea, select {
+    font-family: inherit;
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}

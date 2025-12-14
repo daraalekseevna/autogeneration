@@ -1,5 +1,9 @@
+// frontend/pages/MainContent.jsx
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaPlay, FaEdit, FaEye, FaInfoCircle, FaHistory } from 'react-icons/fa';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import '../styles/MainContent.css';
 
 const ActionCard = ({ type, title, description, buttonText, onButtonClick }) => {
@@ -87,6 +91,7 @@ const ActivityColumn = () => {
 
 const MainContent = () => {
     const [currentDate, setCurrentDate] = useState('');
+    const navigate = useNavigate();
 
     useEffect(() => {
         updateCurrentDate();
@@ -105,59 +110,82 @@ const MainContent = () => {
     };
 
     const handleCardClick = (cardType) => {
-        let message = '';
         switch(cardType) {
             case 'generate':
-                message = 'Запуск генератора расписаний...';
+                navigate('/generate');
                 break;
             case 'extracurricular':
-                message = 'Переход к управлению внешкольными занятиями...';
+                navigate('/extracurricular');
                 break;
             case 'view':
-                message = 'Открытие списка расписаний...';
+                navigate('/schedule');
                 break;
         }
-        alert(message);
     };
 
     return (
-        <main className="main-content">
-            <section className="quick-actions">
-                <div className="date-section">
-                    <h1 className="section-title">{currentDate}</h1>
-                </div>
-                <div className="action-cards">
-                    <ActionCard
-                        type="generate"
-                        title="Автогенерация"
-                        description="Автоматическое создание расписаний на учебный год для всех классов с учетом всех параметров."
-                        buttonText="Запустить генератор"
-                        onButtonClick={() => handleCardClick('generate')}
-                    />
+        <div className="main-content-page">
+            {/* Анимированный фон с размытыми фиолетово-синими кругами */}
+            <div className="animated-bg">
+                <div className="glass-circle"></div>
+                <div className="glass-circle"></div>
+                <div className="glass-circle"></div>
+                <div className="glass-circle"></div>
+                <div className="glass-circle"></div>
+                <div className="glass-circle"></div>
+                <div className="glass-circle"></div>
+                <div className="glass-circle"></div>
+                <div className="glass-circle"></div>
+                <div className="glass-circle"></div>
+            </div>
+            
+            <Header />
+            
+            <main className="main-content-container">
+                <section className="quick-actions">
+                    <div className="page-header">
+                        <div className="title-section">
+                            <div className="current-date-display">
+                                <span>{currentDate}</span>
+                            </div>
+                        </div>
+                    </div>
                     
-                    <ActionCard
-                        type="extracurricular"
-                        title="Внешкольные занятия"
-                        description="Ручное добавление, редактирование и удаление кружков, секций и мероприятий."
-                        buttonText="Управлять занятиями"
-                        onButtonClick={() => handleCardClick('extracurricular')}
-                    />
-                    
-                    <ActionCard
-                        type="view"
-                        title="Просмотр расписаний"
-                        description="Просмотр, печать и экспорт готовых расписаний для всех классов."
-                        buttonText="Открыть список"
-                        onButtonClick={() => handleCardClick('view')}
-                    />
-                </div>
-            </section>
+                    <div className="action-cards">
+                        <ActionCard
+                            type="generate"
+                            title="Автогенерация"
+                            description="Загрузите Excel файл с данными и автоматически создайте расписание на учебный год"
+                            buttonText="Запустить генератор"
+                            onButtonClick={() => handleCardClick('generate')}
+                        />
+                        
+                        <ActionCard
+                            type="extracurricular"
+                            title="Внешкольные занятия"
+                            description="Ручное добавление, редактирование и удаление кружков, секций и мероприятий"
+                            buttonText="Управлять занятиями"
+                            onButtonClick={() => handleCardClick('extracurricular')}
+                        />
+                        
+                        <ActionCard
+                            type="view"
+                            title="Просмотр расписаний"
+                            description="Просмотр, печать и экспорт готовых расписаний для всех классов"
+                            buttonText="Открыть список"
+                            onButtonClick={() => handleCardClick('view')}
+                        />
+                    </div>
+                </section>
 
-            <section className="dashboard-info">
-                <StatusColumn />
-                <ActivityColumn />
-            </section>
-        </main>
+                <section className="dashboard-info">
+                    <StatusColumn />
+                    <ActivityColumn />
+                </section>
+            </main>
+            
+            <Footer />
+        </div>
     );
 };
 

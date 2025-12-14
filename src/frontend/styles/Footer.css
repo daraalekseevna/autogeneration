@@ -1,13 +1,22 @@
+/* Footer.css */
+@import url('https://fonts.cdnfonts.com/css/ms-reference-sans-serif');
+
+:root {
+    --primary: #21435A;
+    --dark: #1a2b3c;
+    --gray: #878282;
+}
+
 footer {
     padding: 2rem 1.5rem;
     margin-top: 3rem;
     color: #21435A;
     border-top: 1px solid var(--gray);
-   
     width: 100%;
     max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .footer-content {
@@ -21,6 +30,7 @@ footer {
 .footer-item {
     text-align: right;
     min-width: 180px;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .footer-item h3 {
@@ -30,6 +40,7 @@ footer {
     margin-bottom: 0.25rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .footer-item p {
@@ -37,6 +48,7 @@ footer {
     color: var(--primary);
     font-weight: 500;
     line-height: 1.4;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .footer-copyright {
@@ -45,6 +57,7 @@ footer {
     border-top: 1px solid var(--gray);
     font-size: 0.85rem;
     color: #21435A;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 @media (max-width: 1024px) {

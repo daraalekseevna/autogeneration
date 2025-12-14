@@ -34,10 +34,10 @@ const Header = () => {
                 />
                 <div className="school-info">
                     <div className="school-name">
-                      МАОУ МО Динской район СОШ № 20 имени Жукова В.А.
+                     МАОУ МО Динской район СОШ № 20 имени Жукова В.А.
                     </div>
                     <div className="school-location">
-                        П.Агроном
+                        п.Агроном
                     </div>
                 </div>
             </div>

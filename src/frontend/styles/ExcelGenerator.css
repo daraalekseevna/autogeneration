@@ -1,0 +1,1747 @@
+/* ExcelGenerator.css - Изолированные стили для страницы генератора Excel */
+
+.excel-gen-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    position: relative;
+    overflow-x: hidden;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Основной фон с кругами */
+.excel-gen-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    background: linear-gradient(135deg, 
+        rgba(245, 245, 245, 0.144) 0%, 
+        rgba(232, 240, 254, 0.788) 50%, 
+        rgba(245, 240, 255, 0.5) 100%);
+}
+
+.excel-gen-glass-circle {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(35px);
+    opacity: 0.7;
+    mix-blend-mode: soft-light;
+    animation: excel-gen-float 18s infinite ease-in-out;
+    transform-origin: center;
+}
+
+.excel-gen-glass-circle:nth-child(1) {
+    width: 550px;
+    height: 530px;
+    top: 5%;
+    left: 3%;
+    background: radial-gradient(
+        circle at 30% 30%,
+        rgba(106, 13, 173, 0.534) 0%,
+        rgba(0, 153, 255, 0.541) 40%,
+        transparent 70%
+    );
+    animation-delay: 0s;
+    animation-duration: 22s;
+    border-radius: 43% 57% 52% 48% / 48% 43% 57% 52%;
+}
+
+.excel-gen-glass-circle:nth-child(2) {
+    width: 480px;
+    height: 450px;
+    top: 65%;
+    right: 5%;
+    background: radial-gradient(
+        circle at 70% 20%,
+        rgba(68, 153, 209, 0.7) 0%,
+        rgba(137, 43, 226, 0.521) 40%,
+        transparent 70%
+    );
+    animation-delay: -5s;
+    animation-duration: 26s;
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    filter: blur(42px);
+}
+
+.excel-gen-glass-circle:nth-child(3) {
+    width: 420px;
+    height: 440px;
+    bottom: 10%;
+    left: 10%;
+    background: radial-gradient(
+        circle at 50% 50%,
+        rgba(76, 0, 130, 0.616) 0%,
+        rgba(107, 163, 202, 0.6) 40%,
+        transparent 70%
+    );
+    animation-delay: -10s;
+    animation-duration: 20s;
+    border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+    filter: blur(38px);
+}
+
+.excel-gen-glass-circle:nth-child(4) {
+    width: 350px;
+    height: 330px;
+    top: 20%;
+    right: 20%;
+    background: linear-gradient(
+        135deg,
+        rgba(106, 13, 173, 0.534) 0%,
+        rgba(68, 153, 209, 0.7) 50%,
+        transparent 100%
+    );
+    animation-delay: -3s;
+    animation-duration: 24s;
+    border-radius: 55% 45% 65% 35% / 45% 55% 45% 55%;
+    filter: blur(40px);
+}
+
+.excel-gen-glass-circle:nth-child(5) {
+    width: 300px;
+    height: 280px;
+    bottom: 40%;
+    right: 25%;
+    background: radial-gradient(
+        circle at 80% 50%,
+        rgba(0, 153, 255, 0.541) 0%,
+        rgba(137, 43, 226, 0.521) 40%,
+        transparent 70%
+    );
+    animation-delay: -12s;
+    animation-duration: 28s;
+    border-radius: 70% 30% 50% 50% / 60% 40% 60% 40%;
+    filter: blur(36px);
+}
+
+.excel-gen-glass-circle:nth-child(6) {
+    width: 250px;
+    height: 270px;
+    top: 75%;
+    left: 32%;
+    background: radial-gradient(
+        circle at 40% 60%,
+        rgba(137, 43, 226, 0.521) 0%,
+        rgba(107, 163, 202, 0.6) 40%,
+        transparent 70%
+    );
+    animation-delay: -15s;
+    animation-duration: 19s;
+    border-radius: 45% 55% 35% 65% / 55% 45% 55% 45%;
+    filter: blur(48px);
+    opacity: 0.6;
+}
+
+.excel-gen-glass-circle:nth-child(7) {
+    width: 200px;
+    height: 180px;
+    top: 12%;
+    left: 38%;
+    background: linear-gradient(
+        45deg,
+        rgba(76, 0, 130, 0.616) 0%,
+        rgba(0, 153, 255, 0.541) 60%,
+        transparent 100%
+    );
+    animation-delay: -6s;
+    animation-duration: 21s;
+    border-radius: 65% 35% 45% 55% / 35% 65% 35% 65%;
+    filter: blur(52px);
+    opacity: 0.55;
+}
+
+.excel-gen-glass-circle:nth-child(8) {
+    width: 700px;
+    height: 670px;
+    top: -120px;
+    left: -180px;
+    background: radial-gradient(
+        circle at center,
+        rgba(106, 13, 173, 0.534) 0%,
+        transparent 60%
+    );
+    animation-delay: -20s;
+    animation-duration: 32s;
+    border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+    filter: blur(65px);
+    opacity: 0.4;
+}
+
+.excel-gen-glass-circle:nth-child(9) {
+    width: 600px;
+    height: 630px;
+    bottom: -140px;
+    right: -130px;
+    background: radial-gradient(
+        circle at center,
+        rgba(68, 153, 209, 0.7) 0%,
+        transparent 70%
+    );
+    animation-delay: -16s;
+    animation-duration: 30s;
+    border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+    filter: blur(60px);
+    opacity: 0.35;
+}
+
+.excel-gen-glass-circle:nth-child(10) {
+    width: 330px;
+    height: 350px;
+    top: 45%;
+    left: 65%;
+    background: linear-gradient(
+        120deg,
+        rgba(106, 13, 173, 0.534) 0%,
+        rgba(68, 153, 209, 0.7) 30%,
+        rgba(76, 0, 130, 0.616) 70%,
+        transparent 100%
+    );
+    animation-delay: -8s;
+    animation-duration: 25s;
+    border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%;
+    filter: blur(45px);
+    opacity: 0.65;
+}
+
+@keyframes excel-gen-float {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+    20% {
+        transform: translate(35px, 25px) rotate(1.5deg) scale(1.02);
+    }
+    40% {
+        transform: translate(-20px, 40px) rotate(-2.5deg) scale(0.98);
+    }
+    60% {
+        transform: translate(30px, -20px) rotate(3deg) scale(1.01);
+    }
+    80% {
+        transform: translate(-15px, -30px) rotate(-1.5deg) scale(0.99);
+    }
+}
+
+@keyframes excel-gen-pulse {
+    0%, 100% {
+        opacity: 0.7;
+    }
+    50% {
+        opacity: 0.85;
+    }
+}
+
+.excel-gen-glass-circle:nth-child(1),
+.excel-gen-glass-circle:nth-child(4),
+.excel-gen-glass-circle:nth-child(7) {
+    animation: excel-gen-float 18s infinite ease-in-out, excel-gen-pulse 6s infinite ease-in-out;
+}
+
+/* Основное содержимое */
+.excel-gen-main-content {
+    flex: 1;
+    padding: 2.5rem 2rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+    background: transparent;
+}
+
+/* Заголовок страницы */
+.excel-gen-page-header {
+    margin-bottom: 3.5rem;
+    text-align: center;
+    width: 100%;
+    max-width: 1000px;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    border-radius: 16px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.excel-gen-page-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(
+            circle at 20% 30%,
+           
+            transparent 60%
+        ),
+        radial-gradient(
+            circle at 80% 70%,
+            rgba(0, 153, 255, 0.03) 0%,
+            transparent 60%
+        );
+    z-index: -1;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+.excel-gen-page-title {
+    margin-bottom: 1.5rem;
+}
+
+.excel-gen-page-title h1 {
+    font-size: 2.2rem;
+    color: #21435A;
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    text-align: center;
+}
+
+.excel-gen-page-title h1 svg {
+    color: #21435A;
+    font-size: 2.2rem;
+    flex-shrink: 0;
+}
+
+.excel-gen-page-subtitle {
+    color: #21435A;
+    font-size: 1.15rem;
+    opacity: 0.85;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.excel-gen-page-actions {
+    display: flex;
+    gap: 1.25rem;
+    margin-top: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Кнопки */
+.excel-gen-btn {
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid #21435A;
+    color: #21435A;
+    padding: 0.875rem 1.75rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    font-family: inherit;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.excel-gen-btn:hover:not(:disabled) {
+    background: #21435A;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(33, 67, 90, 0.15);
+}
+
+.excel-gen-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.excel-gen-btn-outline {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #21435A;
+    color: #21435A;
+}
+
+.excel-gen-btn-outline:hover:not(:disabled) {
+    background: #21435A;
+    color: white;
+}
+
+.excel-gen-btn-primary {
+    background: #21435A;
+    color: white;
+    border: none;
+}
+
+.excel-gen-btn-primary:hover:not(:disabled) {
+    background: #2c5475;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(33, 67, 90, 0.2);
+}
+
+.excel-gen-btn-secondary {
+    background: #21435A;
+    color: white;
+    border: none;
+}
+
+.excel-gen-btn-secondary:hover:not(:disabled) {
+    background: #2c5475;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(58, 124, 165, 0.2);
+}
+
+.excel-gen-btn-large {
+    padding: 1.125rem 2.25rem;
+    font-size: 1.15rem;
+    min-width: 280px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    border-radius: 8px;
+}
+
+.excel-gen-btn-large:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(33, 67, 90, 0.2);
+}
+
+/* Секция загрузки файла */
+.excel-gen-upload-section {
+    margin-bottom: 3.5rem;
+    width: 100%;
+    max-width: 900px;
+    background: rgba(255, 255, 255, 0.68);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.excel-gen-upload-section:hover {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.excel-gen-upload-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(
+            circle at 20% 30%,
+            rgba(106, 13, 173, 0.03) 0%,
+            transparent 60%
+        ),
+        radial-gradient(
+            circle at 80% 70%,
+            rgba(0, 153, 255, 0.03) 0%,
+            transparent 60%
+        );
+    z-index: -1;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+/* Область загрузки */
+.excel-gen-upload-area {
+    border: 2px dashed rgba(33, 67, 90, 0.3);
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.excel-gen-upload-area.has-file {
+    border-color: #21435A;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.excel-gen-upload-area:hover {
+    border-color: #21435A;
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateY(-2px);
+}
+
+.excel-gen-upload-icon {
+    font-size: 4.5rem;
+    color: #21435A;
+    margin-bottom: 1.75rem;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.excel-gen-upload-area:hover .excel-gen-upload-icon {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.excel-gen-upload-area h3 {
+    font-size: 1.6rem;
+    margin-bottom: 0.875rem;
+    color: #21435A;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.excel-gen-upload-area p {
+    color: #21435A;
+    margin-bottom: 0.625rem;
+    opacity: 0.8;
+    font-size: 1.05rem;
+    line-height: 1.5;
+}
+
+.excel-gen-upload-hint {
+    margin-bottom: 1.75rem !important;
+    opacity: 0.65 !important;
+    font-size: 0.95rem !important;
+    color: #21435A !important;
+}
+
+.excel-gen-upload-btn {
+    margin-top: 1.25rem;
+    padding: 0.875rem 1.75rem;
+    font-size: 1rem;
+}
+
+.excel-gen-file-input {
+    display: none;
+}
+
+.excel-gen-file-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.75rem;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    padding: 1.25rem;
+    background: rgba(33, 67, 90, 0.07);
+    border-radius: 12px;
+    border: 1px solid rgba(33, 67, 90, 0.15);
+}
+
+.excel-gen-file-icon {
+    font-size: 3.5rem;
+    color: #21435A;
+    flex-shrink: 0;
+}
+
+.excel-gen-file-info {
+    text-align: left;
+    flex: 1;
+    min-width: 200px;
+}
+
+.excel-gen-file-info h4 {
+    margin-bottom: 0.375rem;
+    font-size: 1.25rem;
+    color: #21435A;
+    font-weight: 600;
+    word-break: break-all;
+}
+
+.excel-gen-file-info p {
+    color: #21435A;
+    opacity: 0.7;
+    font-size: 0.95rem;
+    margin-bottom: 0;
+    font-weight: 500;
+}
+
+.excel-gen-btn-remove {
+    background: rgba(244, 67, 54, 0.1);
+    border: 2px solid rgba(244, 67, 54, 0.3);
+    color: #f44336;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.625rem;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+}
+
+.excel-gen-btn-remove:hover {
+    background: #f44336;
+    color: white;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.2);
+}
+
+.excel-gen-file-actions {
+    display: flex;
+    gap: 1.25rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Детали файла */
+.excel-gen-file-details {
+    border-radius: 12px;
+    padding: 1.5rem;
+    background: rgba(33, 67, 90, 0.07);
+    border: 1px solid rgba(33, 67, 90, 0.15);
+}
+
+.excel-gen-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+}
+
+.excel-gen-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.05rem;
+    padding: 1rem 1.25rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    color: #21435A;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(33, 67, 90, 0.15);
+}
+
+.excel-gen-detail-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(33, 67, 90, 0.1);
+    background: rgba(255, 255, 255, 1);
+}
+
+.excel-gen-detail-item svg {
+    color: #21435A;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.excel-gen-detail-item span {
+    font-weight: 500;
+    flex: 1;
+}
+
+.excel-gen-detail-item strong {
+    color: #21435A;
+    font-weight: 700;
+    margin-left: 0.25rem;
+}
+
+/* Секция настроек */
+.excel-gen-settings-section {
+    border-radius: 16px;
+    padding: 2.5rem;
+    margin-bottom: 2.5rem;
+    width: 100%;
+    max-width: 900px;
+    background: rgba(255, 255, 255, 0.473);
+    backdrop-filter: blur(70px);
+    -webkit-backdrop-filter: blur(70px);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.048);
+    position: relative;
+    overflow: hidden;
+   
+}
+
+.excel-gen-settings-section:hover {
+    background: rgba(255, 255, 255, 0.329);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+   
+}
+
+.excel-gen-settings-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(
+            circle at 20% 30%,
+            rgba(106, 13, 173, 0.03) 0%,
+            transparent 60%
+        ),
+        radial-gradient(
+            circle at 80% 70%,
+            rgba(0, 153, 255, 0.03) 0%,
+            transparent 60%
+        );
+    z-index: -1;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+.excel-gen-settings-title {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    color: #21435A;
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    font-weight: 700;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(33, 67, 90, 0.1);
+}
+
+.excel-gen-settings-title svg {
+    color: #21435A;
+    font-size: 1.5rem;
+}
+
+.excel-gen-settings-grid {
+    display: grid;
+    gap: 2.5rem;
+}
+
+/* Группы настроек */
+.excel-gen-settings-group {
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.568);
+    border-radius: 12px;
+    border-left: 5px solid #21435A;
+    border: 1px solid rgba(33, 67, 90, 0.062);
+    margin-bottom: 1.5rem;
+   
+}
+
+.excel-gen-settings-group:last-child {
+    margin-bottom: 0;
+}
+
+
+
+.excel-gen-settings-group h4 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    color: #21435A;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(33, 67, 90, 0.1);
+}
+
+.excel-gen-settings-group h4 svg {
+    color: #21435A;
+    font-size: 1.3rem;
+}
+
+.excel-gen-settings-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.75rem;
+    margin-bottom: 1.75rem;
+}
+
+.excel-gen-setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.excel-gen-setting-item label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #21435A;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.excel-gen-setting-item label::after {
+    content: ':';
+}
+
+.excel-gen-setting-item input,
+.excel-gen-setting-item select {
+    padding: 0.875rem 1rem;
+    border: 2px solid rgba(33, 67, 90, 0.2);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #21435A;
+    font-family: inherit;
+}
+
+.excel-gen-setting-item input:focus,
+.excel-gen-setting-item select:focus {
+    outline: none;
+    border-color: #21435A;
+    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.15);
+    transform: translateY(-1px);
+    background-color: rgba(255, 255, 255, 0.95);
+}
+
+.excel-gen-setting-item input:hover,
+.excel-gen-setting-item select:hover {
+    border-color: rgba(33, 67, 90, 0.4);
+    background-color: rgba(255, 255, 255, 0.95);
+}
+
+.excel-gen-days-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+.excel-gen-day-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.excel-gen-day-item input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.excel-gen-day-item label {
+    cursor: pointer;
+    user-select: none;
+    font-weight: 500;
+    padding: 0.75rem 1.25rem;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    border: 2px solid rgba(33, 67, 90, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #21435A;
+    min-width: 70px;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+.excel-gen-day-item input[type="checkbox"]:checked + label {
+    background-color: #21435A;
+    color: white;
+    border-color: #21435A;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(33, 67, 90, 0.2);
+}
+
+.excel-gen-day-item label:hover {
+    border-color: #21435A;
+    transform: translateY(-1px);
+    background-color: rgba(255, 255, 255, 1);
+}
+
+.excel-gen-classes-selection {
+    margin-top: 1.75rem;
+}
+
+.excel-gen-classes-selection p {
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    color: #21435A;
+    font-size: 1.05rem;
+}
+
+.excel-gen-classes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.excel-gen-class-checkbox {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.excel-gen-class-checkbox input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.excel-gen-class-checkbox label {
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 0.625rem 0.5rem;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex: 1;
+    text-align: center;
+    color: #21435A;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(33, 67, 90, 0.2);
+    font-weight: 500;
+}
+
+.excel-gen-class-checkbox input[type="checkbox"]:checked + label {
+    background-color: #21435A;
+    color: white;
+    font-weight: 600;
+    border-color: #21435A;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(58, 124, 165, 0.2);
+}
+
+.excel-gen-class-checkbox label:hover {
+    border-color: #21435A;
+    transform: translateY(-1px);
+    background-color: rgba(255, 255, 255, 1);
+}
+
+.excel-gen-subjects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.excel-gen-subject-checkbox {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.excel-gen-subject-checkbox input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.excel-gen-subject-checkbox label {
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex: 1;
+    color: #21435A;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(33, 67, 90, 0.2);
+    font-weight: 500;
+}
+
+.excel-gen-subject-checkbox input[type="checkbox"]:checked + label {
+    background-color: #21435A;
+    color: white;
+    font-weight: 600;
+    border-color: #21435A;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(211, 84, 0, 0.2);
+}
+
+.excel-gen-subject-checkbox label:hover {
+    border-color: #21435A;
+    transform: translateY(-1px);
+    background-color: rgba(255, 255, 255, 1);
+}
+
+.excel-gen-setting-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+}
+
+.excel-gen-setting-checkbox input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.excel-gen-setting-checkbox label {
+    cursor: pointer;
+    user-select: none;
+    font-weight: 500;
+    color: #21435A;
+    font-size: 1rem;
+    padding-left: 2.5rem;
+    position: relative;
+    line-height: 1.5;
+}
+
+.excel-gen-setting-checkbox label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    border: 2px solid rgba(33, 67, 90, 0.3);
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.excel-gen-setting-checkbox label::after {
+    content: '✓';
+    position: absolute;
+    left: 7px;
+    top: 50%;
+    transform: translateY(-50%) scale(0);
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.excel-gen-setting-checkbox input[type="checkbox"]:checked + label::before {
+    background-color: #21435A;
+    border-color: #21435A;
+}
+
+.excel-gen-setting-checkbox input[type="checkbox"]:checked + label::after {
+    transform: translateY(-50%) scale(1);
+}
+
+.excel-gen-setting-checkbox label:hover::before {
+    border-color: #21435A;
+    background-color: rgba(255, 255, 255, 1);
+}
+
+.excel-gen-setting-description {
+    color: #21435A;
+    opacity: 0.85;
+    font-size: 0.95rem;
+    margin-bottom: 1.75rem;
+    line-height: 1.7;
+    padding: 1rem 1.25rem;
+    background: rgba(33, 67, 90, 0.06);
+    border-radius: 10px;
+    border-left: 4px solid #21435A;
+    border: 1px solid rgba(33, 67, 90, 0.15);
+}
+
+/* Секция прогресса */
+.excel-gen-progress-section {
+    border-radius: 16px;
+    padding: 2.5rem;
+    margin-bottom: 2.5rem;
+    text-align: center;
+    width: 100%;
+    max-width: 800px;
+    background: rgba(255, 255, 255, 0.68);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.excel-gen-progress-section:hover {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.excel-gen-progress-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(
+            circle at 20% 30%,
+            rgba(106, 13, 173, 0.03) 0%,
+            transparent 60%
+        ),
+        radial-gradient(
+            circle at 80% 70%,
+            rgba(0, 153, 255, 0.03) 0%,
+            transparent 60%
+        );
+    z-index: -1;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+.excel-gen-progress-section h3 {
+    margin-bottom: 1.75rem;
+    color: #21435A;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.excel-gen-progress-container {
+    margin: 0 auto 2.5rem;
+    max-width: 600px;
+}
+
+.excel-gen-progress-bar {
+    height: 14px;
+    background-color: rgba(245, 245, 245, 0.7);
+    border-radius: 7px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+    position: relative;
+    border: 1px solid rgba(33, 67, 90, 0.2);
+}
+
+.excel-gen-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, rgba(106, 13, 173, 0.534), rgba(0, 153, 255, 0.541));
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 7px;
+    position: relative;
+    overflow: hidden;
+}
+
+.excel-gen-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.3) 50%, 
+        transparent 100%);
+    animation: excel-gen-shimmer 2s infinite;
+}
+
+@keyframes excel-gen-shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.excel-gen-progress-text {
+    font-weight: 700;
+    color: #21435A;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.excel-gen-progress-steps {
+    display: flex;
+    justify-content: center;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+    margin-top: 2.5rem;
+}
+
+.excel-gen-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+}
+
+.excel-gen-step::before {
+    content: '';
+    position: absolute;
+    top: 18px;
+    left: -1.25rem;
+    right: -1.25rem;
+    height: 2px;
+    background-color: rgba(33, 67, 90, 0.2);
+    z-index: 1;
+}
+
+.excel-gen-step:first-child::before {
+    display: none;
+}
+
+.excel-gen-step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(245, 245, 245, 0.7);
+    color: #21435A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    border: 3px solid rgba(33, 67, 90, 0.3);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2;
+    font-size: 1rem;
+}
+
+.excel-gen-step.completed .excel-gen-step-icon {
+    background-color: #21435A;
+    color: white;
+    border-color: #21435A;
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(58, 124, 165, 0.3);
+}
+
+.excel-gen-step.active .excel-gen-step-icon {
+    background-color: #21435A;
+    color: white;
+    border-color: #21435A;
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(33, 67, 90, 0.3);
+    animation: excel-gen-pulse 2s infinite;
+}
+
+.excel-gen-step-text {
+    font-size: 0.95rem;
+    color: #21435A;
+    font-weight: 600;
+    text-align: center;
+    max-width: 100px;
+    line-height: 1.4;
+}
+
+.excel-gen-step.completed .excel-gen-step-text {
+    color: #21435A;
+    font-weight: 700;
+}
+
+.excel-gen-step.active .excel-gen-step-text {
+    color: #21435A;
+    font-weight: 700;
+}
+
+/* Секция результатов */
+.excel-gen-results-section {
+    border-radius: 16px;
+    padding: 3rem;
+    margin-bottom: 3rem;
+    text-align: center;
+    width: 100%;
+    max-width: 800px;
+    background: rgba(255, 255, 255, 0.68);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    animation: excel-gen-slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.excel-gen-results-section:hover {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.excel-gen-results-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(
+            circle at 20% 30%,
+            rgba(106, 13, 173, 0.03) 0%,
+            transparent 60%
+        ),
+        radial-gradient(
+            circle at 80% 70%,
+            rgba(0, 153, 255, 0.03) 0%,
+            transparent 60%
+        );
+    z-index: -1;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+@keyframes excel-gen-slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.excel-gen-results-header {
+    margin-bottom: 2.5rem;
+}
+
+.excel-gen-success-icon {
+    font-size: 3.5rem;
+    color: #21435A;
+    margin-bottom: 1.25rem;
+    animation: excel-gen-successScale 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both;
+}
+
+@keyframes excel-gen-successScale {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.excel-gen-results-header h3 {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+    color: #21435A;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.excel-gen-results-header p {
+    color: #21435A;
+    opacity: 0.85;
+    font-size: 1.15rem;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.excel-gen-results-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.excel-gen-stat-item {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    background: rgba(33, 67, 90, 0.07);
+    border-radius: 12px;
+    border: 1px solid rgba(33, 67, 90, 0.15);
+    transition: all 0.3s ease;
+}
+
+.excel-gen-stat-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(33, 67, 90, 0.1);
+    background: rgba(33, 67, 90, 0.1);
+}
+
+.excel-gen-stat-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #21435A;
+    margin-bottom: 0.375rem;
+    line-height: 1;
+}
+
+.excel-gen-stat-label {
+    font-size: 0.95rem;
+    color: #21435A;
+    opacity: 0.85;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.excel-gen-results-actions {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.excel-gen-results-actions .excel-gen-btn {
+    min-width: 220px;
+    padding: 1rem 2rem;
+    font-size: 1.05rem;
+    border-radius: 8px;
+}
+
+/* Секция генерации */
+.excel-gen-generate-section {
+    text-align: center;
+    margin: 4rem 0 3rem;
+    width: 100%;
+    max-width: 800px;
+    padding: 2rem;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+   
+}
+
+.excel-gen-generate-section:hover {
+  
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+
+}
+
+.excel-gen-generate-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(
+            circle at 20% 30%,
+            rgba(106, 13, 173, 0) 0%,
+            
+        ),
+        radial-gradient(
+            circle at 80% 70%,
+            rgba(0, 153, 255, 0) 0%,
+           
+        );
+    z-index: -1;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+.excel-gen-generate-hint {
+    margin-top: 1.25rem;
+    color: #21435A;
+    opacity: 0.7;
+    font-size: 1rem;
+    font-style: italic;
+    padding: 0.75rem 1.5rem;
+    background-color: rgba(33, 67, 90, 0.07);
+    border-radius: 8px;
+    display: inline-block;
+}
+
+@keyframes excel-gen-fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.excel-gen-page.loaded .excel-gen-upload-section,
+.excel-gen-page.loaded .excel-gen-settings-section,
+.excel-gen-page.loaded .excel-gen-progress-section,
+.excel-gen-page.loaded .excel-gen-results-section,
+.excel-gen-page.loaded .excel-gen-generate-section {
+    animation: excel-gen-fadeIn 0.5s ease-out;
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .excel-gen-main-content {
+        padding: 2rem 1.5rem;
+    }
+    
+    .excel-gen-page-title h1 {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .excel-gen-main-content {
+        padding: 1.75rem 1.25rem;
+    }
+    
+    .excel-gen-settings-grid,
+    .excel-gen-details-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .excel-gen-settings-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .excel-gen-progress-steps {
+        gap: 2rem;
+    }
+    
+    .excel-gen-step::before {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .excel-gen-main-content {
+        padding: 1.5rem 1rem;
+    }
+    
+    .excel-gen-page-header {
+        padding: 1.5rem;
+    }
+    
+    .excel-gen-page-title h1 {
+        font-size: 1.7rem;
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+    
+    .excel-gen-page-subtitle {
+        font-size: 1.05rem;
+        text-align: center;
+        padding: 0 0.5rem;
+    }
+    
+    .excel-gen-page-actions {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .excel-gen-page-actions .excel-gen-btn {
+        width: 100%;
+        max-width: 320px;
+        min-width: auto;
+    }
+    
+    .excel-gen-upload-area {
+        padding: 2.5rem 1.5rem;
+    }
+    
+    .excel-gen-upload-area h3 {
+        font-size: 1.4rem;
+    }
+    
+    .excel-gen-upload-icon {
+        font-size: 3.5rem;
+    }
+    
+    .excel-gen-settings-section,
+    .excel-gen-progress-section,
+    .excel-gen-results-section {
+        padding: 2rem 1.5rem;
+    }
+    
+    .excel-gen-btn-large {
+        width: 100%;
+        min-width: auto;
+        max-width: 320px;
+    }
+    
+    .excel-gen-details-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .excel-gen-progress-steps {
+        gap: 1.5rem;
+        flex-direction: column;
+    }
+    
+    .excel-gen-results-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+    
+    .excel-gen-results-actions {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .excel-gen-results-actions .excel-gen-btn {
+        width: 100%;
+        max-width: 320px;
+        min-width: auto;
+    }
+    
+    .excel-gen-classes-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .excel-gen-subjects-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .excel-gen-settings-group {
+        padding: 1.5rem;
+    }
+    
+    .excel-gen-glass-circle:nth-child(1),
+    .excel-gen-glass-circle:nth-child(2),
+    .excel-gen-glass-circle:nth-child(3) {
+        width: 280px;
+        height: 260px;
+        filter: blur(28px);
+    }
+    
+    .excel-gen-glass-circle:nth-child(4),
+    .excel-gen-glass-circle:nth-child(5),
+    .excel-gen-glass-circle:nth-child(6) {
+        width: 200px;
+        height: 180px;
+        filter: blur(24px);
+    }
+    
+    .excel-gen-glass-circle:nth-child(7),
+    .excel-gen-glass-circle:nth-child(10) {
+        width: 150px;
+        height: 130px;
+        filter: blur(22px);
+    }
+    
+    .excel-gen-glass-circle:nth-child(8),
+    .excel-gen-glass-circle:nth-child(9) {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .excel-gen-main-content {
+        padding: 1.25rem 0.75rem;
+    }
+    
+    .excel-gen-page-header {
+        padding: 1.25rem 1rem;
+    }
+    
+    .excel-gen-page-title h1 {
+        font-size: 1.5rem;
+    }
+    
+    .excel-gen-page-subtitle {
+        font-size: 1rem;
+    }
+    
+    .excel-gen-upload-area {
+        padding: 2rem 1rem;
+        border-radius: 12px;
+    }
+    
+    .excel-gen-upload-area h3 {
+        font-size: 1.3rem;
+    }
+    
+    .excel-gen-upload-area p {
+        font-size: 0.95rem;
+    }
+    
+    .excel-gen-details-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .excel-gen-results-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .excel-gen-stat-item {
+        padding: 1.25rem 0.75rem;
+    }
+    
+    .excel-gen-stat-value {
+        font-size: 1.8rem;
+    }
+    
+    .excel-gen-classes-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .excel-gen-subjects-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .excel-gen-upload-area h3 {
+        font-size: 1.25rem;
+    }
+    
+    .excel-gen-settings-group h4 {
+        font-size: 1.15rem;
+    }
+    
+    .excel-gen-progress-steps {
+        gap: 1.25rem;
+    }
+    
+    .excel-gen-step-icon {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .excel-gen-step-text {
+        font-size: 0.9rem;
+    }
+    
+    .excel-gen-results-header h3 {
+        font-size: 1.7rem;
+    }
+    
+    .excel-gen-results-header p {
+        font-size: 1.05rem;
+    }
+    
+    .excel-gen-success-icon {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .excel-gen-page-title h1 svg {
+        font-size: 1.8rem;
+    }
+    
+    .excel-gen-upload-icon {
+        font-size: 3rem;
+    }
+    
+    .excel-gen-file-icon {
+        font-size: 2.8rem;
+    }
+    
+    .excel-gen-classes-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .excel-gen-days-grid {
+        justify-content: center;
+    }
+    
+    .excel-gen-day-item label {
+        min-width: 60px;
+        padding: 0.625rem 1rem;
+        font-size: 0.9rem;
+    }
+}
