@@ -1,4 +1,4 @@
-// frontend/pages/MainContent.jsx
+// MainContent.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaPlay, FaEdit, FaEye, FaInfoCircle, FaHistory } from 'react-icons/fa';
@@ -115,7 +115,7 @@ const MainContent = () => {
                 navigate('/generate');
                 break;
             case 'extracurricular':
-                navigate('/extracurricular');
+                alert('Функция "Внешкольные занятия" в разработке');
                 break;
             case 'view':
                 navigate('/schedule');
@@ -125,18 +125,10 @@ const MainContent = () => {
 
     return (
         <div className="main-content-page">
-            {/* Анимированный фон с размытыми фиолетово-синими кругами */}
             <div className="animated-bg">
-                <div className="glass-circle"></div>
-                <div className="glass-circle"></div>
-                <div className="glass-circle"></div>
-                <div className="glass-circle"></div>
-                <div className="glass-circle"></div>
-                <div className="glass-circle"></div>
-                <div className="glass-circle"></div>
-                <div className="glass-circle"></div>
-                <div className="glass-circle"></div>
-                <div className="glass-circle"></div>
+                {[...Array(10)].map((_, i) => (
+                    <div key={i} className="glass-circle"></div>
+                ))}
             </div>
             
             <Header />
@@ -171,7 +163,7 @@ const MainContent = () => {
                         <ActionCard
                             type="view"
                             title="Просмотр расписаний"
-                            description="Просмотр, печать и экспорт готовых расписаний для всех классов"
+                            description="Просмотр, печать и редактирование готовых расписаний для всех классов"
                             buttonText="Открыть список"
                             onButtonClick={() => handleCardClick('view')}
                         />

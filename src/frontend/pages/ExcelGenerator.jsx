@@ -1,3 +1,4 @@
+// ExcelGenerator.jsx
 import React, { useState, useRef, useEffect } from 'react'; 
 import { 
     FaCalendarAlt, 
@@ -13,13 +14,17 @@ import {
     FaBell,
     FaListAlt,
     FaTimes,
-    FaCheck
+    FaCheck,
+    FaArrowLeft
 } from 'react-icons/fa';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import '../styles/ExcelGenerator.css';
+import { useNavigate } from 'react-router-dom';
 
 const ExcelGenerator = () => {
+    const navigate = useNavigate();
+    
     const [file, setFile] = useState(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -134,26 +139,50 @@ const ExcelGenerator = () => {
         setProgress(0);
     };
 
+    const handleBack = () => {
+        navigate(-1);
+    };
+
+    const handleViewSchedule = () => {
+        navigate('/schedule');
+    };
+
     const allClasses = ['1А', '1Б', '2А', '2Б', '3А', '3Б', '4А', '4Б', '5А', '5Б', '6А', '6Б', '7А', '7Б', '8А', '8Б', '9А', '9Б', '10А', '10Б', '11А', '11Б'];
     const allSubjects = ['Математика', 'Русский язык', 'Английский язык', 'Литература', 'История', 'Биология', 'Химия', 'Физика', 'География', 'Физкультура', 'Информатика', 'Музыка', 'ИЗО', 'Технология'];
 
     return (
         <div className={`excel-gen-page ${isLoaded ? 'loaded' : ''}`}>
             <div className="excel-gen-bg">
-                <div className="excel-gen-glass-circle"></div>
-                <div className="excel-gen-glass-circle"></div>
-                <div className="excel-gen-glass-circle"></div>
-                <div className="excel-gen-glass-circle"></div>
-                <div className="excel-gen-glass-circle"></div>
-                <div className="excel-gen-glass-circle"></div>
-                <div className="excel-gen-glass-circle"></div>
-                <div className="excel-gen-glass-circle"></div>
-                <div className="excel-gen-glass-circle"></div>
-                <div className="excel-gen-glass-circle"></div>
+                {[...Array(10)].map((_, i) => (
+                    <div key={i} className="excel-gen-glass-circle"></div>
+                ))}
             </div>
+            
+            <button 
+                className="excel-gen-back-btn"
+                onClick={handleBack}
+                title="Вернуться назад"
+                aria-label="Вернуться назад"
+            >
+                <FaArrowLeft className="excel-gen-back-icon" />
+                <span className="excel-gen-back-text"></span>
+            </button>
+            
             <Header />
             <main className="excel-gen-main-content">
                 <div className="excel-gen-page-header">
+                    <div className="excel-gen-page-title">
+                        <h1>
+                            <FaFileExcel />
+                            Генератор расписаний
+                        </h1>
+                    </div>
+                    
+                    <p className="excel-gen-page-subtitle">
+                        Загрузите Excel файл с данными о классах, учителях и кабинетах, 
+                        и система автоматически создаст оптимальное расписание на учебный год
+                    </p>
+                    
                     <div className="excel-gen-page-actions">
                         <button 
                             className={`excel-gen-btn ${showSettings ? 'excel-gen-btn-secondary' : 'excel-gen-btn-outline'}`}
@@ -490,7 +519,10 @@ const ExcelGenerator = () => {
                         </div>
                         
                         <div className="excel-gen-results-actions">
-                            <button className="excel-gen-btn excel-gen-btn-primary">
+                            <button 
+                                className="excel-gen-btn excel-gen-btn-primary"
+                                onClick={handleViewSchedule}
+                            >
                                 <FaListAlt />
                                 Просмотреть расписания
                             </button>
@@ -515,7 +547,9 @@ const ExcelGenerator = () => {
                             <FaPlay />
                             Запустить генерацию расписания
                         </button>
-                      
+                        <p className="excel-gen-generate-hint">
+                            Для начала генерации необходимо загрузить Excel файл с данными
+                        </p>
                     </div>
                 )}
             </main>
