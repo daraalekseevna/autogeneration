@@ -13,5 +13,4 @@ cd frontend
 npm install
 Run in Development Mode
 
-bash
 npm run dev
