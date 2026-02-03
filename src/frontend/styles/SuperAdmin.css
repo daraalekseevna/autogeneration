@@ -1,0 +1,294 @@
+/* src/frontend/styles/SuperAdmin.css */
+
+/* Основные стили для панели суперадмина */
+.superadmin-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.superadmin-header {
+    margin-bottom: 2rem;
+}
+
+.superadmin-title {
+    color: #21435A;
+    margin-bottom: 0.5rem;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.superadmin-subtitle {
+    color: #8a8a8a;
+    font-size: 1rem;
+}
+
+/* Статистика */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.733);
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid rgba(33, 67, 90, 0.11);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #21435A;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #21435A;
+    margin-top: 0.5rem;
+}
+
+/* Навигация */
+.tabs-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    border-bottom: 1px solid rgba(33, 67, 90, 0.11);
+    padding-bottom: 1rem;
+}
+
+.tab-button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background: rgba(255, 255, 255, 0.733);
+    color: #21435A;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+    background: rgba(33, 67, 90, 0.048);
+}
+
+.tab-button.active {
+    background: #21435A;
+    color: white;
+}
+
+/* Формы и таблицы */
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+}
+
+@media (max-width: 1024px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-container, .table-container {
+    background: rgba(255, 255, 255, 0.733);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid rgba(33, 67, 90, 0.11);
+}
+
+.form-title, .table-title {
+    color: #21435A;
+    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #21435A;
+    font-weight: 500;
+}
+
+.form-input, .form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid rgba(33, 67, 90, 0.11);
+    border-radius: 6px;
+    font-size: 1rem;
+    background: white;
+}
+
+.form-input:focus, .form-select:focus {
+    outline: none;
+    border-color: #21435A;
+}
+
+.submit-button {
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    background: #21435A;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
+
+/* Таблицы */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    padding: 1rem;
+    text-align: left;
+    color: #21435A;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(33, 67, 90, 0.2);
+}
+
+.data-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(33, 67, 90, 0.1);
+}
+
+.data-table tr:hover {
+    background: rgba(33, 67, 90, 0.02);
+}
+
+/* Кнопки действий */
+.action-button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+}
+
+.delete-button {
+    background: #910e05ce;
+    color: white;
+}
+
+.shift-button {
+    background: #ff9900;
+    color: white;
+}
+
+.assign-button {
+    background: #4CAF50;
+    color: white;
+}
+
+.unassign-button {
+    background: #910e05ce;
+    color: white;
+}
+
+/* Смены */
+.shift-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: white;
+}
+
+.shift-1 {
+    background: #4CAF50;
+}
+
+.shift-2 {
+    background: #2196F3;
+}
+
+/* Статистика смен */
+.shift-stats {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: rgba(33, 67, 90, 0.05);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.shift-stat {
+    text-align: center;
+}
+
+.shift-stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.shift-stat-1 {
+    color: #4CAF50;
+}
+
+.shift-stat-2 {
+    color: #2196F3;
+}
+
+/* Предупреждения */
+.warning-box {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #fff3e0;
+    border-left: 4px solid #ff9800;
+    border-radius: 4px;
+}
+
+.warning-box strong {
+    color: #ff9800;
+}
+
+/* Уведомления */
+.notification {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    background: #21435A;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

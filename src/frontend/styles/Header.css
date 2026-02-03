@@ -221,3 +221,57 @@
         height: 35px;
     }
 }
+/* Добавим эти стили в существующий header.css */
+
+.admin-avatar-container {
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.admin-avatar-container:hover {
+    transform: scale(1.05);
+}
+
+.admin-avatar-container:hover .admin-avatar {
+    box-shadow: 0 0 0 3px #21435A, 0 5px 15px rgba(33, 67, 90, 0.3);
+}
+
+.avatar-overlay {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: #21435A;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    border: 2px solid white;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+}
+
+.admin-avatar-container:hover .avatar-overlay {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.admin-info {
+    margin-left: 1rem;
+}
+
+.admin-name {
+    font-weight: 600;
+    color: #21435A;
+    font-size: 0.95rem;
+}
+
+.admin-role {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 0.1rem;
+}

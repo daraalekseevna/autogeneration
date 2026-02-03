@@ -109,19 +109,20 @@ const MainContent = () => {
         setCurrentDate(dateString);
     };
 
-    const handleCardClick = (cardType) => {
-        switch(cardType) {
-            case 'generate':
-                navigate('/generate');
-                break;
-            case 'extracurricular':
-                alert('Функция "Внешкольные занятия" в разработке');
-                break;
-            case 'view':
-                navigate('/schedule');
-                break;
-        }
-    };
+// MainContent.jsx - изменить обработчик handleCardClick:
+const handleCardClick = (cardType) => {
+    switch(cardType) {
+        case 'generate':
+            navigate('/generate');
+            break;
+        case 'extracurricular':
+            navigate('/extracurricular'); // Меняем alert на навигацию
+            break;
+        case 'view':
+            navigate('/schedule');
+            break;
+    }
+};
 
     return (
         <div className="main-content-page">

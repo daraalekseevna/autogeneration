@@ -1,0 +1,378 @@
+/* src/frontend/styles/Login.css */
+
+/* Основные стили для страницы входа */
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    animation: fadeInDown 0.6s ease-out;
+}
+
+.login-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.95);
+    margin-bottom: 1.5rem;
+    border: 2px solid rgba(33, 67, 90, 0.2);
+    box-shadow: 0 4px 12px rgba(33, 67, 90, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.login-logo:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(33, 67, 90, 0.15);
+}
+
+.login-logo-icon {
+    font-size: 2.5rem;
+    color: var(--primary);
+}
+
+.login-title {
+    color: var(--primary);
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', sans-serif;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+}
+
+.login-subtitle {
+    color: var(--gray-dark);
+    font-size: 1rem;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', sans-serif;
+    opacity: 0.8;
+}
+
+/* Карточка входа */
+.login-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 8px 32px rgba(33, 67, 90, 0.12), 
+                0 2px 8px rgba(33, 67, 90, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+.login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary) 0%, rgba(33, 67, 90, 0.5) 100%);
+    border-radius: 16px 16px 0 0;
+}
+
+.login-card-title {
+    color: var(--dark);
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-weight: 600;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', sans-serif;
+}
+
+/* Форма */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 0;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+    font-size: 0.95rem;
+    font-weight: 500;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', sans-serif;
+}
+
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 1rem;
+    color: var(--primary);
+    font-size: 1rem;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.login-input {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3rem;
+    border: 1px solid var(--gray);
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', sans-serif;
+    background-color: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+    outline: none;
+    position: relative;
+    z-index: 1;
+}
+
+.login-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
+}
+
+.login-input:focus + .input-icon {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Группа пароля */
+.password-group {
+    margin-bottom: 0;
+}
+
+.password-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.password-toggle {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', sans-serif;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.password-toggle:hover {
+    background-color: rgba(33, 67, 90, 0.05);
+}
+
+/* Сообщение об ошибке */
+.error-message {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    padding: 0.875rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', sans-serif;
+    border: 1px solid rgba(231, 76, 60, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: shake 0.5s ease-in-out;
+}
+
+.error-marker {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #e74c3c;
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+}
+
+/* Кнопка входа */
+.login-button {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'MS Reference Sans Serif', 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, var(--primary) 0%, rgba(33, 67, 90, 0.9) 100%);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(33, 67, 90, 0.2);
+}
+
+.login-button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.login-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.login-button-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 0.5rem;
+}
+
+/* Анимации */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .login-title {
+        font-size: 1.75rem;
+    }
+    
+    .login-card-title {
+        font-size: 1.3rem;
+    }
+    
+    .login-logo {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .login-logo-icon {
+        font-size: 2rem;
+    }
+}
+
+/* Эффект при загрузке */
+.login-loading {
+    position: relative;
+}
+
+.login-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Дополнительные декоративные элементы */
+.login-decoration {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    filter: blur(20px);
+    opacity: 0.4;
+    z-index: 0;
+}
+
+.decoration-1 {
+    top: 10%;
+    left: 10%;
+    background: radial-gradient(circle, var(--purple-1) 0%, transparent 70%);
+    animation: float 20s infinite ease-in-out;
+}
+
+.decoration-2 {
+    bottom: 10%;
+    right: 10%;
+    background: radial-gradient(circle, var(--blue-2) 0%, transparent 70%);
+    animation: float 25s infinite ease-in-out reverse;
+}
