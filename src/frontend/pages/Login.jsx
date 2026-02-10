@@ -1,82 +1,92 @@
-// src/frontend/pages/Login.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUser, FaLock, FaSignInAlt, FaEye, FaEyeSlash, FaSchool } from 'react-icons/fa';
 import '../styles/MainContent.css';
 import '../styles/Login.css';
 
+// Импорт конфигураций
+import { findUserByCredentials, getRouteByRole } from '../config/usersConfig';
+import { loginConfig, getPasswordFieldType, getPasswordToggleConfig } from '../config/loginConfig';
+import { appConfig, getCopyrightInfo } from '../config/appConfig';
+
 const Login = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [formState, setFormState] = useState({
+        username: '',
+        password: '',
+        showPassword: false,
+        error: '',
+        isLoading: false
+    });
+
     const navigate = useNavigate();
 
-    // Пользователи для демонстрации
-    const users = [
-        { username: 'superadmin', password: 'super123', role: 'superadmin', name: 'Супер Администратор' },
-        { username: 'admin', password: 'admin123', role: 'admin', name: 'Администратор' },
-        { username: 'teacher1', password: 'teacher123', role: 'teacher', name: 'Учитель Иванова' },
-        { username: 'class5a', password: 'class123', role: 'class', name: '5 "А" Класс' },
-    ];
+    // Функция для обновления состояния формы
+    const updateFormState = (updates) => {
+        setFormState(prev => ({
+            ...prev,
+            ...updates
+        }));
+    };
 
+    // Функция обработки входа
     const handleLogin = async (e) => {
         e.preventDefault();
-        setError('');
+        updateFormState({ error: '' });
         
-        if (!username.trim() || !password.trim()) {
-            setError('Пожалуйста, заполните все поля');
+        // Проверка заполненности полей
+        if (!formState.username.trim() || !formState.password.trim()) {
+            updateFormState({ error: loginConfig.errorMessages.emptyFields });
             return;
         }
 
-        setIsLoading(true);
+        updateFormState({ isLoading: true });
 
         // Имитация задержки сети
-        await new Promise(resolve => setTimeout(resolve, 800));
-
-        // Находим пользователя
-        const user = users.find(u => 
-            u.username === username && u.password === password
+        await new Promise(resolve => 
+            setTimeout(resolve, loginConfig.network.simulateDelay)
         );
+
+        // Поиск пользователя
+        const user = findUserByCredentials(formState.username, formState.password);
 
         if (user) {
             // Сохраняем данные пользователя
-            localStorage.setItem('user', JSON.stringify({
+            const userData = {
+                id: user.id,
                 username: user.username,
                 role: user.role,
-                name: user.name
-            }));
+                name: user.name,
+                email: user.email,
+                avatarColor: user.avatarColor,
+                loginTime: new Date().toISOString()
+            };
+            localStorage.setItem('user', JSON.stringify(userData));
 
-            // Перенаправляем в зависимости от роли
-            switch(user.role) {
-                case 'superadmin':
-                    navigate('/superadmin');
-                    break;
-                case 'admin':
-                    navigate('/');
-                    break;
-                case 'teacher':
-                    navigate('/teacher');
-                    break;
-                case 'class':
-                    navigate('/class');
-                    break;
-                default:
-                    navigate('/');
-            }
+            // Перенаправляем по роли
+            const route = getRouteByRole(user.role);
+            navigate(route);
         } else {
-            setError('Неверное имя пользователя или пароль');
+            updateFormState({ error: loginConfig.errorMessages.invalidCredentials });
         }
         
-        setIsLoading(false);
+        updateFormState({ isLoading: false });
     };
+
+    // Функция для обработки изменения полей ввода
+    const handleInputChange = (field, value) => {
+        updateFormState({ 
+            [field]: value,
+            error: '' 
+        });
+    };
+
+    // Получаем текущую конфигурацию переключателя пароля
+    const passwordToggleConfig = getPasswordToggleConfig(formState.showPassword);
 
     return (
         <div className="login-page">
-            {/* Анимированный фон из MainContent.css */}
+            {/* Анимированный фон */}
             <div className="animated-bg login-background">
-                {[...Array(10)].map((_, i) => (
+                {[...Array(appConfig.decorations.backgroundCircles)].map((_, i) => (
                     <div key={i} className="glass-circle"></div>
                 ))}
             </div>
@@ -88,8 +98,7 @@ const Login = () => {
             <div className="login-container">
                 {/* Шапка с логотипом */}
                 <div className="login-header">
-
-                    <p className="login-subtitle">Система управления расписанием</p>
+                    <p className="login-subtitle">{appConfig.system.name}</p>
                 </div>
 
                 {/* Карточка с формой входа */}
@@ -99,20 +108,20 @@ const Login = () => {
                     <form className="login-form" onSubmit={handleLogin}>
                         {/* Поле имени пользователя */}
                         <div className="form-group">
-                            <label className="form-label">Имя пользователя</label>
+                            <label className="form-label">
+                                {loginConfig.formFields.username.label}
+                            </label>
                             <div className="input-with-icon">
-                                <FaUser className="input-icon" />
+                                <loginConfig.formFields.username.icon className="input-icon" />
                                 <input
-                                    type="text"
+                                    type={loginConfig.formFields.username.type}
                                     className="login-input"
-                                    placeholder="Введите логин"
-                                    value={username}
-                                    onChange={(e) => {
-                                        setUsername(e.target.value);
-                                        setError('');
-                                    }}
-                                    disabled={isLoading}
+                                    placeholder={loginConfig.formFields.username.placeholder}
+                                    value={formState.username}
+                                    onChange={(e) => handleInputChange('username', e.target.value)}
+                                    disabled={formState.isLoading}
                                     required
+                                    autoComplete={loginConfig.formFields.username.autoComplete}
                                 />
                             </div>
                         </div>
@@ -120,80 +129,71 @@ const Login = () => {
                         {/* Поле пароля */}
                         <div className="form-group password-group">
                             <div className="password-header">
-                                <label className="form-label">Пароль</label>
+                                <label className="form-label">
+                                    {loginConfig.formFields.password.label}
+                                </label>
                                 <button
                                     type="button"
                                     className="password-toggle"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    disabled={isLoading}
+                                    onClick={() => updateFormState({ 
+                                        showPassword: !formState.showPassword 
+                                    })}
+                                    disabled={formState.isLoading}
+                                    title={passwordToggleConfig.title}
                                 >
-                                    {showPassword ? (
-                                        <>
-                                            <FaEyeSlash /> Скрыть
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FaEye /> Показать
-                                        </>
-                                    )}
+                                    <passwordToggleConfig.icon /> {passwordToggleConfig.text}
                                 </button>
                             </div>
                             <div className="input-with-icon">
-                                <FaLock className="input-icon" />
+                                <loginConfig.formFields.password.icon className="input-icon" />
                                 <input
-                                    type={showPassword ? "text" : "password"}
+                                    type={getPasswordFieldType(formState.showPassword)}
                                     className="login-input"
-                                    placeholder="Введите пароль"
-                                    value={password}
-                                    onChange={(e) => {
-                                        setPassword(e.target.value);
-                                        setError('');
-                                    }}
-                                    disabled={isLoading}
+                                    placeholder={loginConfig.formFields.password.placeholder}
+                                    value={formState.password}
+                                    onChange={(e) => handleInputChange('password', e.target.value)}
+                                    disabled={formState.isLoading}
                                     required
+                                    autoComplete={loginConfig.formFields.password.autoComplete}
                                 />
                             </div>
                         </div>
 
                         {/* Сообщение об ошибке */}
-                        {error && (
+                        {formState.error && (
                             <div className="error-message">
                                 <div className="error-marker"></div>
-                                {error}
+                                {formState.error}
                             </div>
                         )}
 
                         {/* Кнопка входа */}
                         <button
                             type="submit"
-                            className={`login-button ${isLoading ? 'login-loading' : ''}`}
-                            disabled={isLoading}
+                            className={formState.isLoading ? 
+                                loginConfig.button.loading.className : 
+                                loginConfig.button.normal.className
+                            }
+                            disabled={formState.isLoading}
                         >
-                            {isLoading ? (
+                            {formState.isLoading ? (
                                 <>
                                     <span className="login-button-spinner"></span>
-                                    Вход...
+                                    {loginConfig.button.loading.text}
                                 </>
                             ) : (
                                 <>
-                                    <FaSignInAlt style={{ marginRight: '0.5rem' }} />
-                                    Войти в систему
+                                    <loginConfig.button.normal.icon style={{ marginRight: '0.5rem' }} />
+                                    {loginConfig.button.normal.text}
                                 </>
                             )}
                         </button>
                     </form>
                 </div>
 
-                {/* Информация о системе (опционально) */}
-                <div style={{
-                    marginTop: '2rem',
-                    textAlign: 'center',
-                    color: 'var(--gray-dark)',
-                    fontSize: '0.9rem',
-                    fontFamily: "'MS Reference Sans Serif', 'Segoe UI', sans-serif",
-                    opacity: '0.7'
-                }}>
-                    <p>© 2026  МАОУ МО Динской район СОШ № 20 имени Жукова В.А. Все права защищены.</p>
+                {/* Информация о системе */}
+                <div className="system-info">
+                    <p>{getCopyrightInfo()}</p>
                 </div>
             </div>
         </div>

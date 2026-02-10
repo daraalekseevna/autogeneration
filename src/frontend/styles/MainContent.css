@@ -1,6 +1,301 @@
 /* MainContent.css */
 @import url('https://fonts.cdnfonts.com/css/ms-reference-sans-serif');
+/* Status Column Styles */
+.status-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
 
+.status-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 4px;
+    flex-shrink: 0;
+}
+
+.status-ok {
+    background-color: #2ecc71;
+}
+
+.status-info {
+    background-color: #3498db;
+}
+
+.status-warning {
+    background-color: #f39c12;
+}
+
+.status-content {
+    flex: 1;
+    margin-left: 0.75rem;
+}
+
+.status-label {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--gray-light);
+    margin-bottom: 0.25rem;
+}
+
+.status-value {
+    display: block;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.status-details {
+    font-size: 0.85rem;
+    color: var(--gray);
+    margin-top: 0.25rem;
+}
+
+.status-timestamp {
+    font-size: 0.8rem;
+    color: var(--gray-dark);
+    margin-top: 0.25rem;
+}
+
+.status-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-item {
+    text-align: center;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--gray);
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* Activity Column Styles */
+.log-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.log-time {
+    font-size: 0.8rem;
+    color: var(--gray);
+}
+
+.log-type-badge {
+    font-size: 0.7rem;
+    color: white;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.log-user {
+    font-size: 0.8rem;
+    color: var(--primary-color);
+    background: rgba(52, 152, 219, 0.1);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+}
+
+.log-text {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--text-primary);
+}
+
+/* Цвета для типов событий */
+.event-schedule {
+    border-left-color: #3498db;
+}
+
+.event-schedule .log-type-badge {
+    background-color: #3498db;
+}
+
+.event-extracurricular {
+    border-left-color: #9b59b6;
+}
+
+.event-extracurricular .log-type-badge {
+    background-color: #9b59b6;
+}
+
+.event-user {
+    border-left-color: #2ecc71;
+}
+
+.event-user .log-type-badge {
+    background-color: #2ecc71;
+}
+
+.event-system {
+    border-left-color: #e67e22;
+}
+
+.event-system .log-type-badge {
+    background-color: #e67e22;
+}
+
+.event-edit {
+    border-left-color: #f1c40f;
+}
+
+.event-edit .log-type-badge {
+    background-color: #f1c40f;
+    color: #333;
+}
+
+.event-generation {
+    border-left-color: #e74c3c;
+}
+
+.event-generation .log-type-badge {
+    background-color: #e74c3c;
+}
+
+/* НОВЫЕ СТИЛИ ДЛЯ ПОИСКА И ФИЛЬТРА */
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.activity-controls {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.75rem;
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+.search-input {
+    padding: 0.5rem 0.5rem 0.5rem 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    width: 150px;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    width: 200px;
+}
+
+.filter-dropdown {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.filter-icon {
+    position: absolute;
+    left: 0.75rem;
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+.filter-select {
+    padding: 0.5rem 0.5rem 0.5rem 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.no-activities {
+    text-align: center;
+    padding: 2rem;
+    color: var(--gray);
+    font-style: italic;
+}
+
+.activity-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.activity-count {
+    font-size: 0.8rem;
+    color: var(--gray);
+}
+
+.view-all-btn {
+    background: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.view-all-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* ОСТАЛЬНЫЕ СТИЛИ НЕ ТРОГАЕМ */
 * {
     margin: 0;
     padding: 0;
@@ -10,11 +305,8 @@
 
 :root {
     --primary: #21435A;
-   /* --primary-light: #762599b7;*/
     --secondary: #21435A;
-    /*--secondary-light: #21435ada;*/
     --accent: #21435A;
-  /*  --accent-light: #762599b7;*/
     --dark: #21435A;
     --light: #f5f5f5;
     --white: #ffffff;
@@ -267,16 +559,7 @@ body {
     }
 }
 
-/* Добавляем эффект пульсации для некоторых кругов */
-@keyframes pulse {
-    0%, 100% {
-        opacity: 0.6;
-    }
-    50% {
-        opacity: 0.8;
-    }
-}
-
+/* Добавляем эффект пульсации для некоторых круги */
 .glass-circle:nth-child(1),
 .glass-circle:nth-child(4),
 .glass-circle:nth-child(7) {
@@ -362,10 +645,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--primary); /* Цвет #21435A */
-    font-size: 1.2rem; /* Чуть больше шрифт */
-    margin-bottom: 2.5rem; /* Чуть ниже */
-    margin-top: 1rem; /* Отступ сверху */
+    color: var(--primary);
+    font-size: 1.2rem;
+    margin-bottom: 2.5rem;
+    margin-top: 1rem;
     font-weight: 500;
     font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
@@ -769,5 +1052,28 @@ body {
         font-size: 1rem;
         margin-bottom: 1.5rem;
         margin-top: 0.5rem;
+    }
+    
+    /* Адаптивность для поиска и фильтра */
+    .activity-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .activity-controls {
+        width: 100%;
+    }
+    
+    .search-box,
+    .filter-dropdown {
+        width: 100%;
+    }
+    
+    .search-input {
+        width: 100%;
+    }
+    
+    .search-input:focus {
+        width: 100%;
     }
 }
