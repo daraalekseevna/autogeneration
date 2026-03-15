@@ -4,7 +4,8 @@ import {
   FaFilter, FaSearch, FaEye, FaEyeSlash, FaUser, FaDoorOpen,
   FaBell, FaExclamationTriangle, FaCheckCircle, FaGripVertical,
   FaArrowLeft, FaPlus, FaTrash, FaClock, FaSchool, FaSync,
-  FaBook, FaCalendarAlt, FaUsers, FaUndo, FaRedo, FaEraser
+  FaBook, FaCalendarAlt, FaUsers, FaUndo, FaRedo, FaEraser,
+  FaGraduationCap, FaMapMarkerAlt, FaHourglassHalf
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
@@ -26,6 +27,18 @@ const ScheduleViewer = () => {
   const [loading, setLoading] = useState(false);
   const [draggedLesson, setDraggedLesson] = useState(null);
   
+  // Модальное окно редактирования
+  const [editingLesson, setEditingLesson] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({
+    subject: '',
+    teacher: '',
+    room: '',
+    duration: 45,
+    building: 'high',
+    type: 'regular'
+  });
+  
   // Фильтры
   const [filters, setFilters] = useState({
     showTeachers: true,
@@ -42,6 +55,24 @@ const ScheduleViewer = () => {
   const [schedule, setSchedule] = useState({});
   const [conflicts, setConflicts] = useState([]);
   const [alternatives, setAlternatives] = useState([]);
+  
+  // Данные для селектов
+  const subjects = TeacherRegistry.getAllSubjects();
+  const teachers = TeacherRegistry.getTeacherOptions('high');
+  const rooms = RoomRegistry.getRoomOptions('high');
+  const durations = [30, 45, 60, 90, 120];
+  const lessonTypes = [
+    { value: 'regular', label: 'Обычный урок' },
+    { value: 'lab', label: 'Лабораторная' },
+    { value: 'test', label: 'Контрольная' },
+    { value: 'extracurricular', label: 'Внеурочная' },
+    { value: 'project', label: 'Проектная работа' }
+  ];
+  const buildings = [
+    { value: 'high', label: 'Старшая школа' },
+    { value: 'middle', label: 'Средняя школа' },
+    { value: 'primary', label: 'Начальная школа' }
+  ];
   
   // Данные из конфигурации
   const days = WeekSchedule.getDayOptions('high')
@@ -87,40 +118,62 @@ const ScheduleViewer = () => {
     const classData = ClassRegistry.getClassByName(selectedClass);
     if (!classData) return {};
     
-    const subjects = TeacherRegistry.getAllSubjects();
-    const teachers = TeacherRegistry.getTeacherOptions('high');
-    const rooms = RoomRegistry.getRoomOptions('high');
-    
     const mockData = {};
     
+    const scheduleTemplate = {
+      'Понедельник': { 
+        1: { subject: 'Математика', teacher: 'Иванова А.П.', room: '201', duration: 45 },
+        2: { subject: 'Русский язык', teacher: 'Петрова С.И.', room: '305', duration: 45 },
+        3: { subject: 'Литература', teacher: 'Сидорова О.В.', room: '208', duration: 45 },
+        4: { subject: 'Физическая культура', teacher: 'Козлов Д.С.', room: 'Спортзал', duration: 90 }
+      },
+      'Вторник': { 
+        1: { subject: 'Английский язык', teacher: 'Смирнова Е.А.', room: '401', duration: 45 },
+        2: { subject: 'История', teacher: 'Федоров П.К.', room: '312', duration: 45 },
+        3: { subject: 'Биология', teacher: 'Николаева М.В.', room: 'Лаборатория', duration: 90 },
+        4: { subject: 'Химия', teacher: 'Алексеев В.Г.', room: 'Лаборатория', duration: 90 }
+      },
+      'Среда': { 
+        1: { subject: 'Физика', teacher: 'Григорьев А.С.', room: 'Физика', duration: 45 },
+        2: { subject: 'География', teacher: 'Тихонова Л.М.', room: '307', duration: 45 },
+        3: { subject: 'Информатика', teacher: 'Белов Д.А.', room: 'Компьютерный', duration: 90 },
+        4: { subject: 'Обществознание', teacher: 'Морозова Т.П.', room: '210', duration: 45 }
+      },
+      'Четверг': { 
+        1: { subject: 'Математика', teacher: 'Иванова А.П.', room: '201', duration: 45 },
+        2: { subject: 'Русский язык', teacher: 'Петрова С.И.', room: '305', duration: 45 },
+        3: { subject: 'Английский язык', teacher: 'Смирнова Е.А.', room: '401', duration: 45 },
+        4: { subject: 'Физическая культура', teacher: 'Козлов Д.С.', room: 'Спортзал', duration: 90 }
+      },
+      'Пятница': { 
+        1: { subject: 'Изобразительное искусство', teacher: 'Волкова Н.С.', room: 'ИЗО', duration: 45 },
+        2: { subject: 'Музыка', teacher: 'Лебедева И.А.', room: 'Музыка', duration: 45 },
+        3: { subject: 'Труд', teacher: 'Павлов С.В.', room: 'Мастерская', duration: 90 },
+        4: { subject: 'Классный час', teacher: ClassRegistry.getClassTeacher(selectedClass), room: selectedClass, duration: 45 }
+      }
+    };
+    
     days.forEach(day => {
+      const daySchedule = scheduleTemplate[day.name];
+      if (!daySchedule) return;
+      
       mockData[day.id] = {};
       
-      const lessonsCount = Math.floor(Math.random() * 4) + 3;
-      const usedLessons = new Set();
-      
-      for (let i = 0; i < lessonsCount; i++) {
-        let lessonNum;
-        do {
-          lessonNum = Math.floor(Math.random() * 6) + 1;
-        } while (usedLessons.has(lessonNum));
-        usedLessons.add(lessonNum);
-        
-        const subject = subjects[Math.floor(Math.random() * subjects.length)];
-        const teacher = teachers[Math.floor(Math.random() * teachers.length)];
-        const room = rooms[Math.floor(Math.random() * rooms.length)];
-        
+      Object.entries(daySchedule).forEach(([lessonNum, data]) => {
         mockData[day.id][lessonNum] = {
           id: `${day.id}-${lessonNum}`,
-          subject,
-          teacher: teacher.value,
-          room: room.value,
-          color: getSubjectColor(subject),
-          building: classData.building,
-          duration: 45,
-          type: 'regular'
+          subject: data.subject,
+          teacher: data.teacher,
+          room: data.room,
+          duration: data.duration,
+          color: getSubjectColor(data.subject),
+          building: 'high',
+          type: lessonNum === '3' && day.name === 'Вторник' ? 'lab' : 
+                lessonNum === '3' && day.name === 'Среда' ? 'lab' : 
+                lessonNum === '4' && day.name === 'Понедельник' ? 'extracurricular' : 'regular',
+          class: selectedClass
         };
-      }
+      });
     });
     
     return mockData;
@@ -143,7 +196,8 @@ const ScheduleViewer = () => {
       'Информатика': '#E91E63',
       'Изобразительное искусство': '#FFC107',
       'Музыка': '#00BCD4',
-      'Труд': '#FF9800'
+      'Труд': '#FF9800',
+      'Классный час': '#9E9E9E'
     };
     
     for (const [key, color] of Object.entries(colorMap)) {
@@ -248,7 +302,110 @@ const ScheduleViewer = () => {
     checkConflicts(newSchedule);
   };
 
-  // Сохранение изменений
+  // Открытие модального окна редактирования
+  const openEditModal = (day, lessonNum, lesson) => {
+    if (!editMode || !lesson) return;
+    
+    setEditingLesson({ day, lessonNum });
+    setEditForm({
+      subject: lesson.subject || '',
+      teacher: lesson.teacher || '',
+      room: lesson.room || '',
+      duration: lesson.duration || 45,
+      building: lesson.building || 'high',
+      type: lesson.type || 'regular'
+    });
+    setShowEditModal(true);
+  };
+
+  // Сохранение изменений урока
+  const saveLessonChanges = () => {
+    if (!editingLesson) return;
+    
+    const { day, lessonNum } = editingLesson;
+    const newSchedule = { ...schedule };
+    
+    newSchedule[day][lessonNum] = {
+      ...newSchedule[day][lessonNum],
+      ...editForm,
+      color: getSubjectColor(editForm.subject),
+      id: `${day}-${lessonNum}`
+    };
+    
+    setSchedule(newSchedule);
+    setShowEditModal(false);
+    setEditingLesson(null);
+    checkConflicts(newSchedule);
+  };
+
+  // Добавление урока
+  const handleAddLesson = (day, lessonNum) => {
+    if (!editMode) return;
+    
+    setEditingLesson({ day, lessonNum, isNew: true });
+    setEditForm({
+      subject: '',
+      teacher: teachers[0]?.value || '',
+      room: rooms[0]?.value || '',
+      duration: 45,
+      building: 'high',
+      type: 'regular'
+    });
+    setShowEditModal(true);
+  };
+
+  // Сохранение нового урока
+  const saveNewLesson = () => {
+    if (!editingLesson || !editingLesson.isNew) return;
+    
+    const { day, lessonNum } = editingLesson;
+    const newSchedule = { ...schedule };
+    
+    if (!newSchedule[day]) {
+      newSchedule[day] = {};
+    }
+    
+    newSchedule[day][lessonNum] = {
+      id: `${day}-${lessonNum}`,
+      subject: editForm.subject,
+      teacher: editForm.teacher,
+      room: editForm.room,
+      duration: editForm.duration,
+      color: getSubjectColor(editForm.subject),
+      building: editForm.building,
+      type: editForm.type,
+      class: selectedClass
+    };
+    
+    setSchedule(newSchedule);
+    setShowEditModal(false);
+    setEditingLesson(null);
+    checkConflicts(newSchedule);
+  };
+
+  // Удаление урока
+  const handleDeleteLesson = (day, lessonNum) => {
+    if (!editMode) return;
+    
+    const lesson = schedule[day]?.[lessonNum];
+    if (!lesson) return;
+    
+    if (!window.confirm(`Удалить урок "${lesson.subject}"?`)) return;
+    
+    const newSchedule = { ...schedule };
+    if (newSchedule[day]) {
+      delete newSchedule[day][lessonNum];
+      
+      if (Object.keys(newSchedule[day]).length === 0) {
+        delete newSchedule[day];
+      }
+    }
+    
+    setSchedule(newSchedule);
+    checkConflicts(newSchedule);
+  };
+
+  // Сохранение всех изменений расписания
   const saveChanges = async () => {
     try {
       setLoading(true);
@@ -333,89 +490,20 @@ const ScheduleViewer = () => {
     document.body.removeChild(link);
   };
 
-  // Добавление урока
-  const handleAddLesson = (day, lessonNum) => {
-    if (!editMode) return;
-    
-    const newLesson = {
-      id: `${day}-${lessonNum}`,
-      subject: 'Новый урок',
-      teacher: TeacherRegistry.getTeacherOptions('high')[0]?.value || '',
-      room: RoomRegistry.getRoomOptions('high')[0]?.value || '',
-      color: '#9E9E9E',
-      building: 'high',
-      duration: 45,
-      type: 'regular'
-    };
-    
-    const newSchedule = { ...schedule };
-    if (!newSchedule[day]) {
-      newSchedule[day] = {};
-    }
-    newSchedule[day][lessonNum] = newLesson;
-    
-    setSchedule(newSchedule);
-  };
-
-  // Удаление урока
-  const handleDeleteLesson = (day, lessonNum) => {
-    if (!editMode) return;
-    
-    const newSchedule = { ...schedule };
-    if (newSchedule[day]) {
-      delete newSchedule[day][lessonNum];
-      
-      if (Object.keys(newSchedule[day]).length === 0) {
-        delete newSchedule[day];
-      }
-    }
-    
-    setSchedule(newSchedule);
-  };
-
-  // Редактирование урока
-  const handleEditLesson = (day, lessonNum) => {
-    const lesson = schedule[day]?.[lessonNum];
-    if (!lesson) return;
-    
-    const newSubject = prompt('Введите название предмета:', lesson.subject);
-    if (newSubject === null) return;
-    
-    const newTeacher = prompt('Введите учителя:', lesson.teacher);
-    if (newTeacher === null) return;
-    
-    const newRoom = prompt('Введите кабинет:', lesson.room);
-    if (newRoom === null) return;
-    
-    const updatedLesson = {
-      ...lesson,
-      subject: newSubject || lesson.subject,
-      teacher: newTeacher || lesson.teacher,
-      room: newRoom || lesson.room,
-      color: getSubjectColor(newSubject || lesson.subject)
-    };
-    
-    const newSchedule = { ...schedule };
-    newSchedule[day][lessonNum] = updatedLesson;
-    setSchedule(newSchedule);
-    
-    checkConflicts(newSchedule);
-  };
-
   // Поиск альтернатив
   const findAlternatives = (conflict) => {
     const alternativesList = [];
     
     if (conflict.type === 'teacher') {
-      const subjectTeachers = TeacherRegistry.getTeachersBySubject(
-        schedule[conflict.day]?.[conflict.lesson]?.subject || ''
+      const subjectTeachers = teachers.filter(t => 
+        t.label.toLowerCase().includes(schedule[conflict.day]?.[conflict.lesson]?.subject?.toLowerCase()?.split(' ')[0] || '')
       );
       
       subjectTeachers.forEach(teacher => {
-        if (teacher !== conflict.teacher) {
+        if (teacher.value !== conflict.teacher) {
           alternativesList.push({
             type: 'teacher',
-            teacher,
+            teacher: teacher.value,
             subject: schedule[conflict.day]?.[conflict.lesson]?.subject,
             day: conflict.day,
             lesson: conflict.lesson
@@ -423,7 +511,6 @@ const ScheduleViewer = () => {
         }
       });
     } else if (conflict.type === 'room') {
-      const allRooms = RoomRegistry.getRoomOptions('high');
       const takenRooms = new Set();
       
       Object.values(schedule).forEach(dayLessons => {
@@ -432,7 +519,7 @@ const ScheduleViewer = () => {
         });
       });
       
-      allRooms.forEach(room => {
+      rooms.forEach(room => {
         if (!takenRooms.has(room.value)) {
           alternativesList.push({
             type: 'room',
@@ -451,9 +538,9 @@ const ScheduleViewer = () => {
   const applyAlternative = (alternative) => {
     const newSchedule = { ...schedule };
     
-    if (alternative.type === 'teacher') {
+    if (alternative.type === 'teacher' && newSchedule[alternative.day]?.[alternative.lesson]) {
       newSchedule[alternative.day][alternative.lesson].teacher = alternative.teacher;
-    } else if (alternative.type === 'room') {
+    } else if (alternative.type === 'room' && newSchedule[alternative.day]?.[alternative.lesson]) {
       newSchedule[alternative.day][alternative.lesson].room = alternative.room;
     }
     
@@ -495,6 +582,11 @@ const ScheduleViewer = () => {
     
     return filtered;
   }, [schedule, searchTerm]);
+
+  // Получение метки типа урока
+  const getLessonTypeLabel = (type) => {
+    return lessonTypes.find(t => t.value === type)?.label || type;
+  };
 
   return (
     <div className="schedule-viewer-page">
@@ -737,17 +829,28 @@ const ScheduleViewer = () => {
                                 <div className="lesson-subject">{lessonData.subject}</div>
                               )}
                               
-                              {filters.showTeachers && (
-                                <div className="lesson-teacher">
-                                  <FaUser /> {lessonData.teacher}
+                              <div className="lesson-details">
+                                {filters.showTeachers && (
+                                  <div className="lesson-teacher">
+                                    <FaGraduationCap /> {lessonData.teacher}
+                                  </div>
+                                )}
+                                
+                                {filters.showRooms && (
+                                  <div className="lesson-room">
+                                    <FaMapMarkerAlt /> {lessonData.room}
+                                  </div>
+                                )}
+                                
+                                <div className="lesson-meta">
+                                  <span className="lesson-duration">
+                                    <FaHourglassHalf /> {lessonData.duration} мин
+                                  </span>
+                                  <span className="lesson-type">
+                                    {getLessonTypeLabel(lessonData.type)}
+                                  </span>
                                 </div>
-                              )}
-                              
-                              {filters.showRooms && (
-                                <div className="lesson-room">
-                                  <FaDoorOpen /> {lessonData.room}
-                                </div>
-                              )}
+                              </div>
                             </div>
                             
                             {editMode && (
@@ -756,9 +859,9 @@ const ScheduleViewer = () => {
                                   className="btn-icon"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleEditLesson(day.id, lesson.number);
+                                    openEditModal(day.id, lesson.number, lessonData);
                                   }}
-                                  title="Редактировать"
+                                  title="Редактировать урок"
                                 >
                                   <FaEdit />
                                 </button>
@@ -766,11 +869,9 @@ const ScheduleViewer = () => {
                                   className="btn-icon"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (window.confirm('Удалить этот урок?')) {
-                                      handleDeleteLesson(day.id, lesson.number);
-                                    }
+                                    handleDeleteLesson(day.id, lesson.number);
                                   }}
-                                  title="Удалить"
+                                  title="Удалить урок"
                                 >
                                   <FaTrash />
                                 </button>
@@ -883,22 +984,160 @@ const ScheduleViewer = () => {
             </div>
           </div>
         )}
-        
-        {/* Подсказки */}
-        {editMode && (
-          <div className="hints-panel">
-            <div className="hint">
-              <strong>Режим редактирования:</strong>
-              <ul>
-                <li>Перетащите урок для изменения его времени</li>
-                <li>Нажмите на урок для редактирования</li>
-                <li>Кликните на пустую ячейку для добавления урока</li>
-                <li>Красная иконка указывает на конфликт</li>
-              </ul>
+      </div>
+      
+      {/* Модальное окно редактирования урока */}
+      {showEditModal && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>
+                <FaEdit />
+                {editingLesson?.isNew ? 'Добавить новый урок' : 'Редактировать урок'}
+              </h3>
+              <button 
+                className="close-modal"
+                onClick={() => setShowEditModal(false)}
+              >
+                <FaTimes />
+              </button>
+            </div>
+            
+            <div className="modal-content">
+              <div className="edit-form">
+                <div className="form-group">
+                  <label htmlFor="subject">
+                    <FaBook /> Предмет
+                  </label>
+                  <select
+                    id="subject"
+                    value={editForm.subject}
+                    onChange={(e) => setEditForm({...editForm, subject: e.target.value})}
+                    className="form-select"
+                  >
+                    <option value="">Выберите предмет</option>
+                    {subjects.map((subject, index) => (
+                      <option key={index} value={subject}>
+                        {subject}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="teacher">
+                    <FaGraduationCap /> Учитель
+                  </label>
+                  <select
+                    id="teacher"
+                    value={editForm.teacher}
+                    onChange={(e) => setEditForm({...editForm, teacher: e.target.value})}
+                    className="form-select"
+                  >
+                    <option value="">Выберите учителя</option>
+                    {teachers.map((teacher) => (
+                      <option key={teacher.value} value={teacher.value}>
+                        {teacher.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="room">
+                    <FaMapMarkerAlt /> Кабинет
+                  </label>
+                  <select
+                    id="room"
+                    value={editForm.room}
+                    onChange={(e) => setEditForm({...editForm, room: e.target.value})}
+                    className="form-select"
+                  >
+                    <option value="">Выберите кабинет</option>
+                    {rooms.map((room) => (
+                      <option key={room.value} value={room.value}>
+                        {room.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="duration">
+                      <FaHourglassHalf /> Длительность
+                    </label>
+                    <select
+                      id="duration"
+                      value={editForm.duration}
+                      onChange={(e) => setEditForm({...editForm, duration: parseInt(e.target.value)})}
+                      className="form-select"
+                    >
+                      {durations.map((duration) => (
+                        <option key={duration} value={duration}>
+                          {duration} минут
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="type">
+                      Тип урока
+                    </label>
+                    <select
+                      id="type"
+                      value={editForm.type}
+                      onChange={(e) => setEditForm({...editForm, type: e.target.value})}
+                      className="form-select"
+                    >
+                      {lessonTypes.map((type) => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="building">
+                    Корпус/Здание
+                  </label>
+                  <select
+                    id="building"
+                    value={editForm.building}
+                    onChange={(e) => setEditForm({...editForm, building: e.target.value})}
+                    className="form-select"
+                  >
+                    {buildings.map((building) => (
+                      <option key={building.value} value={building.value}>
+                        {building.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+            
+            <div className="modal-actions">
+              <button 
+                className="schedule-btn schedule-btn-secondary"
+                onClick={() => setShowEditModal(false)}
+              >
+                Отмена
+              </button>
+              <button 
+                className="schedule-btn schedule-btn-success"
+                onClick={editingLesson?.isNew ? saveNewLesson : saveLessonChanges}
+                disabled={!editForm.subject || !editForm.teacher || !editForm.room}
+              >
+                <FaSave /> {editingLesson?.isNew ? 'Добавить урок' : 'Сохранить изменения'}
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
       
       <Footer />
     </div>
