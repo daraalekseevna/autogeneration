@@ -34,7 +34,7 @@ footer {
 }
 
 .footer-item h3 {
-    font-size: 0.9rem;
+    font-size: 0.6rem;
     font-weight: 600;
     color: var(--dark);
     margin-bottom: 0.25rem;
@@ -44,7 +44,7 @@ footer {
 }
 
 .footer-item p {
-    font-size: 1rem;
+    font-size: 0.6rem;
     color: var(--primary);
     font-weight: 500;
     line-height: 1.4;
@@ -87,11 +87,11 @@ footer {
     }
     
     .footer-item h3 {
-        font-size: 0.85rem;
+        font-size: 0.6rem;
     }
     
     .footer-item p {
-        font-size: 0.95rem;
+        font-size: 0.6rem;
     }
     
     .footer-copyright {
