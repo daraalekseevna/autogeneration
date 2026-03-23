@@ -1,6 +1,6 @@
 // Header.jsx
 import React, { useEffect, useState } from 'react';
-import { FaCalendarAlt, FaUser } from 'react-icons/fa'; // Добавили FaUser
+import { FaCalendarAlt } from 'react-icons/fa';
 import PersonalCabinet from './PersonalCabinet';
 import '../styles/header.css';
 import logo from '../assets/logo.png';
@@ -29,10 +29,13 @@ const Header = () => {
     };
 
     const loadUserData = () => {
+        // В реальном приложении здесь был бы запрос к API
+        // Сейчас используем данные из localStorage или дефолтные
         const savedData = localStorage.getItem('userData');
         if (savedData) {
             setUserData(JSON.parse(savedData));
         } else {
+            // Дефолтные данные для примера
             const role = localStorage.getItem('userRole') || 'admin';
             const defaultData = {
                 id: 1,
@@ -50,6 +53,7 @@ const Header = () => {
     };
 
     const handleSaveUserData = (updatedData) => {
+        // Обновляем данные пользователя
         const newData = {
             ...userData,
             name: updatedData.name,
@@ -59,6 +63,8 @@ const Header = () => {
         
         setUserData(newData);
         localStorage.setItem('userData', JSON.stringify(newData));
+        
+        // Здесь в реальном приложении был бы запрос к API
         console.log('Данные сохранены:', updatedData);
     };
 
@@ -86,10 +92,11 @@ const Header = () => {
                 </div>
                 
                 <div className="header-center">
-                    <div className="current-date">
+                    {/* Можно добавить дату при необходимости */}
+                    {/* <div className="current-date">
                         <FaCalendarAlt className="date-icon" />
                         <span>{currentDate}</span>
-                    </div>
+                    </div> */}
                 </div>
                 
                 <div className="header-right">
@@ -108,21 +115,17 @@ const Header = () => {
                                     e.target.src = avatar;
                                 }}
                             />
-                            {/* ИСПРАВЛЕНО: вместо FaCalendarAlt используем FaUser или другой символ */}
                             <div className="avatar-overlay">
-                                <span>✓</span> {/* Простая галочка вместо иконки */}
+                                <FaCalendarAlt />
                             </div>
                         </div>
                         <div className="admin-info">
-                            <div className="admin-name">
-                                {userData?.name ? userData.name.split(' ')[0] : 'Админ'}
-                            </div>
+                            <div className="admin-name">{userData?.name?.split(' ')[0] || 'Админ'}</div>
                             <div className="admin-role">
                                 {userData?.role === 'superadmin' && 'Суперадмин'}
                                 {userData?.role === 'admin' && 'Администратор'}
                                 {userData?.role === 'teacher' && 'Учитель'}
                                 {userData?.role === 'class' && 'Классный руководитель'}
-                                {!userData?.role && 'Администратор'}
                             </div>
                         </div>
                     </div>

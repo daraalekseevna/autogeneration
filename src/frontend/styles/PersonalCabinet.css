@@ -1,5 +1,6 @@
 /* src/frontend/styles/PersonalCabinet.css */
 
+/* ===== МОДАЛЬНОЕ ОКНО ===== */
 .personal-cabinet-modal {
   position: fixed;
   top: 0;
@@ -7,34 +8,33 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  backdrop-filter: blur(5px);
-  animation: fadeIn 0.3s ease;
+  animation: modalFadeIn 0.2s ease;
 }
 
-@keyframes fadeIn {
+@keyframes modalFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
 .personal-cabinet-content {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.98) 100%);
-  border-radius: 20px;
+  background: white;
+  border-radius: 24px;
   width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(33, 67, 90, 0.3);
-  border: 1px solid rgba(33, 67, 90, 0.1);
-  animation: slideUp 0.3s ease;
+  max-width: 520px;
+  max-height: 85vh;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  animation: modalSlideUp 0.25s ease;
 }
 
-@keyframes slideUp {
+@keyframes modalSlideUp {
   from {
-    transform: translateY(30px);
+    transform: translateY(20px);
     opacity: 0;
   }
   to {
@@ -43,167 +43,242 @@
   }
 }
 
+/* ===== ЗАГОЛОВОК ===== */
 .cabinet-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid rgba(33, 67, 90, 0.1);
-  background: rgba(33, 67, 90, 0.02);
+  padding: 18px 20px;
+  background: #21435A;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .cabinet-title {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  color: #21435A;
+  gap: 10px;
 }
 
 .cabinet-icon {
-  font-size: 1.5rem;
-  color: #21435A;
+  font-size: 20px;
+  color: white;
 }
 
 .cabinet-title h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 18px;
   font-weight: 600;
+  color: white;
 }
 
 .close-button {
-  background: none;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  font-size: 1.2rem;
-  color: #21435A;
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  color: white;
   cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s ease;
 }
 
 .close-button:hover {
-  background: rgba(33, 67, 90, 0.1);
+  background: rgba(255, 255, 255, 0.2);
   transform: rotate(90deg);
 }
 
+/* ===== ОСНОВНОЙ КОНТЕНТ ===== */
 .cabinet-body {
-  padding: 2rem;
+  padding: 20px;
+  overflow-y: auto;
+  max-height: calc(85vh - 120px);
 }
 
-/* Информация о пользователе */
-.user-info-section {
+.cabinet-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.cabinet-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.cabinet-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+/* ===== АВАТАР ===== */
+.user-avatar-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.avatar-container {
+  position: relative;
+  cursor: pointer;
+}
+
+.avatar-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #21435A;
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+  transition: all 0.2s ease;
+}
+
+.avatar-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #21435A, #2c5475);
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(33, 67, 90, 0.1);
+  justify-content: center;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.user-avatar-large {
-  width: 100px;
-  height: 100px;
+.avatar-placeholder svg {
+  font-size: 36px;
+  color: white;
+}
+
+.avatar-overlay {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #21435A;
   border-radius: 50%;
-  overflow: hidden;
-  border: 3px solid #21435A;
-  box-shadow: 0 5px 15px rgba(33, 67, 90, 0.2);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.user-avatar-large img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.avatar-overlay svg {
+  font-size: 12px;
+  color: white;
 }
 
-.user-main-info {
-  flex: 1;
+.avatar-overlay:hover {
+  background: #2c5475;
+  transform: scale(1.05);
+}
+
+/* ===== ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ ===== */
+.user-info {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eef2f6;
 }
 
 .user-name {
-  font-size: 1.5rem;
+  font-size: 18px;
   font-weight: 600;
   color: #21435A;
-  margin-bottom: 0.5rem;
-}
-
-.user-role {
-  margin-bottom: 0.5rem;
+  margin-bottom: 6px;
 }
 
 .role-badge {
-  display: inline-block;
-  padding: 0.25rem 1rem;
-  background: rgba(33, 67, 90, 0.1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: #f1f5f9;
   border-radius: 20px;
-  font-size: 0.9rem;
+  font-size: 12px;
   font-weight: 500;
+  color: #21435A;
 }
 
 .user-description {
-  color: #666;
-  font-size: 0.95rem;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 8px;
 }
 
-/* Ролевая статистика */
+/* ===== СТАТИСТИКА ===== */
 .role-stats {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 10px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .role-stat {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: rgba(33, 67, 90, 0.05);
-  border-radius: 8px;
-  font-size: 0.9rem;
-  color: #21435A;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f8fafc;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  border: 1px solid #e2e8f0;
 }
 
 .role-stat svg {
+  font-size: 12px;
   color: #21435A;
 }
 
-/* Форма */
+/* ===== ФОРМА ===== */
 .cabinet-form {
-  margin-bottom: 2rem;
+  margin-bottom: 8px;
 }
 
 .form-section {
-  margin-bottom: 2rem;
+  margin-bottom: 20px;
 }
 
 .section-title {
   color: #21435A;
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(33, 67, 90, 0.1);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eef2f6;
 }
 
 .form-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 14px;
 }
 
 .form-label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: #21435A;
-  margin-bottom: 0.5rem;
+  gap: 6px;
+  color: #475569;
+  margin-bottom: 6px;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 12px;
+}
+
+.form-label svg {
+  font-size: 12px;
+  color: #8b9eb0;
 }
 
 .form-input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid rgba(33, 67, 90, 0.2);
-  border-radius: 8px;
-  font-size: 1rem;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 13px;
   background: white;
   transition: all 0.2s ease;
 }
@@ -211,84 +286,175 @@
 .form-input:focus {
   outline: none;
   border-color: #21435A;
-  box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
+  box-shadow: 0 0 0 2px rgba(33, 67, 90, 0.05);
 }
 
 .form-input:disabled {
-  background: rgba(33, 67, 90, 0.05);
+  background: #f8fafc;
   cursor: not-allowed;
+  color: #94a3b8;
 }
 
 .error-message {
-  color: #dc3545;
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
-  display: block;
+  color: #ef4444;
+  font-size: 11px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* Кнопки */
+/* ===== УВЕДОМЛЕНИЕ ===== */
+.success-toast {
+  background: #d1fae5;
+  color: #065f46;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ===== ФУТЕР ===== */
 .cabinet-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  padding: 1.5rem 2rem;
-  border-top: 1px solid rgba(33, 67, 90, 0.1);
-  background: rgba(33, 67, 90, 0.02);
+  gap: 10px;
+  padding: 14px 20px;
+  background: #fefefe;
+  border-top: 1px solid #eef2f6;
 }
 
 .btn-primary {
-  padding: 0.75rem 1.5rem;
+  padding: 8px 20px;
   background: #21435A;
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 1rem;
+  border-radius: 30px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 6px;
   transition: all 0.2s ease;
 }
 
 .btn-primary:hover {
-  background: #1a3447;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(33, 67, 90, 0.2);
+  background: #2c5475;
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
-  padding: 0.75rem 1.5rem;
-  background: rgba(33, 67, 90, 0.1);
+  padding: 8px 20px;
+  background: white;
   color: #21435A;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 30px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   transition: all 0.2s ease;
 }
 
 .btn-secondary:hover {
-  background: rgba(33, 67, 90, 0.2);
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 640px) {
   .personal-cabinet-content {
     width: 95%;
-    margin: 1rem;
+    max-width: none;
+    border-radius: 20px;
   }
   
-  .user-info-section {
-    flex-direction: column;
-    text-align: center;
+  .cabinet-header {
+    padding: 14px 16px;
   }
   
-  .cabinet-header,
-  .cabinet-body,
+  .cabinet-title h2 {
+    font-size: 16px;
+  }
+  
+  .cabinet-body {
+    padding: 16px;
+  }
+  
+  .avatar-image,
+  .avatar-placeholder {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .avatar-placeholder svg {
+    font-size: 32px;
+  }
+  
+  .avatar-overlay {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .avatar-overlay svg {
+    font-size: 10px;
+  }
+  
+  .user-name {
+    font-size: 16px;
+  }
+  
+  .role-stats {
+    gap: 8px;
+  }
+  
+  .role-stat {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+  
   .cabinet-footer {
-    padding: 1rem;
+    padding: 12px 16px;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    padding: 6px 16px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cabinet-body {
+    padding: 14px;
+  }
+  
+  .form-group {
+    margin-bottom: 12px;
+  }
+  
+  .form-input {
+    padding: 7px 10px;
+    font-size: 12px;
   }
   
   .cabinet-footer {

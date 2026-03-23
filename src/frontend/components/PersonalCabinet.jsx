@@ -1,136 +1,266 @@
 // src/frontend/components/PersonalCabinet.jsx
-import React, { useState, useEffect } from 'react';
-import { FaUser, FaEnvelope, FaKey, FaSave, FaTimes, FaPhone, FaSchool, FaUsers, FaCalendarAlt } from 'react-icons/fa';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { 
+  FaUser, 
+  FaEnvelope, 
+  FaKey, 
+  FaSave, 
+  FaTimes, 
+  FaPhone, 
+  FaSchool, 
+  FaUsers, 
+  FaCalendarAlt,
+  FaIdCard,
+  FaGraduationCap,
+  FaChartLine,
+  FaStar,
+  FaCheckCircle,
+  FaEdit,
+  FaCamera,
+  FaLock
+} from 'react-icons/fa';
 import '../styles/PersonalCabinet.css';
+
+// Константы для ролей
+const ROLES = {
+  SUPERADMIN: 'superadmin',
+  ADMIN: 'admin',
+  TEACHER: 'teacher',
+  CLASS: 'class'
+};
 
 const PersonalCabinet = ({ userData, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
+    avatar: null
+  });
+  const [passwords, setPasswords] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef(null);
 
+  // Инициализация данных
   useEffect(() => {
     if (userData) {
       setFormData({
         name: userData.name || '',
         email: userData.email || '',
         phone: userData.phone || '',
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
+        avatar: userData.avatar || null
       });
+      setAvatarPreview(userData.avatar || null);
     }
   }, [userData]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    // Очистка ошибки при изменении
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+  // Авто-скрытие уведомления
+  useEffect(() => {
+    if (saveSuccess) {
+      const timer = setTimeout(() => setSaveSuccess(false), 3000);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [saveSuccess]);
 
-  const validateForm = () => {
+  // Получение информации о роли
+  const getRoleInfo = useCallback(() => {
+    const roleMap = {
+      [ROLES.SUPERADMIN]: {
+        title: 'Суперадминистратор',
+        description: 'Полный доступ ко всем функциям системы',
+        icon: <FaStar />,
+        color: '#f59e0b'
+      },
+      [ROLES.ADMIN]: {
+        title: 'Администратор',
+        description: 'Управление расписанием и занятиями',
+        icon: <FaUsers />,
+        color: '#21435A'
+      },
+      [ROLES.TEACHER]: {
+        title: 'Учитель',
+        description: 'Просмотр расписания и управление оценками',
+        icon: <FaGraduationCap />,
+        color: '#10b981'
+      },
+      [ROLES.CLASS]: {
+        title: 'Классный руководитель',
+        description: 'Управление классом и расписанием',
+        icon: <FaSchool />,
+        color: '#8b5cf6'
+      }
+    };
+    return roleMap[userData?.role] || {
+      title: 'Пользователь',
+      description: 'Базовый доступ',
+      icon: <FaUser />,
+      color: '#6c757d'
+    };
+  }, [userData?.role]);
+
+  // Получение ролевой статистики
+  const getRoleStats = useCallback(() => {
+    const statsMap = {
+      [ROLES.TEACHER]: [
+        { icon: <FaUsers />, label: 'Классов', value: userData?.classes || 3 },
+        { icon: <FaSchool />, label: 'Предметов', value: userData?.subjects || 4 },
+        { icon: <FaChartLine />, label: 'Учеников', value: userData?.studentsCount || 87 }
+      ],
+      [ROLES.ADMIN]: [
+        { icon: <FaCalendarAlt />, label: 'Активных занятий', value: userData?.activeActivities || 12 },
+        { icon: <FaUsers />, label: 'Пользователей', value: userData?.usersCount || 156 }
+      ],
+      [ROLES.SUPERADMIN]: [
+        { icon: <FaUsers />, label: 'Администраторов', value: userData?.adminsCount || 5 },
+        { icon: <FaChartLine />, label: 'Всего занятий', value: userData?.totalActivities || 24 }
+      ]
+    };
+    return statsMap[userData?.role] || [];
+  }, [userData]);
+
+  // Валидация формы
+  const validateForm = useCallback(() => {
     const newErrors = {};
     
-    if (isEditing && formData.newPassword) {
-      if (formData.newPassword.length < 6) {
+    if (isEditing) {
+      if (!formData.name?.trim()) {
+        newErrors.name = 'Введите ФИО';
+      }
+      if (!formData.email?.trim()) {
+        newErrors.email = 'Введите email';
+      } else if (!/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(formData.email)) {
+        newErrors.email = 'Неверный формат email';
+      }
+      if (formData.phone && !/^[\d\s\-+()]{10,}$/.test(formData.phone.replace(/\s/g, ''))) {
+        newErrors.phone = 'Неверный формат телефона';
+      }
+    }
+    
+    if (isChangingPassword) {
+      if (!passwords.currentPassword) {
+        newErrors.currentPassword = 'Введите текущий пароль';
+      }
+      if (passwords.newPassword && passwords.newPassword.length < 6) {
         newErrors.newPassword = 'Пароль должен быть не менее 6 символов';
       }
-      if (formData.newPassword !== formData.confirmPassword) {
+      if (passwords.newPassword !== passwords.confirmPassword) {
         newErrors.confirmPassword = 'Пароли не совпадают';
       }
     }
     
-    if (formData.phone && !/^[\d\s\-+()]+$/.test(formData.phone)) {
-      newErrors.phone = 'Неверный формат телефона';
-    }
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  }, [formData, passwords, isEditing, isChangingPassword]);
+
+  // Обработчик изменения полей
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
-  const handleSubmit = (e) => {
+  // Обработчик изменения паролей
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswords(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  // Обработчик выбора аватарки
+  const handleAvatarClick = () => {
+    if (isEditing) {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file && (file.type === 'image/jpeg' || file.type === 'image/png')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result);
+        setFormData(prev => ({ ...prev, avatar: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setErrors(prev => ({ ...prev, avatar: 'Можно загрузить только JPG или PNG' }));
+    }
+  };
+
+  // Сохранение данных
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) return;
     
-    const dataToSave = {
-      ...formData,
-      // Не отправляем пароли в открытом виде в реальном приложении
-      id: userData.id
-    };
+    setIsLoading(true);
     
-    onSave(dataToSave);
-    setIsEditing(false);
-    
-    // Очищаем поля паролей после сохранения
-    setFormData(prev => ({
-      ...prev,
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    }));
-  };
-
-  const getRoleInfo = () => {
-    switch(userData.role) {
-      case 'superadmin':
-        return {
-          title: 'Суперадминистратор',
-          description: 'Полный доступ ко всем функциям системы',
-          color: '#21435A'
-        };
-      case 'admin':
-        return {
-          title: 'Администратор',
-          description: 'Управление расписанием и занятиями',
-          color: '#2E5A87'
-        };
-      case 'teacher':
-        return {
-          title: 'Учитель',
-          description: 'Просмотр расписания и классов',
-          color: '#4A6FA5'
-        };
-      case 'class':
-        return {
-          title: 'Классный руководитель',
-          description: 'Просмотр расписания класса',
-          color: '#6B8CBC'
-        };
-      default:
-        return {
-          title: 'Пользователь',
-          description: 'Базовый доступ',
-          color: '#8A9CB2'
-        };
+    try {
+      const dataToSave = {
+        ...formData,
+        id: userData.id,
+        role: userData.role,
+        ...(isChangingPassword && passwords.newPassword && {
+          newPassword: passwords.newPassword,
+          currentPassword: passwords.currentPassword
+        })
+      };
+      
+      await onSave(dataToSave);
+      setIsEditing(false);
+      setIsChangingPassword(false);
+      setSaveSuccess(true);
+      setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      setErrors({ submit: error.message || 'Ошибка при сохранении' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Отмена редактирования
+  const handleCancel = () => {
+    setIsEditing(false);
+    setIsChangingPassword(false);
+    setErrors({});
+    setFormData({
+      name: userData.name || '',
+      email: userData.email || '',
+      phone: userData.phone || '',
+      avatar: userData.avatar || null
+    });
+    setAvatarPreview(userData.avatar || null);
+    setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  };
+
   const roleInfo = getRoleInfo();
+  const roleStats = getRoleStats();
+
+  // Закрытие по клику на оверлей
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
 
   return (
-    <div className="personal-cabinet-modal">
-      <div className="personal-cabinet-content" onClick={(e) => e.stopPropagation()}>
-        {/* Заголовок */}
+    <div className="personal-cabinet-modal" onClick={handleOverlayClick}>
+      <div className="personal-cabinet-content">
         <div className="cabinet-header">
           <div className="cabinet-title">
-            <FaUser className="cabinet-icon" />
+            <FaIdCard className="cabinet-icon" />
             <h2>Личный кабинет</h2>
           </div>
           <button className="close-button" onClick={onClose}>
@@ -139,57 +269,59 @@ const PersonalCabinet = ({ userData, onClose, onSave }) => {
         </div>
 
         <div className="cabinet-body">
-          {/* Информация о пользователе */}
-          <div className="user-info-section">
-            <div className="user-avatar-large">
-              <img 
-                src={userData.avatar || '/default-avatar.png'} 
-                alt="Аватар" 
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = '/default-avatar.png';
-                }}
+          {/* Аватар */}
+          <div className="user-avatar-section">
+            <div className="avatar-container" onClick={handleAvatarClick}>
+              {avatarPreview ? (
+                <img src={avatarPreview} alt="Аватар" className="avatar-image" />
+              ) : (
+                <div className="avatar-placeholder">
+                  <FaUser />
+                </div>
+              )}
+              {isEditing && (
+                <div className="avatar-overlay">
+                  <FaCamera />
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png"
+                onChange={handleAvatarChange}
+                style={{ display: 'none' }}
               />
             </div>
-            
-            <div className="user-main-info">
-              <div className="user-name">{userData.name || 'Не указано'}</div>
-              <div className="user-role" style={{ color: roleInfo.color }}>
-                <span className="role-badge">{roleInfo.title}</span>
-              </div>
-              <div className="user-description">{roleInfo.description}</div>
+          </div>
+
+          {/* Информация о пользователе */}
+          <div className="user-info">
+            <div className="user-name">{formData.name || 'Не указано'}</div>
+            <div className="role-badge">
+              {roleInfo.icon} {roleInfo.title}
             </div>
+            <div className="user-description">{roleInfo.description}</div>
           </div>
 
-          {/* Ролевая информация */}
-          <div className="role-stats">
-            {userData.role === 'teacher' && (
-              <>
-                <div className="role-stat">
-                  <FaUsers />
-                  <span>Классы: {userData.classes || 3}</span>
+          {/* Статистика */}
+          {roleStats.length > 0 && (
+            <div className="role-stats">
+              {roleStats.map((stat, index) => (
+                <div key={index} className="role-stat">
+                  {stat.icon} {stat.label}: {stat.value}
                 </div>
-                <div className="role-stat">
-                  <FaSchool />
-                  <span>Предметы: {userData.subjects || 'Математика, Физика'}</span>
-                </div>
-              </>
-            )}
-            {userData.role === 'admin' && (
-              <div className="role-stat">
-                <FaCalendarAlt />
-                <span>Управление расписанием</span>
-              </div>
-            )}
-            {userData.role === 'superadmin' && (
-              <div className="role-stat">
-                <FaUsers />
-                <span>Управление пользователями</span>
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
 
-          {/* Форма редактирования */}
+          {/* Уведомление об успехе */}
+          {saveSuccess && (
+            <div className="success-toast">
+              <FaCheckCircle /> Данные успешно сохранены
+            </div>
+          )}
+
+          {/* Форма */}
           <form onSubmit={handleSubmit} className="cabinet-form">
             <div className="form-section">
               <h3 className="section-title">Основная информация</h3>
@@ -205,7 +337,9 @@ const PersonalCabinet = ({ userData, onClose, onSave }) => {
                   onChange={handleChange}
                   disabled={!isEditing}
                   className="form-input"
+                  placeholder="Введите ваше полное имя"
                 />
+                {errors.name && <span className="error-message">{errors.name}</span>}
               </div>
 
               <div className="form-group">
@@ -219,7 +353,9 @@ const PersonalCabinet = ({ userData, onClose, onSave }) => {
                   onChange={handleChange}
                   disabled={!isEditing}
                   className="form-input"
+                  placeholder="example@mail.com"
                 />
+                {errors.email && <span className="error-message">{errors.email}</span>}
               </div>
 
               <div className="form-group">
@@ -239,66 +375,88 @@ const PersonalCabinet = ({ userData, onClose, onSave }) => {
               </div>
             </div>
 
-            {isEditing && (
+            {/* Смена пароля */}
+            {(isEditing || isChangingPassword) && (
               <div className="form-section">
-                <h3 className="section-title">Смена пароля</h3>
+                <h3 className="section-title">
+                  {isChangingPassword ? 'Смена пароля' : 'Изменить пароль'}
+                </h3>
                 
-                <div className="form-group">
-                  <label className="form-label">
-                    <FaKey /> Текущий пароль
-                  </label>
-                  <input
-                    type="password"
-                    name="currentPassword"
-                    value={formData.currentPassword}
-                    onChange={handleChange}
-                    className="form-input"
-                  />
-                </div>
+                {!isChangingPassword && isEditing && (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setIsChangingPassword(true)}
+                    style={{ marginBottom: '12px', width: 'auto' }}
+                  >
+                    <FaLock /> Сменить пароль
+                  </button>
+                )}
+                
+                {isChangingPassword && (
+                  <>
+                    <div className="form-group">
+                      <label className="form-label">
+                        <FaKey /> Текущий пароль
+                      </label>
+                      <input
+                        type="password"
+                        name="currentPassword"
+                        value={passwords.currentPassword}
+                        onChange={handlePasswordChange}
+                        className="form-input"
+                        placeholder="Введите текущий пароль"
+                      />
+                      {errors.currentPassword && <span className="error-message">{errors.currentPassword}</span>}
+                    </div>
 
-                <div className="form-group">
-                  <label className="form-label">
-                    <FaKey /> Новый пароль
-                  </label>
-                  <input
-                    type="password"
-                    name="newPassword"
-                    value={formData.newPassword}
-                    onChange={handleChange}
-                    className="form-input"
-                  />
-                  {errors.newPassword && <span className="error-message">{errors.newPassword}</span>}
-                </div>
+                    <div className="form-group">
+                      <label className="form-label">
+                        <FaKey /> Новый пароль
+                      </label>
+                      <input
+                        type="password"
+                        name="newPassword"
+                        value={passwords.newPassword}
+                        onChange={handlePasswordChange}
+                        className="form-input"
+                        placeholder="Введите новый пароль"
+                      />
+                      {errors.newPassword && <span className="error-message">{errors.newPassword}</span>}
+                    </div>
 
-                <div className="form-group">
-                  <label className="form-label">
-                    <FaKey /> Подтвердите пароль
-                  </label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="form-input"
-                  />
-                  {errors.confirmPassword && (
-                    <span className="error-message">{errors.confirmPassword}</span>
-                  )}
-                </div>
+                    <div className="form-group">
+                      <label className="form-label">
+                        <FaKey /> Подтвердите пароль
+                      </label>
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        value={passwords.confirmPassword}
+                        onChange={handlePasswordChange}
+                        className="form-input"
+                        placeholder="Повторите новый пароль"
+                      />
+                      {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {errors.submit && (
+              <div className="error-message" style={{ marginTop: '12px' }}>
+                {errors.submit}
               </div>
             )}
           </form>
         </div>
 
-        {/* Футер с кнопками */}
         <div className="cabinet-footer">
           {!isEditing ? (
             <>
-              <button 
-                className="btn-secondary" 
-                onClick={() => setIsEditing(true)}
-              >
-                Редактировать
+              <button className="btn-primary" onClick={() => setIsEditing(true)}>
+                <FaEdit /> Редактировать
               </button>
               <button className="btn-secondary" onClick={onClose}>
                 Закрыть
@@ -308,27 +466,13 @@ const PersonalCabinet = ({ userData, onClose, onSave }) => {
             <>
               <button 
                 type="submit" 
-                className="btn-primary"
+                className="btn-primary" 
                 onClick={handleSubmit}
+                disabled={isLoading}
               >
-                <FaSave /> Сохранить
+                <FaSave /> {isLoading ? 'Сохранение...' : 'Сохранить'}
               </button>
-              <button 
-                className="btn-secondary" 
-                onClick={() => {
-                  setIsEditing(false);
-                  setErrors({});
-                  // Восстанавливаем исходные данные
-                  setFormData({
-                    name: userData.name || '',
-                    email: userData.email || '',
-                    phone: userData.phone || '',
-                    currentPassword: '',
-                    newPassword: '',
-                    confirmPassword: ''
-                  });
-                }}
-              >
+              <button className="btn-secondary" onClick={handleCancel}>
                 Отмена
               </button>
             </>
