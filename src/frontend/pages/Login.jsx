@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import '../styles/MainContent.css';
 import '../styles/Login.css';
 
 // Импорт конфигураций
-import { findUserByCredentials, getRouteByRole } from '../config/usersConfig';
+import { getRouteByRole, authenticateUser } from '../config/usersConfig';
 import { loginConfig, getPasswordFieldType, getPasswordToggleConfig } from '../config/loginConfig';
 import { appConfig, getCopyrightInfo } from '../config/appConfig';
+
+const API_URL = 'http://localhost:5000/api';
 
 const Login = () => {
     const [formState, setFormState] = useState({
@@ -19,59 +22,68 @@ const Login = () => {
 
     const navigate = useNavigate();
 
-    // Функция для обновления состояния формы
     const updateFormState = (updates) => {
-        setFormState(prev => ({
-            ...prev,
-            ...updates
-        }));
+        setFormState(prev => ({ ...prev, ...updates }));
     };
 
-    // Функция обработки входа
     const handleLogin = async (e) => {
         e.preventDefault();
         updateFormState({ error: '' });
         
-        // Проверка заполненности полей
         if (!formState.username.trim() || !formState.password.trim()) {
-            updateFormState({ error: loginConfig.errorMessages.emptyFields });
+            updateFormState({ error: 'Введите логин и пароль' });
             return;
         }
 
         updateFormState({ isLoading: true });
 
-        // Имитация задержки сети
-        await new Promise(resolve => 
-            setTimeout(resolve, loginConfig.network.simulateDelay)
-        );
+        try {
+            const response = await axios.post(`${API_URL}/auth/login`, {
+                login: formState.username,
+                password: formState.password
+            });
 
-        // Поиск пользователя
-        const user = findUserByCredentials(formState.username, formState.password);
+            const { token, user } = response.data;
 
-        if (user) {
+            // Сохраняем токен
+            localStorage.setItem('token', token);
+            
             // Сохраняем данные пользователя
-            const userData = {
+            localStorage.setItem('user', JSON.stringify({
                 id: user.id,
-                username: user.username,
+                username: user.login,
                 role: user.role,
-                name: user.name,
-                email: user.email,
-                avatarColor: user.avatarColor,
                 loginTime: new Date().toISOString()
-            };
-            localStorage.setItem('user', JSON.stringify(userData));
+            }));
+
+            // Устанавливаем токен для axios
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
             // Перенаправляем по роли
             const route = getRouteByRole(user.role);
             navigate(route);
-        } else {
-            updateFormState({ error: loginConfig.errorMessages.invalidCredentials });
+            
+        } catch (err) {
+            console.error('Login error:', err);
+            
+            if (err.response) {
+                if (err.response.status === 401) {
+                    updateFormState({ error: 'Неверный логин или пароль' });
+                } else if (err.response.status === 500) {
+                    updateFormState({ error: 'Ошибка сервера. Попробуйте позже.' });
+                } else {
+                    updateFormState({ error: err.response.data?.message || 'Ошибка входа' });
+                }
+            } else if (err.request) {
+                updateFormState({ error: 'Не удается подключиться к серверу. Убедитесь, что бэкенд запущен.' });
+            } else {
+                updateFormState({ error: 'Произошла ошибка. Попробуйте снова.' });
+            }
+        } finally {
+            updateFormState({ isLoading: false });
         }
-        
-        updateFormState({ isLoading: false });
     };
 
-    // Функция для обработки изменения полей ввода
     const handleInputChange = (field, value) => {
         updateFormState({ 
             [field]: value,
@@ -79,34 +91,28 @@ const Login = () => {
         });
     };
 
-    // Получаем текущую конфигурацию переключателя пароля
     const passwordToggleConfig = getPasswordToggleConfig(formState.showPassword);
 
     return (
         <div className="login-page">
-            {/* Анимированный фон */}
             <div className="animated-bg login-background">
-                {[...Array(appConfig.decorations.backgroundCircles)].map((_, i) => (
+                {[...Array(appConfig.decorations?.backgroundCircles || 10)].map((_, i) => (
                     <div key={i} className="glass-circle"></div>
                 ))}
             </div>
             
-            {/* Декоративные элементы */}
             <div className="login-decoration decoration-1"></div>
             <div className="login-decoration decoration-2"></div>
 
             <div className="login-container">
-                {/* Шапка с логотипом */}
                 <div className="login-header">
-                    <p className="login-subtitle">{appConfig.system.name}</p>
+                    <p className="login-subtitle">{appConfig.system?.name || 'Школьная система'}</p>
                 </div>
 
-                {/* Карточка с формой входа */}
                 <div className="login-card">
                     <h2 className="login-card-title">Вход в систему</h2>
 
                     <form className="login-form" onSubmit={handleLogin}>
-                        {/* Поле имени пользователя */}
                         <div className="form-group">
                             <label className="form-label">
                                 {loginConfig.formFields.username.label}
@@ -126,7 +132,6 @@ const Login = () => {
                             </div>
                         </div>
 
-                        {/* Поле пароля */}
                         <div className="form-group password-group">
                             <div className="password-header">
                                 <label className="form-label">
@@ -159,7 +164,6 @@ const Login = () => {
                             </div>
                         </div>
 
-                        {/* Сообщение об ошибке */}
                         {formState.error && (
                             <div className="error-message">
                                 <div className="error-marker"></div>
@@ -167,7 +171,6 @@ const Login = () => {
                             </div>
                         )}
 
-                        {/* Кнопка входа */}
                         <button
                             type="submit"
                             className={formState.isLoading ? 
@@ -191,7 +194,6 @@ const Login = () => {
                     </form>
                 </div>
 
-                {/* Информация о системе */}
                 <div className="system-info">
                     <p>{getCopyrightInfo()}</p>
                 </div>

@@ -4,14 +4,14 @@
 :root {
     --primary: #21435A;
     --dark: #1a2b3c;
-    --gray: #878282;
+    --gray: #21435A;
 }
 
 footer {
     padding: 2rem 1.5rem;
     margin-top: 3rem;
-    color: #21435A;
-    border-top: 1px solid var(--gray);
+    color: #21435ab2;
+    border-top: 1px solid  #21435aa9;
     width: 100%;
     max-width: 1400px;
     margin-left: auto;

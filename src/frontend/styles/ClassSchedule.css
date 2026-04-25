@@ -1,0 +1,244 @@
+/* src/frontend/styles/ClassSchedule.css */
+
+/* Загрузка */
+.loading-container {
+    min-height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(33, 67, 90, 0.1);
+    border-top: 3px solid #21435A;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.loading-container span {
+    color: #21435A;
+}
+
+/* Информация о классе */
+.class-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.info-item {
+    background: rgba(33, 67, 90, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: #21435A;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-item svg {
+    font-size: 0.8rem;
+}
+
+/* Контейнер для карточек - центрирование */
+.action-cards {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin: 2rem auto;
+    max-width: 1000px;
+    width: 100%;
+}
+
+/* Карточки */
+.card {
+    flex: 0 1 auto;
+    width: 100%;
+    max-width: 380px;
+    min-width: 280px;
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+}
+
+.card-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: rgba(33, 67, 90, 0.1);
+    color: #21435A;
+}
+
+.card-icon svg {
+    font-size: 1.4rem;
+}
+
+.card-badge {
+    background: #21435A;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    min-width: 24px;
+    text-align: center;
+}
+
+.card h2 {
+    margin-bottom: 0.8rem;
+    font-size: 1.2rem;
+    color: #21435A;
+    font-weight: 600;
+}
+
+.card p {
+    margin-bottom: 1.5rem;
+    color: #21435A;
+    flex-grow: 1;
+    line-height: 1.5;
+    font-size: 0.85rem;
+}
+
+.card-button-wrapper {
+    width: 100%;
+    margin-top: auto;
+}
+
+.btn {
+    padding: 0.7rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.btn-primary {
+    width: 100%;
+    background: #21435A;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #163445;
+    transform: translateY(-2px);
+}
+
+/* Заголовок */
+.title-section h1 {
+    color: #21435A;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    font-size: 1.8rem;
+}
+
+.title-section h1 svg {
+    color: #21435A;
+}
+
+.current-date-display {
+    color: #21435A;
+    font-size: 1rem;
+    margin-top: 1rem;
+    text-align: center;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .class-info {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .info-item {
+        justify-content: center;
+    }
+    
+    .title-section h1 {
+        font-size: 1.5rem;
+    }
+    
+    .action-cards {
+        gap: 1.5rem;
+    }
+    
+    .card {
+        max-width: 320px;
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .title-section h1 {
+        font-size: 1.3rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .action-cards {
+        gap: 1rem;
+    }
+    
+    .card {
+        max-width: 100%;
+        min-width: auto;
+        padding: 1.2rem;
+    }
+    
+    .card h2 {
+        font-size: 1rem;
+    }
+    
+    .card p {
+        font-size: 0.8rem;
+    }
+    
+    .card-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .card-icon svg {
+        font-size: 1.2rem;
+    }
+}

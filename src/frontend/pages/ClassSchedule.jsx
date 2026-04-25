@@ -1,13 +1,152 @@
 // src/frontend/pages/ClassSchedule.jsx
-import React from 'react';
-import { FaCalendarAlt, FaUsers, FaBell, FaBook } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { 
+    FaCalendarAlt,
+    FaSun, 
+    FaMoon,
+    FaClock,
+    FaBook,
+    FaChalkboardTeacher,
+    FaMapMarkerAlt,
+    FaUserGraduate,
+    FaArrowRight
+} from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { getScheduleByClassName, getSubjectColor, weekDays, timeSlots } from '../data/classScheduleData';
 import '../styles/MainContent.css';
+import styles from '../styles/ClassSchedule.module.css';
 
 const ClassSchedule = () => {
-    const user = JSON.parse(localStorage.getItem('user')) || { name: '5 "А" Класс' };
+    const navigate = useNavigate();
+    const [currentDate, setCurrentDate] = useState('');
+    const [isDarkTheme, setIsDarkTheme] = useState(() => {
+        const saved = localStorage.getItem('theme');
+        return saved === 'dark';
+    });
     
+    const user = JSON.parse(localStorage.getItem('user')) || { name: '5А класс', role: 'class' };
+    const className = user.name || '5А класс';
+    const userRole = user.role || 'class';
+    
+    // Получаем расписание для класса
+    const scheduleData = getScheduleByClassName(className);
+
+    useEffect(() => {
+        updateCurrentDate();
+    }, []);
+
+    useEffect(() => {
+        if (isDarkTheme) {
+            document.body.classList.add('dark-theme');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.body.classList.remove('dark-theme');
+            localStorage.setItem('theme', 'light');
+        }
+    }, [isDarkTheme]);
+
+    const updateCurrentDate = () => {
+        const now = new Date();
+        const options = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        };
+        const dateString = now.toLocaleDateString('ru-RU', options);
+        setCurrentDate(dateString);
+    };
+
+    const toggleTheme = () => {
+        setIsDarkTheme(!isDarkTheme);
+    };
+
+    const handleExtracurricularClick = () => {
+        navigate('/class/extracurricular');
+    };
+
+    const topRowDays = weekDays.slice(0, 3);
+    const bottomRowDays = weekDays.slice(3, 6);
+
+    const DayScheduleTable = ({ dayName }) => {
+        const lessons = scheduleData[dayName] || [];
+
+        return (
+            <div className={styles.dayTableWrapper}>
+                <div className={styles.dayTableHeader}>
+                    <span className={styles.dayShort}>
+                        {dayName === 'Понедельник' ? 'ПН' : 
+                         dayName === 'Вторник' ? 'ВТ' : 
+                         dayName === 'Среда' ? 'СР' : 
+                         dayName === 'Четверг' ? 'ЧТ' : 
+                         dayName === 'Пятница' ? 'ПТ' : 'СБ'}
+                    </span>
+                    <span className={styles.dayFull}>{dayName}</span>
+                </div>
+                <div className={styles.dayTableContainer}>
+                    <table className={styles.scheduleTable}>
+                        <thead>
+                            <tr>
+                                <th className={styles.timeCol}>Урок</th>
+                                <th className={styles.timeColFull}>Время</th>
+                                <th className={styles.contentCol}>Занятие</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {timeSlots.map((slot) => {
+                                const lesson = lessons.find(l => l.number === slot.number);
+                                
+                                return (
+                                    <tr key={slot.number} className={styles.scheduleRow}>
+                                        <td className={styles.lessonNumCell}>
+                                            <div className={styles.lessonNumber}>{slot.number}</div>
+                                        </td>
+                                        <td className={styles.lessonTimeCell}>
+                                            <div className={styles.lessonTime}>
+                                                <FaClock />
+                                                <span>{slot.time}</span>
+                                            </div>
+                                        </td>
+                                        <td className={styles.lessonContentCell}>
+                                            {lesson && lesson.subject ? (
+                                                <div 
+                                                    className={styles.lessonItem}
+                                                    style={{ 
+                                                        borderLeftColor: getSubjectColor(lesson.subject),
+                                                        backgroundColor: `${getSubjectColor(lesson.subject)}10`
+                                                    }}
+                                                >
+                                                    <div className={styles.lessonInfo}>
+                                                        <div className={styles.lessonSubject}>
+                                                            <FaBook />
+                                                            <span>{lesson.subject}</span>
+                                                        </div>
+                                                        <div className={styles.lessonTeacher}>
+                                                            <FaChalkboardTeacher />
+                                                            <span>{lesson.teacher}</span>
+                                                        </div>
+                                                        <div className={styles.lessonRoom}>
+                                                            <FaMapMarkerAlt />
+                                                            <span>Каб. {lesson.room}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className={styles.emptySlot}>—</div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="main-content-page">
             <div className="animated-bg">
@@ -18,75 +157,47 @@ const ClassSchedule = () => {
             
             <Header />
             
-            <main className="main-content-container">
-                <div className="page-header">
-                    <h1 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>
-                        <FaUsers style={{ marginRight: '0.5rem' }} />
-                        Расписание класса
-                    </h1>
-                    <p style={{ color: 'var(--gray-dark)', marginBottom: '2rem' }}>
-                        Добро пожаловать, {user.name}!
-                    </p>
+            <div className={styles.themeToggle}>
+                <button className={styles.themeBtn} onClick={toggleTheme}>
+                    {isDarkTheme ? <FaSun /> : <FaMoon />}
+                    <span>{isDarkTheme ? 'Светлая тема' : 'Темная тема'}</span>
+                </button>
+            </div>
+            
+            <main className={styles.container}>
+                <div className={styles.scheduleHeader}>
+                    <div className={styles.classInfo}>
+                        <div className={styles.classIcon}>
+                            <FaUserGraduate />
+                        </div>
+                        <div>
+                            <h1>{className} класс</h1>
+                            <p className={styles.currentDate}>
+                                <FaCalendarAlt />
+                                <span>{currentDate}</span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <button 
+                        className={styles.extracurricularBtn}
+                        onClick={handleExtracurricularClick}
+                    >
+                        <FaArrowRight />
+                        <span>Дополнительные занятия</span>
+                    </button>
                 </div>
 
-                <div className="action-cards">
-                    <div className="card">
-                        <h2><FaCalendarAlt /> Текущее расписание</h2>
-                        <p>Расписание уроков на текущую неделю. Показывает предметы, учителей и кабинеты.</p>
-                        <div className="card-button-wrapper">
-                            <button className="btn btn-primary">
-                                <FaCalendarAlt /> Посмотреть расписание
-                            </button>
-                        </div>
+                <div className={styles.scheduleGrid}>
+                    <div className={styles.topRow}>
+                        {topRowDays.map(day => (
+                            <DayScheduleTable key={day} dayName={day} />
+                        ))}
                     </div>
-
-                    <div className="card">
-                        <h2><FaBell /> Объявления</h2>
-                        <p>Важные объявления и новости для класса. Родительские собрания и мероприятия.</p>
-                        <div className="card-button-wrapper">
-                            <button className="btn btn-secondary">
-                                <FaBell /> Читать объявления
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="card">
-                        <h2><FaBook /> Домашние задания</h2>
-                        <p>Список домашних заданий и сроки сдачи. Материалы для самостоятельной работы.</p>
-                        <div className="card-button-wrapper">
-                            <button className="btn btn-accent">
-                                <FaBook /> Открыть задания
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="dashboard-info" style={{ marginTop: '2rem' }}>
-                    <div className="status-column">
-                        <h2 className="column-title">
-                            <FaBell className="column-icon" />
-                            Последние объявления
-                        </h2>
-                        <div className="announcements">
-                            <div style={{ padding: '1rem 0', borderBottom: '1px solid var(--gray)' }}>
-                                <h3 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>
-                                    Родительское собрание
-                                </h3>
-                                <p>28 октября в 18:00 в кабинете 205</p>
-                            </div>
-                            <div style={{ padding: '1rem 0', borderBottom: '1px solid var(--gray)' }}>
-                                <h3 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>
-                                    Спортивное мероприятие
-                                </h3>
-                                <p>30 октября "Весёлые старты" на стадионе</p>
-                            </div>
-                            <div style={{ padding: '1rem 0' }}>
-                                <h3 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>
-                                    Каникулы
-                                </h3>
-                                <p>С 1 по 7 ноября - осенние каникулы</p>
-                            </div>
-                        </div>
+                    <div className={styles.bottomRow}>
+                        {bottomRowDays.map(day => (
+                            <DayScheduleTable key={day} dayName={day} />
+                        ))}
                     </div>
                 </div>
             </main>

@@ -1,6 +1,11 @@
+// MainContent.jsx - с переключателем светлой/темной темы
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaPlay, FaEdit, FaEye, FaInfoCircle, FaHistory, FaSearch, FaFilter } from 'react-icons/fa';
+import { 
+    FaPlay, FaEdit, FaEye, FaInfoCircle, FaHistory, 
+    FaSearch, FaFilter, FaCalendarAlt, FaChalkboardTeacher,
+    FaUsers, FaBookOpen, FaSun, FaMoon
+} from 'react-icons/fa';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import '../styles/MainContent.css';
@@ -36,7 +41,7 @@ const actionCardsConfig = {
         buttonText: 'Открыть список',
         icon: FaEye,
         buttonClass: 'btn-accent',
-        route: '/schedule'
+        route: '/admin/schedule'
     }
 };
 
@@ -75,7 +80,6 @@ const StatusColumn = () => {
                             <span 
                                 className={`status-indicator ${statusInfo.indicatorClass}`}
                                 title={statusInfo.name}
-                                style={{ backgroundColor: statusInfo.color }}
                             ></span>
                             <div className="status-content">
                                 <span className="status-label">{item.label}:</span>
@@ -94,22 +98,24 @@ const StatusColumn = () => {
                 })}
             </ul>
             
-            {/* Статистика */}
             <div className="status-stats">
                 <div className="stat-item">
-                    <span className="stat-label">Классы:</span>
+                    <FaChalkboardTeacher className="stat-icon" />
+                    <span className="stat-label">Классы</span>
                     <span className="stat-value">
                         {statusConfig.statistics.totalClasses}
                     </span>
                 </div>
                 <div className="stat-item">
-                    <span className="stat-label">Учителя:</span>
+                    <FaUsers className="stat-icon" />
+                    <span className="stat-label">Учителя</span>
                     <span className="stat-value">
                         {statusConfig.statistics.teachersCount}
                     </span>
                 </div>
                 <div className="stat-item">
-                    <span className="stat-label">Занятия:</span>
+                    <FaBookOpen className="stat-icon" />
+                    <span className="stat-label">Занятия</span>
                     <span className="stat-value">
                         {statusConfig.statistics.scheduledLessons}
                     </span>
@@ -124,16 +130,13 @@ const ActivityColumn = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterType, setFilterType] = useState('all');
     
-    // Получаем отфильтрованные активности
     const getFilteredActivities = () => {
         let activities = activityConfig.activityLog;
         
-        // Фильтруем по типу
         if (filterType !== 'all') {
             activities = activities.filter(item => item.type === filterType);
         }
         
-        // Фильтруем по поиску
         if (searchQuery) {
             activities = activities.filter(item => 
                 item.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -141,7 +144,7 @@ const ActivityColumn = () => {
             );
         }
         
-        return activities.slice(0, 5); // Ограничиваем 5 элементами
+        return activities.slice(0, 5);
     };
     
     const filteredActivities = getFilteredActivities();
@@ -225,10 +228,21 @@ const ActivityColumn = () => {
 // Основной компонент MainContent
 const MainContent = () => {
     const [currentDate, setCurrentDate] = useState('');
+    const [isDarkTheme, setIsDarkTheme] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
         updateCurrentDate();
+        
+        // Загружаем сохраненную тему из localStorage
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            setIsDarkTheme(true);
+            document.body.classList.add('dark-theme');
+        } else {
+            setIsDarkTheme(false);
+            document.body.classList.remove('dark-theme');
+        }
     }, []);
 
     const updateCurrentDate = () => {
@@ -243,13 +257,26 @@ const MainContent = () => {
         setCurrentDate(dateString);
     };
 
+    const toggleTheme = () => {
+        const newTheme = !isDarkTheme;
+        setIsDarkTheme(newTheme);
+        
+        if (newTheme) {
+            document.body.classList.add('dark-theme');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.body.classList.remove('dark-theme');
+            localStorage.setItem('theme', 'light');
+        }
+    };
+
     const handleCardClick = (cardType) => {
         const route = actionCardsConfig[cardType]?.route || '/';
         navigate(route);
     };
 
     return (
-        <div className="main-content-page">
+        <div className={`main-content-page ${isDarkTheme ? 'dark-theme' : 'light-theme'}`}>
             <div className="animated-bg">
                 {[...Array(10)].map((_, i) => (
                     <div key={i} className="glass-circle"></div>
@@ -259,10 +286,18 @@ const MainContent = () => {
             <Header />
             
             <main className="main-content-container">
+                <div className="theme-toggle">
+                    <button className="theme-btn" onClick={toggleTheme}>
+                        {isDarkTheme ? <FaSun /> : <FaMoon />}
+                        <span>{isDarkTheme ? 'Светлая тема' : 'Темная тема'}</span>
+                    </button>
+                </div>
+                
                 <section className="quick-actions">
                     <div className="page-header">
                         <div className="title-section">
                             <div className="current-date-display">
+                                <FaCalendarAlt />
                                 <span>{currentDate}</span>
                             </div>
                         </div>

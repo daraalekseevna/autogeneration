@@ -23,13 +23,44 @@ import {
     FaCheck,
     FaPrint,
     FaBell,
-    FaShieldAlt
+    FaSun,
+    FaMoon
 } from 'react-icons/fa';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import activityStorage from '../services/activityStorage';
 import { COLORS, WEEK_DAYS, TIME_SLOTS, TEACHERS } from '../config/extracurricularData';
 import styles from '../styles/ExtracurricularActivities.module.css';
+
+// ========== КОМПОНЕНТ КНОПКИ ПЕРЕКЛЮЧЕНИЯ ТЕМЫ ==========
+const ThemeToggle = () => {
+    const [isDark, setIsDark] = useState(() => {
+        const saved = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        return saved === 'dark' || (saved === null && prefersDark);
+    });
+
+    useEffect(() => {
+        if (isDark) {
+            document.body.classList.add('dark-theme');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.body.classList.remove('dark-theme');
+            localStorage.setItem('theme', 'light');
+        }
+    }, [isDark]);
+
+    const toggleTheme = () => {
+        setIsDark(prev => !prev);
+    };
+
+    return (
+        <button className={styles.themeBtn} onClick={toggleTheme}>
+            {isDark ? <FaSun /> : <FaMoon />}
+            {isDark ? 'Светлая тема' : 'Темная тема'}
+        </button>
+    );
+};
 
 // ========== КОМПОНЕНТ УВЕДОМЛЕНИЯ ==========
 const Notification = ({ message, type, onClose }) => {
@@ -57,7 +88,7 @@ const Notification = ({ message, type, onClose }) => {
     );
 };
 
-// ========== КОМПОНЕНТ ФОРМЫ (УБРАНЫ УРОВЕНЬ И МАКСИМУМ УЧЕНИКОВ) ==========
+// ========== КОМПОНЕНТ ФОРМЫ ==========
 const ActivityForm = ({ isOpen, onClose, onSubmit, initialData }) => {
     const [form, setForm] = useState({
         title: '',
@@ -361,8 +392,8 @@ const DeleteConfirmation = ({ onConfirm, onCancel, activityTitle }) => {
     );
 };
 
-// ========== КОМПОНЕНТ КАРТОЧКИ (КОМПАКТНАЯ) ==========
-const ActivityCard = React.memo(({ activity, onEdit, onDelete }) => {
+// ========== КОМПОНЕНТ КАРТОЧКИ ==========
+const ActivityCard = React.memo(({ activity, onEdit, onDelete, canEdit }) => {
     const [showConfirm, setShowConfirm] = useState(false);
 
     const handleDeleteClick = (e) => {
@@ -388,7 +419,7 @@ const ActivityCard = React.memo(({ activity, onEdit, onDelete }) => {
 
     const cardStyle = {
         borderLeftColor: activity.color || '#21435A',
-        backgroundColor: `${activity.color}08` || '#f8f9fa'
+        backgroundColor: `${activity.color}08`
     };
 
     if (showConfirm) {
@@ -405,14 +436,16 @@ const ActivityCard = React.memo(({ activity, onEdit, onDelete }) => {
 
     return (
         <div className={styles.activityCard} style={cardStyle}>
-            <div className={styles.cardActions}>
-                <button className={styles.editBtn} onClick={handleEditClick} title="Редактировать">
-                    <FaEdit />
-                </button>
-                <button className={styles.deleteBtn} onClick={handleDeleteClick} title="Удалить">
-                    <FaTrash />
-                </button>
-            </div>
+            {canEdit && (
+                <div className={styles.cardActions}>
+                    <button className={styles.editBtn} onClick={handleEditClick} title="Редактировать">
+                        <FaEdit />
+                    </button>
+                    <button className={styles.deleteBtn} onClick={handleDeleteClick} title="Удалить">
+                        <FaTrash />
+                    </button>
+                </div>
+            )}
             <h4 className={styles.activityTitle}>{activity.title}</h4>
             <div className={styles.activityInfo}>
                 <div><FaRegUser /> {activity.teacher}</div>
@@ -424,10 +457,10 @@ const ActivityCard = React.memo(({ activity, onEdit, onDelete }) => {
 });
 
 // ========== КОМПОНЕНТ ДНЯ ==========
-const DayColumn = React.memo(({ day, activities, onEdit, onDelete }) => {
+const DayColumn = React.memo(({ day, activities, onEdit, onDelete, canEdit }) => {
     const dayActivities = useMemo(() => 
         activities
-            .filter(a => a.days.includes(day.name))
+            .filter(a => a.days && a.days.includes(day.name))
             .sort((a, b) => a.startTime.localeCompare(b.startTime)),
         [activities, day.name]
     );
@@ -455,6 +488,7 @@ const DayColumn = React.memo(({ day, activities, onEdit, onDelete }) => {
                             activity={activity}
                             onEdit={onEdit}
                             onDelete={onDelete}
+                            canEdit={canEdit}
                         />
                     ))
                 )}
@@ -466,6 +500,12 @@ const DayColumn = React.memo(({ day, activities, onEdit, onDelete }) => {
 // ========== ОСНОВНОЙ КОМПОНЕНТ ==========
 const ExtracurricularActivities = () => {
     const navigate = useNavigate();
+    
+    // ПОЛУЧАЕМ РОЛЬ ПОЛЬЗОВАТЕЛЯ
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    const userRole = user?.role || 'guest';
+    const canEdit = userRole === 'admin' || userRole === 'superadmin';
     
     const [activities, setActivities] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -480,7 +520,6 @@ const ExtracurricularActivities = () => {
     
     const searchTimeoutRef = useRef(null);
 
-    // Подписка на изменения в хранилище
     useEffect(() => {
         loadData();
         
@@ -513,6 +552,7 @@ const ExtracurricularActivities = () => {
     };
 
     const handleCreate = useCallback((activityData) => {
+        if (!canEdit) return;
         try {
             const newActivity = activityStorage.create(activityData);
             showNotification(`Занятие "${newActivity.title}" создано`);
@@ -521,9 +561,10 @@ const ExtracurricularActivities = () => {
             console.error('Error creating activity:', error);
             showNotification('Ошибка при создании', 'error');
         }
-    }, []);
+    }, [canEdit]);
 
     const handleUpdate = useCallback((activityData) => {
+        if (!canEdit) return;
         try {
             const updatedActivity = activityStorage.update(activityData.id, activityData);
             showNotification(`Занятие "${updatedActivity.title}" обновлено`);
@@ -533,9 +574,10 @@ const ExtracurricularActivities = () => {
             console.error('Error updating activity:', error);
             showNotification('Ошибка при обновлении', 'error');
         }
-    }, []);
+    }, [canEdit]);
 
     const handleDelete = useCallback((id) => {
+        if (!canEdit) return;
         const activity = activityStorage.getById(id);
         if (!activity) return;
         
@@ -546,14 +588,14 @@ const ExtracurricularActivities = () => {
             console.error('Error deleting activity:', error);
             showNotification('Ошибка при удалении', 'error');
         }
-    }, []);
+    }, [canEdit]);
 
     const handleEdit = useCallback((activity) => {
+        if (!canEdit) return;
         setEditingActivity(activity);
         setShowForm(true);
-    }, []);
+    }, [canEdit]);
 
-    // Функция печати
     const handlePrint = () => {
         window.print();
     };
@@ -600,19 +642,31 @@ const ExtracurricularActivities = () => {
     };
 
     const activeFiltersCount = (search ? 1 : 0) + (filterTeacher ? 1 : 0) + (filterDay ? 1 : 0) + (filterLevel ? 1 : 0);
+    
+    // Кнопка назад - для учеников возвращаем на /class, для админов на /
+    const handleBack = () => {
+        if (userRole === 'class') {
+            navigate('/class');
+        } else {
+            navigate('/');
+        }
+    };
 
     if (loading) {
         return (
             <div className={styles.page}>
                 <div className={styles.animatedBg}>
-                    {[...Array(4)].map((_, i) => (
+                    {[...Array(10)].map((_, i) => (
                         <div key={i} className={styles.glassCircle}></div>
                     ))}
                 </div>
-                <button className={styles.backBtn} onClick={() => navigate('/')}>
-                    <FaArrowLeft />
-                    <span>Назад</span>
-                </button>
+                <div className={styles.topBar}>
+                    <button className={styles.backBtn} onClick={handleBack}>
+                        <FaArrowLeft />
+                        <span>Назад</span>
+                    </button>
+                    <ThemeToggle />
+                </div>
                 <Header />
                 <main className={styles.container}>
                     <div className={styles.loader}>
@@ -628,15 +682,18 @@ const ExtracurricularActivities = () => {
     return (
         <div className={styles.page}>
             <div className={styles.animatedBg}>
-                {[...Array(4)].map((_, i) => (
+                {[...Array(10)].map((_, i) => (
                     <div key={i} className={styles.glassCircle}></div>
                 ))}
             </div>
             
-            <button className={styles.backBtn} onClick={() => navigate('/')}>
-                <FaArrowLeft />
-                <span>Назад</span>
-            </button>
+            <div className={styles.topBar}>
+                <button className={styles.backBtn} onClick={handleBack}>
+                    <FaArrowLeft />
+                    <span>Назад</span>
+                </button>
+                <ThemeToggle />
+            </div>
 
             <Header />
 
@@ -650,14 +707,6 @@ const ExtracurricularActivities = () => {
                     />
                 ))}
 
-                <div className={styles.adminBanner}>
-                    <FaShieldAlt className={styles.adminBannerIcon} />
-                    <div className={styles.adminBannerContent}>
-                        <strong>Панель администратора</strong>
-                        <span>Полный доступ к расписанию</span>
-                    </div>
-                </div>
-
                 <div className={styles.headerCompact}>
                     <div className={styles.headerTitle}>
                         <h1>
@@ -667,7 +716,6 @@ const ExtracurricularActivities = () => {
                     </div>
                     
                     <div className={styles.headerActions}>
-                        {/* Кнопка печати */}
                         <button 
                             className={styles.iconBtn}
                             onClick={handlePrint}
@@ -676,23 +724,28 @@ const ExtracurricularActivities = () => {
                             <FaPrint />
                         </button>
 
-                        <button 
-                            className={`${styles.btnFilter} ${(showFilters || activeFiltersCount > 0) ? styles.active : ''}`}
-                            onClick={() => setShowFilters(!showFilters)}
-                        >
-                            <FaFilter />
-                            {activeFiltersCount > 0 && <span className={styles.filterBadge}>{activeFiltersCount}</span>}
-                        </button>
-                        
-                        <button 
-                            className={styles.btnPrimary}
-                            onClick={() => {
-                                setEditingActivity(null);
-                                setShowForm(true);
-                            }}
-                        >
-                            <FaPlus />
-                        </button>
+                        {/* Фильтры и кнопка добавления - только для админов */}
+                        {canEdit && (
+                            <>
+                                <button 
+                                    className={`${styles.btnFilter} ${(showFilters || activeFiltersCount > 0) ? styles.active : ''}`}
+                                    onClick={() => setShowFilters(!showFilters)}
+                                >
+                                    <FaFilter />
+                                    {activeFiltersCount > 0 && <span className={styles.filterBadge}>{activeFiltersCount}</span>}
+                                </button>
+                                
+                                <button 
+                                    className={styles.btnPrimary}
+                                    onClick={() => {
+                                        setEditingActivity(null);
+                                        setShowForm(true);
+                                    }}
+                                >
+                                    <FaPlus />
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -703,7 +756,8 @@ const ExtracurricularActivities = () => {
                     )}
                 </div>
 
-                {showFilters && (
+                {/* Фильтры - только для админов */}
+                {canEdit && showFilters && (
                     <div className={styles.filtersPanel}>
                         <div className={styles.filterGroup}>
                             <FaSearch className={styles.filterIcon} />
@@ -762,15 +816,18 @@ const ExtracurricularActivities = () => {
                     </div>
                 )}
 
-                <ActivityForm
-                    isOpen={showForm}
-                    onClose={() => {
-                        setShowForm(false);
-                        setEditingActivity(null);
-                    }}
-                    onSubmit={editingActivity ? handleUpdate : handleCreate}
-                    initialData={editingActivity}
-                />
+                {/* Форма - только для админов */}
+                {canEdit && (
+                    <ActivityForm
+                        isOpen={showForm}
+                        onClose={() => {
+                            setShowForm(false);
+                            setEditingActivity(null);
+                        }}
+                        onSubmit={editingActivity ? handleUpdate : handleCreate}
+                        initialData={editingActivity}
+                    />
+                )}
 
                 {filteredActivities.length === 0 ? (
                     <div className={styles.emptyState}>
@@ -779,14 +836,14 @@ const ExtracurricularActivities = () => {
                         <p>
                             {activeFiltersCount > 0
                                 ? 'Измените параметры поиска'
-                                : 'Создайте первое занятие'}
+                                : 'Нет доступных дополнительных занятий'}
                         </p>
-                        {activeFiltersCount > 0 && (
+                        {canEdit && activeFiltersCount > 0 && (
                             <button onClick={clearFilters} className={styles.btnSecondary}>
                                 Сбросить фильтры
                             </button>
                         )}
-                        {filteredActivities.length === 0 && activeFiltersCount === 0 && (
+                        {canEdit && filteredActivities.length === 0 && activeFiltersCount === 0 && (
                             <button onClick={() => setShowForm(true)} className={styles.btnPrimary}>
                                 <FaPlus /> Создать
                             </button>
@@ -801,6 +858,7 @@ const ExtracurricularActivities = () => {
                                 activities={filteredActivities}
                                 onEdit={handleEdit}
                                 onDelete={handleDelete}
+                                canEdit={canEdit}
                             />
                         ))}
                     </div>

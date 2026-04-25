@@ -1,0 +1,512 @@
+/* src/frontend/styles/ClassSchedule.module.css */
+
+/* Кнопка переключения темы */
+.themeToggle {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    z-index: 100;
+}
+
+.themeBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    font-weight: 500;
+}
+
+.themeBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+    background: var(--primary);
+    color: white;
+}
+
+/* Контейнер */
+.container {
+    flex: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 50px 24px 24px 24px;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Информация о классе */
+.scheduleHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.classInfo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: transparent;
+}
+
+.classIcon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+}
+
+.classInfo h1 {
+    font-size: 24px;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.currentDate {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* Кнопка дополнительных занятий */
+.extracurricularBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #21435A;
+    border: none;
+    border-radius: 30px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.extracurricularBtn:hover {
+    background: #2c5475;
+}
+
+.extracurricularBtn:active {
+    transform: scale(0.98);
+}
+
+.extracurricularBtn svg {
+    font-size: 14px;
+}
+
+.extracurricularBtn svg:last-child {
+    transition: transform 0.2s ease;
+}
+
+.extracurricularBtn:hover svg:last-child {
+    transform: translateX(3px);
+}
+
+/* Сетка дней */
+.scheduleGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.topRow, .bottomRow {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+/* Таблица дня */
+.dayTableWrapper {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all 0.3s;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.dayTableWrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.dayTableHeader {
+    background: linear-gradient(135deg, #21435A 0%, #2c5475 100%);
+    padding: 10px 14px;
+    text-align: center;
+}
+
+.dayShort {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    display: block;
+}
+
+.dayFull {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.8);
+    display: block;
+}
+
+.dayTableContainer {
+    overflow-x: auto;
+    overflow-y: auto;
+    flex: 1;
+    max-height: 460px;
+}
+
+.scheduleTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+}
+
+.scheduleTable th {
+    background: var(--bg-table-header);
+    padding: 8px 6px;
+    text-align: center;
+    border-bottom: 2px solid var(--border-color);
+    color: var(--text-primary);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    font-size: 0.7rem;
+}
+
+.timeCol {
+    width: 44px;
+    min-width: 44px;
+    text-align: center;
+}
+
+.timeColFull {
+    width: 72px;
+    min-width: 72px;
+    text-align: center;
+}
+
+.contentCol {
+    text-align: left;
+    width: auto;
+}
+
+.scheduleTable td {
+    border-bottom: 1px solid var(--border-color);
+    padding: 7px 6px;
+    vertical-align: top;
+}
+
+.lessonNumCell {
+    text-align: center;
+    vertical-align: middle;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+body.dark-theme .lessonNumCell,
+body.dark-theme .lessonTimeCell {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.lessonNumber {
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    display: inline-block;
+    background: rgba(33, 67, 90, 0.1);
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    border-radius: 50%;
+}
+
+.lessonTimeCell {
+    text-align: center;
+    vertical-align: middle;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.lessonTime {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    line-height: 1.2;
+}
+
+.lessonTime svg {
+    font-size: 0.55rem;
+    opacity: 0.6;
+}
+
+.lessonContentCell {
+    background: transparent;
+    padding: 5px 8px;
+}
+
+/* Карточка урока */
+.lessonItem {
+    background: var(--bg-card-solid);
+    border-radius: 7px;
+    padding: 7px 8px;
+    border-left: 3px solid;
+    transition: all 0.2s;
+}
+
+.lessonInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.lessonSubject {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 0.72rem;
+    color: var(--text-primary);
+}
+
+.lessonTeacher, .lessonRoom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.62rem;
+    color: var(--text-muted);
+}
+
+.lessonTeacher svg, .lessonRoom svg {
+    font-size: 0.58rem;
+    opacity: 0.7;
+}
+
+.emptySlot {
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    opacity: 0.5;
+}
+
+/* Адаптив */
+@media (max-width: 1024px) {
+    .topRow, .bottomRow {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 45px 16px 16px 16px;
+    }
+    
+    .scheduleHeader {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .classInfo {
+        flex-direction: column;
+        text-align: center;
+        width: 100%;
+    }
+    
+    .topRow, .bottomRow {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .timeCol {
+        width: 40px;
+    }
+    
+    .timeColFull {
+        width: 65px;
+    }
+    
+    .themeToggle {
+        top: 85px;
+        right: 10px;
+    }
+    
+    .themeBtn {
+        height: 38px;
+        padding: 0 14px;
+        font-size: 13px;
+    }
+    
+    .dayTableContainer {
+        max-height: 420px;
+    }
+    
+    .extracurricularBtn {
+        padding: 8px 16px;
+        font-size: 13px;
+        gap: 6px;
+        align-self: center;
+    }
+    
+    .extracurricularBtn svg {
+        font-size: 13px;
+    }
+    
+    body.dark-theme .glassCircle:nth-child(1),
+    body.dark-theme .glassCircle:nth-child(2),
+    body.dark-theme .glassCircle:nth-child(3),
+    body:not(.dark-theme) .glassCircle:nth-child(1),
+    body:not(.dark-theme) .glassCircle:nth-child(2),
+    body:not(.dark-theme) .glassCircle:nth-child(3) {
+        width: 280px;
+        height: 260px;
+        filter: blur(50px);
+    }
+    
+    body.dark-theme .glassCircle:nth-child(4),
+    body.dark-theme .glassCircle:nth-child(5),
+    body.dark-theme .glassCircle:nth-child(6),
+    body:not(.dark-theme) .glassCircle:nth-child(4),
+    body:not(.dark-theme) .glassCircle:nth-child(5),
+    body:not(.dark-theme) .glassCircle:nth-child(6) {
+        width: 200px;
+        height: 180px;
+        filter: blur(45px);
+    }
+    
+    body.dark-theme .glassCircle:nth-child(7),
+    body.dark-theme .glassCircle:nth-child(10),
+    body:not(.dark-theme) .glassCircle:nth-child(7),
+    body:not(.dark-theme) .glassCircle:nth-child(10) {
+        width: 150px;
+        height: 140px;
+        filter: blur(40px);
+    }
+    
+    body.dark-theme .glassCircle:nth-child(8),
+    body.dark-theme .glassCircle:nth-child(9),
+    body:not(.dark-theme) .glassCircle:nth-child(8),
+    body:not(.dark-theme) .glassCircle:nth-child(9) {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding: 40px 12px 12px 12px;
+    }
+    
+    .classInfo h1 {
+        font-size: 18px;
+    }
+    
+    .currentDate {
+        font-size: 12px;
+    }
+    
+    .classIcon {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+    }
+    
+    .timeCol {
+        width: 36px;
+    }
+    
+    .timeColFull {
+        width: 58px;
+    }
+    
+    .lessonTime {
+        font-size: 0.55rem;
+    }
+    
+    .themeToggle {
+        top: 80px;
+        right: 8px;
+    }
+    
+    .themeBtn {
+        padding: 5px 10px;
+        font-size: 0.7rem;
+    }
+    
+    .themeBtn span {
+        display: none;
+    }
+    
+    .themeBtn {
+        padding: 8px 10px;
+    }
+    
+    .lessonSubject {
+        font-size: 0.68rem;
+    }
+    
+    .lessonTeacher, .lessonRoom {
+        font-size: 0.58rem;
+    }
+    
+    .lessonNumber {
+        width: 22px;
+        height: 22px;
+        line-height: 22px;
+        font-size: 0.7rem;
+    }
+    
+    .dayTableContainer {
+        max-height: 380px;
+    }
+    
+    .extracurricularBtn {
+        padding: 8px 14px;
+        font-size: 12px;
+    }
+    
+    .extracurricularBtn span {
+        display: none;
+    }
+    
+    .extracurricularBtn {
+        padding: 8px 12px;
+    }
+    
+    .extracurricularBtn svg:first-child {
+        margin: 0;
+    }
+    
+    .extracurricularBtn svg:last-child {
+        display: none;
+    }
+}

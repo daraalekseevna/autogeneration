@@ -1,18 +1,21 @@
-/* Header.css */
+/* src/frontend/styles/header.css */
 @import url('https://fonts.cdnfonts.com/css/ms-reference-sans-serif');
 
 .admin-header {
-    padding: 1.5rem 2rem;
+    padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
-    border-bottom: 1px solid rgba(135, 130, 130, 1);
+    border-bottom: 1px solid #21435ace;
     font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: rgba(255, 255, 255, 0);
+    box-sizing: border-box;
 }
 
+/* ЛЕВАЯ ЧАСТЬ */
 .header-left {
     display: flex;
     align-items: center;
@@ -21,8 +24,8 @@
 }
 
 .logo-image {
-    width: 40px;
-    height: 40px;
+    width: 55px;
+    height: 55px;
     object-fit: contain;
     flex-shrink: 0;
 }
@@ -35,243 +38,369 @@
 
 .school-name {
     font-weight: 700;
-    font-size: 1.0rem;
+    font-size: 1rem;
     color: #21435A;
-    line-height: 1.2;
-    /*letter-spacing: 0.5px;*/
-    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.3;
 }
 
 .school-location {
-    font-weight: 600;
-    font-size: 1rem;
-    color: #21435A;
-    line-height: 1;
-    letter-spacing: 1px;
-    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.header-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 1;
-}
-
-.system-title {
-    font-weight: 800;
-    font-size: 1.5rem;
-    color: #21435A;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    text-align: center;
-    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.current-date {
-    color: #21435A;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    white-space: nowrap;
     font-weight: 500;
-    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.date-icon {
-    font-size: 1rem;
+    font-size: 0.8rem;
     color: #21435A;
 }
 
+/* ПРАВАЯ ЧАСТЬ */
 .header-right {
-    flex: 1;
     display: flex;
     justify-content: flex-end;
+    flex: 1;
 }
 
 .admin-section {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 1rem;
-    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    gap: 1rem;
+    cursor: pointer;
+    padding: 0.3rem 1rem;
+    border-radius: 50px;
+    background: #f8fafc00;
+    transition: background 0.2s;
 }
 
-.admin-text {
+.admin-section:hover {
+    background: #f1f5f92a;
+}
+
+.admin-avatar-icon {
+    font-size: 56px;
+    width: 40px;
+    height: 40px;
+    color: #21435A;
+    flex-shrink: 0;
+}
+
+.admin-info {
+    text-align: right;
+}
+
+.admin-name {
     font-weight: 600;
     font-size: 1rem;
     color: #21435A;
-    white-space: nowrap;
-    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.3;
 }
 
-.admin-avatar {
-    width: 35px;
-    height: 45px;
+.admin-role {
+    font-size: 0.8rem;
+    color: #7c9bb5;
 }
 
-@media (max-width: 1100px) {
+/* ===== АДАПТАЦИЯ ===== */
+
+/* Планшеты и маленькие ноутбуки */
+@media (max-width: 1024px) {
     .admin-header {
-        padding: 1rem 1.5rem;
+        padding: 0.8rem 1.5rem;
+    }
+    
+    .logo-image {
+        width: 40px;
+        height: 40px;
     }
     
     .school-name {
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
     
     .school-location {
+        font-size: 0.75rem;
+    }
+    
+    .admin-avatar-icon {
+        font-size: 50px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .admin-name {
         font-size: 0.9rem;
     }
     
-    .system-title {
-        font-size: 1.3rem;
+    .admin-role {
+        font-size: 0.75rem;
     }
     
-    .admin-text {
-        font-size: 0.9rem;
+    .admin-section {
+        gap: 0.9rem;
+        padding: 0.25rem 0.9rem;
     }
 }
 
-@media (max-width: 900px) {
-    .admin-header {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-        padding: 1rem;
+/* Средние планшеты */
+@media (max-width: 860px) {
+    .school-name {
+        font-size: 0.85rem;
     }
     
-    .header-left,
-    .header-center,
+    .school-location {
+        font-size: 0.7rem;
+    }
+    
+    .admin-name {
+        font-size: 0.85rem;
+    }
+    
+    .admin-avatar-icon {
+        font-size: 48px;
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* Вертикальная ориентация планшетов */
+@media (max-width: 768px) {
+    .admin-header {
+        flex-direction: column;
+        padding: 0.8rem;
+        gap: 0.8rem;
+    }
+    
+    .header-left {
+        width: 100%;
+        justify-content: center;
+        gap: 0.8rem;
+    }
+    
+    .school-info {
+        text-align: left;
+    }
+    
     .header-right {
         width: 100%;
         justify-content: center;
     }
     
-    .header-left {
-        flex-direction: column;
-        text-align: center;
-    }
-    
     .admin-section {
         justify-content: center;
     }
-}
-
-@media (max-width: 768px) {
-    .admin-header {
-        padding: 1rem;
+    
+    .admin-info {
+        text-align: left;
     }
     
     .logo-image {
-        width: 60px;
-        height: 60px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .school-name {
+        font-size: 0.9rem;
+        white-space: normal;
+    }
+    
+    .school-location {
+        font-size: 0.75rem;
+        white-space: normal;
+    }
+    
+    .admin-avatar-icon {
+        font-size: 52px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .admin-name {
+        font-size: 0.9rem;
+    }
+}
+
+/* Большие телефоны */
+@media (max-width: 580px) {
+    .admin-header {
+        padding: 0.7rem;
+    }
+    
+    .header-left {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .school-info {
+        text-align: center;
+    }
+    
+    .logo-image {
+        width: 40px;
+        height: 40px;
     }
     
     .school-name {
         font-size: 0.95rem;
+        white-space: normal;
+        text-align: center;
     }
     
     .school-location {
+        font-size: 0.75rem;
+        white-space: normal;
+        text-align: center;
+    }
+    
+    .admin-section {
+        padding: 0.3rem 1rem;
+        gap: 0.9rem;
+    }
+    
+    .admin-avatar-icon {
+        font-size: 50px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .admin-name {
         font-size: 0.85rem;
     }
     
-    .system-title {
-        font-size: 1.2rem;
+    .admin-role {
+        font-size: 0.7rem;
+    }
+}
+
+/* Средние телефоны */
+@media (max-width: 480px) {
+    .admin-header {
+        padding: 0.6rem;
     }
     
-    .admin-text {
+    .logo-image {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .school-name {
         font-size: 0.9rem;
     }
     
-    .admin-avatar {
+    .school-location {
+        font-size: 0.7rem;
+    }
+    
+    .admin-avatar-icon {
+        font-size: 46px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .admin-name {
+        font-size: 0.8rem;
+    }
+    
+    .admin-role {
+        font-size: 0.65rem;
+    }
+    
+    .admin-section {
+        padding: 0.25rem 0.8rem;
+        gap: 0.8rem;
+    }
+}
+
+/* Маленькие телефоны */
+@media (max-width: 380px) {
+    .admin-header {
+        padding: 0.5rem;
+    }
+    
+    .logo-image {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .school-name {
+        font-size: 0.85rem;
+    }
+    
+    .school-location {
+        font-size: 0.65rem;
+    }
+    
+    .admin-name {
+        font-size: 0.75rem;
+    }
+    
+    .admin-role {
+        font-size: 0.6rem;
+    }
+    
+    .admin-avatar-icon {
+        font-size: 42px;
         width: 40px;
         height: 40px;
     }
     
     .admin-section {
-        padding: 0.4rem 0.8rem;
+        padding: 0.2rem 0.6rem;
+        gap: 0.7rem;
     }
 }
 
-@media (max-width: 480px) {
-    .school-name {
-        font-size: 0.9rem;
+/* Очень маленькие телефоны */
+@media (max-width: 320px) {
+    .logo-image {
+        width: 40px;
+        height: 40px;
     }
     
-    .school-location {
+    .school-name {
         font-size: 0.8rem;
     }
     
-    .system-title {
-        font-size: 1.1rem;
+    .school-location {
+        font-size: 0.6rem;
     }
     
-    .admin-text {
-        font-size: 0.85rem;
+    .admin-name {
+        font-size: 0.7rem;
     }
     
-    .current-date {
-        font-size: 0.85rem;
+    .admin-role {
+        font-size: 0.55rem;
     }
     
-    .admin-avatar {
-        width: 35px;
-        height: 35px;
+    .admin-avatar-icon {
+        font-size: 38px;
+        width: 38px;
+        height: 38px;
     }
 }
-/* Добавим эти стили в существующий header.css */
 
-.admin-avatar-container {
-    position: relative;
-    transition: transform 0.3s ease;
+/* Альбомная ориентация телефонов */
+@media (max-width: 850px) and (orientation: landscape) {
+    .admin-header {
+        padding: 0.5rem 1rem;
+    }
+    
+    .logo-image {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .school-name {
+        font-size: 0.8rem;
+    }
+    
+    .school-location {
+        font-size: 0.7rem;
+    }
+    
+    .admin-avatar-icon {
+        font-size: 44px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .admin-name {
+        font-size: 0.8rem;
+    }
 }
-
-.admin-avatar-container:hover {
-    transform: scale(1.05);
-}
-
-.admin-avatar-container:hover .admin-avatar {
-    box-shadow: 0 0 0 3px #21435A, 0 5px 15px rgba(33, 67, 90, 0.3);
-}
-
-.avatar-overlay {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    background: #21435A;
-    color: white;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.6rem;
-    border: 2px solid white;
-    opacity: 0;
-    transform: scale(0.8);
-    transition: all 0.3s ease;
-}
-
-.admin-avatar-container:hover .avatar-overlay {
-    opacity: 1;
-    transform: scale(1);
-}
-
-.admin-info {
-    margin-left: 1rem;
-}
-
-.admin-name {
-    font-weight: 600;
-    color: #21435A;
-    font-size: 0.95rem;
-}
-
-.admin-role {
-    font-size: 0.8rem;
-    color: #666;
-    margin-top: 0.1rem;
-} 

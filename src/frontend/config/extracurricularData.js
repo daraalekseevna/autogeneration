@@ -53,7 +53,7 @@ export const TEACHERS = [
     { id: 4, name: "Тыщенко О.Н", fullName: "Тыщенко О.Н", subject: "Театр", experience: 8 },
     { id: 5, name: "Шорина Г.Б", fullName: "Шорина Г.Б", subject: "Медиа", experience: 10 },
     { id: 6, name: "Плакса С.А", fullName: "Плакса С.А", subject: "Гандбол", experience: 14 },
-    { id: 7, name: "Зажлолжный Н.А", fullName: "Зажлолжный Н.А", subject: "Программирование", experience: 18 }
+    { id: 7, name: "Задорожный Н.А", fullName: "Задорожный Н.А", subject: "Программирование", experience: 18 }
 ];
 
 // Кабинеты и места проведения
