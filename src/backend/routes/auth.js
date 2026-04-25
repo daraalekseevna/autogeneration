@@ -5,6 +5,17 @@ const db = require('../models/database');
 
 const router = express.Router();
 
+// Таблица соответствия английских букв русским
+const englishToRussianLetter = (letter) => {
+    const mapping = {
+        'A': 'А', 'B': 'Б', 'V': 'В', 'G': 'Г', 'D': 'Д',
+        'E': 'Е', 'P': 'П', 'R': 'Р', 'S': 'С', 'T': 'Т',
+        'K': 'К', 'L': 'Л', 'M': 'М', 'N': 'Н', 'O': 'О',
+        'F': 'Ф', 'H': 'Х', 'C': 'Ц', 'Y': 'Й', 'Z': 'З'
+    };
+    return mapping[letter.toUpperCase()] || letter;
+};
+
 router.post('/login', async (req, res) => {
     const { login, password } = req.body;
 
@@ -13,6 +24,7 @@ router.post('/login', async (req, res) => {
     }
 
     try {
+        // Ищем пользователя в таблице users
         const result = await db.query(
             'SELECT id, login, password_hash, role FROM users WHERE login = $1',
             [login]
@@ -31,22 +43,99 @@ router.post('/login', async (req, res) => {
 
         const token = jwt.sign(
             { userId: user.id, login: user.login, role: user.role },
-            process.env.JWT_SECRET,
+            process.env.JWT_SECRET || 'secret_key',
             { expiresIn: '24h' }
         );
 
+        // Формируем ответ
+        let responseUser = {
+            id: user.id,
+            login: user.login,
+            role: user.role
+        };
+
+        // Для КЛАССА - парсим логин и преобразуем букву
+        if (user.role === 'class') {
+            const match = user.login.match(/class(\d+)([A-Za-z]+)/i);
+            if (match) {
+                const number = match[1];
+                const englishLetter = match[2];
+                const russianLetter = englishToRussianLetter(englishLetter);
+                responseUser.gradeNumber = number;
+                responseUser.gradeLetter = russianLetter;
+                responseUser.name = `${number}${russianLetter} класс`;
+                responseUser.className = `${number}${russianLetter} класс`;
+            } else {
+                responseUser.name = user.login;
+            }
+        }
+        
+        // ДЛЯ УЧИТЕЛЯ - получаем ФИО из таблицы teachers
+        else if (user.role === 'teacher') {
+            try {
+                const teacherResult = await db.query(
+                    'SELECT first_name, last_name, middle_name FROM teachers WHERE user_id = $1',
+                    [user.id]
+                );
+                if (teacherResult.rows.length > 0) {
+                    const t = teacherResult.rows[0];
+                    responseUser.firstName = t.first_name;
+                    responseUser.lastName = t.last_name;
+                    responseUser.middleName = t.middle_name || '';
+                    // Полное ФИО
+                    responseUser.name = `${t.last_name} ${t.first_name} ${t.middle_name || ''}`.trim();
+                } else {
+                    responseUser.name = user.login;
+                }
+            } catch (err) {
+                console.error('Ошибка получения данных учителя:', err);
+                responseUser.name = user.login;
+            }
+        }
+        
+        // ДЛЯ АДМИНИСТРАТОРА - получаем ФИО из таблицы admins
+        else if (user.role === 'admin') {
+            try {
+                const adminResult = await db.query(
+                    'SELECT name FROM admins WHERE user_id = $1',
+                    [user.id]
+                );
+                if (adminResult.rows.length > 0) {
+                    responseUser.name = adminResult.rows[0].name;
+                    // Парсим ФИО для инициалов
+                    const nameParts = responseUser.name.split(' ');
+                    if (nameParts.length >= 2) {
+                        responseUser.lastName = nameParts[0];
+                        responseUser.firstName = nameParts[1];
+                        responseUser.middleName = nameParts[2] || '';
+                    }
+                } else {
+                    responseUser.name = user.login;
+                }
+            } catch (err) {
+                console.error('Ошибка получения данных администратора:', err);
+                responseUser.name = user.login;
+            }
+        }
+        
+        // ДЛЯ СУПЕРАДМИНА
+        else if (user.role === 'superadmin') {
+            responseUser.name = 'Суперадминистратор';
+            responseUser.lastName = 'Суперадмин';
+            responseUser.firstName = '';
+            responseUser.middleName = '';
+        }
+
+        console.log('Login response:', responseUser);
+
         res.json({
             token,
-            user: {
-                id: user.id,
-                login: user.login,
-                role: user.role
-            }
+            user: responseUser
         });
     } catch (err) {
-        console.error(err);
+        console.error('Login error:', err);
         res.status(500).json({ message: 'Ошибка сервера' });
     }
 });
 
-module.exports = router; // ВАЖНО: экспортируем router
+module.exports = router;

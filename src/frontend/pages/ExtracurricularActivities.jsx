@@ -28,7 +28,7 @@ import {
 } from 'react-icons/fa';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import activityStorage from '../services/activityStorage';
+import { extracurricularAPI } from '../services/extracurricularAPI';
 import { COLORS, WEEK_DAYS, TIME_SLOTS, TEACHERS } from '../config/extracurricularData';
 import styles from '../styles/ExtracurricularActivities.module.css';
 
@@ -154,8 +154,7 @@ const ActivityForm = ({ isOpen, onClose, onSubmit, initialData }) => {
             try {
                 await onSubmit({
                     ...form,
-                    id: initialData?.id,
-                    studentsCount: initialData?.studentsCount || 0
+                    id: initialData?.id
                 });
                 onClose();
             } catch (error) {
@@ -176,6 +175,11 @@ const ActivityForm = ({ isOpen, onClose, onSubmit, initialData }) => {
         if (errors.days) {
             setErrors(prev => ({ ...prev, days: null }));
         }
+    };
+
+    // Форматирование времени без секунд
+    const formatTime = (time) => {
+        return time ? time.substring(0, 5) : time;
     };
 
     if (!isOpen) return null;
@@ -280,7 +284,9 @@ const ActivityForm = ({ isOpen, onClose, onSubmit, initialData }) => {
                                 disabled={isSubmitting}
                             >
                                 {TIME_SLOTS.map(slot => (
-                                    <option key={slot.id} value={slot.value}>{slot.value}</option>
+                                    <option key={slot.id} value={slot.value}>
+                                        {formatTime(slot.value)}
+                                    </option>
                                 ))}
                             </select>
                         </div>
@@ -296,7 +302,9 @@ const ActivityForm = ({ isOpen, onClose, onSubmit, initialData }) => {
                                 disabled={isSubmitting}
                             >
                                 {TIME_SLOTS.map(slot => (
-                                    <option key={slot.id} value={slot.value}>{slot.value}</option>
+                                    <option key={slot.id} value={slot.value}>
+                                        {formatTime(slot.value)}
+                                    </option>
                                 ))}
                             </select>
                         </div>
@@ -422,6 +430,11 @@ const ActivityCard = React.memo(({ activity, onEdit, onDelete, canEdit }) => {
         backgroundColor: `${activity.color}08`
     };
 
+    // Форматирование времени без секунд
+    const formatTime = (time) => {
+        return time ? time.substring(0, 5) : time;
+    };
+
     if (showConfirm) {
         return (
             <div className={`${styles.activityCard} ${styles.deleteMode}`} style={cardStyle}>
@@ -449,7 +462,7 @@ const ActivityCard = React.memo(({ activity, onEdit, onDelete, canEdit }) => {
             <h4 className={styles.activityTitle}>{activity.title}</h4>
             <div className={styles.activityInfo}>
                 <div><FaRegUser /> {activity.teacher}</div>
-                <div><FaRegClock /> {activity.startTime} — {activity.endTime}</div>
+                <div><FaRegClock /> {formatTime(activity.startTime)} — {formatTime(activity.endTime)}</div>
                 <div><FaRegBuilding /> {activity.room}</div>
             </div>
         </div>
@@ -501,7 +514,6 @@ const DayColumn = React.memo(({ day, activities, onEdit, onDelete, canEdit }) =>
 const ExtracurricularActivities = () => {
     const navigate = useNavigate();
     
-    // ПОЛУЧАЕМ РОЛЬ ПОЛЬЗОВАТЕЛЯ
     const userStr = localStorage.getItem('user');
     const user = userStr ? JSON.parse(userStr) : null;
     const userRole = user?.role || 'guest';
@@ -515,25 +527,18 @@ const ExtracurricularActivities = () => {
     const [search, setSearch] = useState('');
     const [filterTeacher, setFilterTeacher] = useState('');
     const [filterDay, setFilterDay] = useState('');
-    const [filterLevel, setFilterLevel] = useState('');
     const [notifications, setNotifications] = useState([]);
     
     const searchTimeoutRef = useRef(null);
 
     useEffect(() => {
         loadData();
-        
-        const unsubscribe = activityStorage.subscribe((newData) => {
-            setActivities(newData);
-        });
-        
-        return unsubscribe;
     }, []);
 
-    const loadData = () => {
+    const loadData = async () => {
         setLoading(true);
         try {
-            const data = activityStorage.getAll();
+            const data = await extracurricularAPI.getAll();
             setActivities(data);
         } catch (error) {
             console.error('Error loading data:', error);
@@ -551,10 +556,11 @@ const ExtracurricularActivities = () => {
         }, 3000);
     };
 
-    const handleCreate = useCallback((activityData) => {
+    const handleCreate = useCallback(async (activityData) => {
         if (!canEdit) return;
         try {
-            const newActivity = activityStorage.create(activityData);
+            const newActivity = await extracurricularAPI.create(activityData);
+            setActivities(prev => [...prev, newActivity]);
             showNotification(`Занятие "${newActivity.title}" создано`);
             setShowForm(false);
         } catch (error) {
@@ -563,10 +569,11 @@ const ExtracurricularActivities = () => {
         }
     }, [canEdit]);
 
-    const handleUpdate = useCallback((activityData) => {
+    const handleUpdate = useCallback(async (activityData) => {
         if (!canEdit) return;
         try {
-            const updatedActivity = activityStorage.update(activityData.id, activityData);
+            const updatedActivity = await extracurricularAPI.update(activityData.id, activityData);
+            setActivities(prev => prev.map(a => a.id === updatedActivity.id ? updatedActivity : a));
             showNotification(`Занятие "${updatedActivity.title}" обновлено`);
             setShowForm(false);
             setEditingActivity(null);
@@ -576,19 +583,20 @@ const ExtracurricularActivities = () => {
         }
     }, [canEdit]);
 
-    const handleDelete = useCallback((id) => {
+    const handleDelete = useCallback(async (id) => {
         if (!canEdit) return;
-        const activity = activityStorage.getById(id);
+        const activity = activities.find(a => a.id === id);
         if (!activity) return;
         
         try {
-            activityStorage.delete(id);
+            await extracurricularAPI.delete(id);
+            setActivities(prev => prev.filter(a => a.id !== id));
             showNotification(`Занятие "${activity.title}" удалено`, 'info');
         } catch (error) {
             console.error('Error deleting activity:', error);
             showNotification('Ошибка при удалении', 'error');
         }
-    }, [canEdit]);
+    }, [canEdit, activities]);
 
     const handleEdit = useCallback((activity) => {
         if (!canEdit) return;
@@ -607,43 +615,46 @@ const ExtracurricularActivities = () => {
             localStorage.setItem('activities_filters', JSON.stringify({
                 search: value,
                 teacher: filterTeacher,
-                day: filterDay,
-                level: filterLevel
+                day: filterDay
             }));
         }, 300);
     };
 
     const filteredActivities = useMemo(() => {
-        const filters = {};
-        if (filterTeacher) filters.teacher = filterTeacher;
-        if (filterDay) filters.day = filterDay;
-        if (filterLevel) filters.level = filterLevel;
-        if (search) filters.search = search;
+        let filtered = [...activities];
         
-        let filtered = activityStorage.filter(filters);
+        if (search) {
+            const searchLower = search.toLowerCase();
+            filtered = filtered.filter(a => 
+                a.title.toLowerCase().includes(searchLower) ||
+                a.description?.toLowerCase().includes(searchLower)
+            );
+        }
         
-        if (Object.keys(filters).length === 0) {
-            filtered = activities;
+        if (filterTeacher) {
+            filtered = filtered.filter(a => a.teacher === filterTeacher);
+        }
+        
+        if (filterDay) {
+            filtered = filtered.filter(a => a.days?.includes(filterDay));
         }
         
         return filtered;
-    }, [activities, search, filterTeacher, filterDay, filterLevel]);
+    }, [activities, search, filterTeacher, filterDay]);
 
     const teachers = useMemo(() => {
-        return [...new Set(activities.map(a => a.teacher))];
+        return [...new Set(activities.map(a => a.teacher).filter(Boolean))];
     }, [activities]);
 
     const clearFilters = () => {
         setSearch('');
         setFilterTeacher('');
         setFilterDay('');
-        setFilterLevel('');
         showNotification('Фильтры сброшены', 'info');
     };
 
-    const activeFiltersCount = (search ? 1 : 0) + (filterTeacher ? 1 : 0) + (filterDay ? 1 : 0) + (filterLevel ? 1 : 0);
+    const activeFiltersCount = (search ? 1 : 0) + (filterTeacher ? 1 : 0) + (filterDay ? 1 : 0);
     
-    // Кнопка назад - для учеников возвращаем на /class, для админов на /
     const handleBack = () => {
         if (userRole === 'class') {
             navigate('/class');
@@ -724,7 +735,6 @@ const ExtracurricularActivities = () => {
                             <FaPrint />
                         </button>
 
-                        {/* Фильтры и кнопка добавления - только для админов */}
                         {canEdit && (
                             <>
                                 <button 
@@ -756,7 +766,6 @@ const ExtracurricularActivities = () => {
                     )}
                 </div>
 
-                {/* Фильтры - только для админов */}
                 {canEdit && showFilters && (
                     <div className={styles.filtersPanel}>
                         <div className={styles.filterGroup}>
@@ -794,20 +803,6 @@ const ExtracurricularActivities = () => {
                             </select>
                         </div>
 
-                        <div className={styles.filterGroup}>
-                            <FaUser className={styles.filterIcon} />
-                            <select
-                                value={filterLevel}
-                                onChange={e => setFilterLevel(e.target.value)}
-                                className={styles.filterSelect}
-                            >
-                                <option value="">Все уровни</option>
-                                <option value="beginner">Начинающий</option>
-                                <option value="intermediate">Средний</option>
-                                <option value="advanced">Продвинутый</option>
-                            </select>
-                        </div>
-
                         {activeFiltersCount > 0 && (
                             <button onClick={clearFilters} className={styles.btnClear}>
                                 <FaTimes /> Сброс
@@ -816,7 +811,6 @@ const ExtracurricularActivities = () => {
                     </div>
                 )}
 
-                {/* Форма - только для админов */}
                 {canEdit && (
                     <ActivityForm
                         isOpen={showForm}

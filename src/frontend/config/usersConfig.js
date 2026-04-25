@@ -27,7 +27,7 @@ export const rolesConfig = {
         name: 'Администратор',
         description: 'Управление расписанием и пользователями',
         permissions: ['manage_schedule', 'manage_users', 'view_reports'],
-        dashboardRoute: '/admin',
+        dashboardRoute: '/',
         icon: '⚙️'
     },
     teacher: {
@@ -41,7 +41,7 @@ export const rolesConfig = {
         name: 'Класс',
         description: 'Просмотр расписания класса',
         permissions: ['view_schedule', 'view_announcements'],
-        dashboardRoute: '/class',
+        dashboardRoute: '/class',  // <-- ИСПРАВЛЕНО: было '/class/schedule', стало '/class'
         icon: '👨‍🎓'
     },
     student: {
@@ -56,13 +56,27 @@ export const rolesConfig = {
 // Маршруты для разных ролей
 export const roleRoutes = {
     superadmin: '/superadmin',
-    admin: '/admin',
+    admin: '/',
     teacher: '/teacher',
-    class: '/class',
+    class: '/class',  // <-- ИСПРАВЛЕНО: было '/class/schedule', стало '/class'
     student: '/student'
 };
 
-// Функция для аутентификации через бэкенд
+// Функция для получения маршрута по роли (с отладкой)
+export const getRouteByRole = (role) => {
+    console.log('getRouteByRole called with role:', role);
+    console.log('Available routes:', roleRoutes);
+    
+    const route = roleRoutes[role];
+    if (!route) {
+        console.error(`Unknown role: ${role}, available roles:`, Object.keys(roleRoutes));
+        return '/';
+    }
+    console.log(`Route for role ${role}: ${route}`);
+    return route;
+};
+
+// Остальные функции...
 export const authenticateUser = async (username, password) => {
     try {
         const response = await fetch(`${API_URL}/auth/login`, {
@@ -79,34 +93,19 @@ export const authenticateUser = async (username, password) => {
         if (response.ok) {
             const data = await response.json();
             
-            // Получаем дополнительную информацию о пользователе
             let userInfo = {
                 id: data.user.id,
                 username: data.user.login,
                 role: data.user.role,
-                name: data.user.login,
-                email: `${data.user.login}@school20.ru`,
-                avatarColor: getAvatarColor(data.user.role)
+                name: data.user.name || data.user.login,
+                email: data.user.email || `${data.user.login}@school20.ru`,
+                avatarColor: getAvatarColor(data.user.role),
+                gradeNumber: data.user.gradeNumber,
+                gradeLetter: data.user.gradeLetter,
+                lastName: data.user.lastName,
+                firstName: data.user.firstName,
+                middleName: data.user.middleName
             };
-
-            // Если это учитель, получаем его ФИО
-            if (data.user.role === 'teacher') {
-                try {
-                    const teacherInfo = await fetch(`${API_URL}/superadmin/teachers`, {
-                        headers: {
-                            'Authorization': `Bearer ${data.token}`
-                        }
-                    });
-                    const teachers = await teacherInfo.json();
-                    const teacher = teachers.find(t => t.login === data.user.login);
-                    if (teacher) {
-                        userInfo.name = teacher.name;
-                        userInfo.email = teacher.email || userInfo.email;
-                    }
-                } catch (e) {
-                    console.warn('Could not fetch teacher info:', e);
-                }
-            }
 
             return {
                 success: true,
@@ -122,12 +121,10 @@ export const authenticateUser = async (username, password) => {
         }
     } catch (error) {
         console.error('API connection error:', error);
-        // Если бэкенд не доступен, используем демо-режим
         return authenticateWithDemo(username, password);
     }
 };
 
-// Демо-аутентификация (резервный вариант)
 const authenticateWithDemo = (username, password) => {
     const user = Object.values(DEMO_USERS).find(
         user => user.username === username && user.password === password
@@ -150,7 +147,6 @@ const authenticateWithDemo = (username, password) => {
     };
 };
 
-// Функция для получения цвета аватара по роли
 const getAvatarColor = (role) => {
     const colors = {
         superadmin: '#ff4757',
@@ -162,30 +158,15 @@ const getAvatarColor = (role) => {
     return colors[role] || '#7bed9f';
 };
 
-// Функция для получения пользователя по логину и паролю (устарело)
-export const findUserByCredentials = (username, password) => {
-    console.warn('findUserByCredentials is deprecated. Use authenticateUser instead.');
-    return null;
-};
-
-// Функция для получения всех пользователей определенной роли
 export const getUsersByRole = (role) => {
-    // В реальном приложении это должно быть API, а не локальные данные
     console.warn('getUsersByRole should be replaced with API call');
     return [];
 };
 
-// Функция для получения информации о роли
 export const getRoleInfo = (role) => {
     return rolesConfig[role] || null;
 };
 
-// Функция для получения маршрута по роли
-export const getRouteByRole = (role) => {
-    return roleRoutes[role] || '/';
-};
-
-// Для обратной совместимости
 export const usersConfig = {
     roles: rolesConfig,
     roleRoutes: roleRoutes,

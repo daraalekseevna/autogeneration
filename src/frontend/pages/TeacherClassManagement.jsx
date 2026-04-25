@@ -1,4 +1,3 @@
-// src/frontend/pages/TeacherClassManagement.jsx
 import React, { useState, useEffect } from 'react';
 import { 
     FaArrowLeft, 
@@ -7,20 +6,18 @@ import {
     FaMoon,
     FaUserGraduate,
     FaRegCalendarAlt,
-    FaRegClock,
-    FaRegBuilding,
-    FaUser,
-    FaSchool,
     FaBook,
     FaChalkboardTeacher,
     FaMapMarkerAlt,
-    FaClock
+    FaRegClock
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { getTeacherClass, getScheduleByClass, subjectColors } from '../data/teacherClassData';
 import styles from '../styles/TeacherClassManagement.module.css';
+
+const API_URL = 'http://localhost:5000/api';
 
 const TeacherClassManagement = () => {
     const navigate = useNavigate();
@@ -28,11 +25,9 @@ const TeacherClassManagement = () => {
         const saved = localStorage.getItem('theme');
         return saved === 'dark';
     });
-
     const [myClass, setMyClass] = useState(null);
-    const [schedule, setSchedule] = useState([]);
+    const [schedule, setSchedule] = useState({});
     const [loading, setLoading] = useState(true);
-    const [isClassTeacher, setIsClassTeacher] = useState(false);
 
     useEffect(() => {
         if (isDarkTheme) {
@@ -48,58 +43,59 @@ const TeacherClassManagement = () => {
         setIsDarkTheme(!isDarkTheme);
     };
 
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('token');
+        return {
+            headers: { Authorization: `Bearer ${token}` }
+        };
+    };
+
     useEffect(() => {
         loadClassData();
     }, []);
 
-    const loadClassData = () => {
+    const loadClassData = async () => {
         setLoading(true);
         try {
-            const userStr = localStorage.getItem('user');
-            const user = userStr ? JSON.parse(userStr) : null;
+            const classResponse = await axios.get(`${API_URL}/teacher/my-class`, getAuthHeaders());
             
-            const teacherClass = getTeacherClass(user?.id);
-            
-            if (teacherClass) {
-                setIsClassTeacher(true);
-                setMyClass(teacherClass);
-                const classSchedule = getScheduleByClass(teacherClass.name);
-                setSchedule(classSchedule);
+            if (classResponse.data.hasClass) {
+                setMyClass(classResponse.data.classData);
+                
+                const scheduleResponse = await axios.get(`${API_URL}/teacher/my-class/schedule`, getAuthHeaders());
+                setSchedule(scheduleResponse.data.schedule || {});
             } else {
-                setIsClassTeacher(false);
+                setMyClass(null);
             }
         } catch (error) {
             console.error('Error loading class data:', error);
-            setIsClassTeacher(false);
         } finally {
             setLoading(false);
         }
     };
 
     const getSubjectColor = (subject) => {
-        return subjectColors[subject] || '#9E9E9E';
+        const colors = {
+            'Математика': '#2196F3',
+            'Русский язык': '#4CAF50',
+            'Литература': '#8BC34A',
+            'Английский язык': '#FF9800',
+            'История': '#9C27B0',
+            'Обществознание': '#673AB7',
+            'География': '#00BCD4',
+            'Биология': '#4CAF50',
+            'Физика': '#3F51B5',
+            'Химия': '#FF5722',
+            'Физкультура': '#795548',
+            'Информатика': '#607D8B'
+        };
+        return colors[subject] || '#9E9E9E';
     };
 
-    // Преобразуем расписание в формат для таблицы
-    const getLessonsByDayAndTime = () => {
-        const result = {};
-        const timeSlots = ['08:30', '09:25', '10:20', '11:15', '12:10', '13:05', '14:00'];
-        
-        schedule.forEach(day => {
-            result[day.day] = {};
-            day.lessons.forEach(lesson => {
-                // Находим индекс времени
-                const timeIndex = timeSlots.findIndex(t => t === lesson.time.split(' - ')[0]);
-                if (timeIndex !== -1) {
-                    result[day.day][timeIndex] = lesson;
-                }
-            });
-        });
-        
-        return result;
-    };
+    const weekDays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+    const topRowDays = weekDays.slice(0, 3);
+    const bottomRowDays = weekDays.slice(3, 6);
 
-    const lessonsByDayAndTime = getLessonsByDayAndTime();
     const timeSlots = [
         { number: 1, time: '08:30' },
         { number: 2, time: '09:25' },
@@ -110,12 +106,8 @@ const TeacherClassManagement = () => {
         { number: 7, time: '14:00' }
     ];
 
-    const weekDays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-    const topRowDays = weekDays.slice(0, 3);
-    const bottomRowDays = weekDays.slice(3, 6);
-
     const DayScheduleTable = ({ dayName }) => {
-        const dayLessons = lessonsByDayAndTime[dayName] || {};
+        const dayLessons = schedule[dayName] || [];
 
         return (
             <div className={styles.dayTableWrapper}>
@@ -140,7 +132,7 @@ const TeacherClassManagement = () => {
                         </thead>
                         <tbody>
                             {timeSlots.map((slot) => {
-                                const lesson = dayLessons[slot.number - 1];
+                                const lesson = dayLessons.find(l => l.number === slot.number);
                                 
                                 return (
                                     <tr key={slot.number} className={styles.scheduleRow}>
@@ -149,7 +141,7 @@ const TeacherClassManagement = () => {
                                         </td>
                                         <td className={styles.lessonTimeCell}>
                                             <div className={styles.lessonTime}>
-                                                <FaClock />
+                                                <FaRegClock />
                                                 <span>{slot.time}</span>
                                             </div>
                                         </td>
@@ -199,20 +191,11 @@ const TeacherClassManagement = () => {
                         <div key={i} className={styles.glassCircle}></div>
                     ))}
                 </div>
-                <div className={styles.topBar}>
-                    <button className={styles.backBtn} onClick={() => navigate('/teacher')}>
-                        <FaArrowLeft /> <span>Назад</span>
-                    </button>
-                    <button className={styles.themeBtn} onClick={toggleTheme}>
-                        {isDarkTheme ? <FaSun /> : <FaMoon />}
-                        <span>{isDarkTheme ? 'Светлая тема' : 'Темная тема'}</span>
-                    </button>
-                </div>
                 <Header />
                 <main className={styles.container}>
                     <div className={styles.loader}>
                         <div className={styles.spinner}></div>
-                        <p className={styles.loadingText}>Загрузка...</p>
+                        <p>Загрузка...</p>
                     </div>
                 </main>
                 <Footer />
@@ -220,7 +203,7 @@ const TeacherClassManagement = () => {
         );
     }
 
-    if (!isClassTeacher) {
+    if (!myClass) {
         return (
             <div className={styles.page}>
                 <div className={styles.animatedBg}>
@@ -240,7 +223,7 @@ const TeacherClassManagement = () => {
                 <Header />
                 <main className={styles.container}>
                     <div className={styles.disabledCard}>
-                        <FaSchool className={styles.disabledIcon} />
+                        <FaUsers className={styles.disabledIcon} />
                         <h2>Доступ ограничен</h2>
                         <p>Вы не являетесь классным руководителем.<br />Эта страница доступна только классным руководителям.</p>
                         <button className={styles.backToTeacherBtn} onClick={() => navigate('/teacher')}>
@@ -280,22 +263,21 @@ const TeacherClassManagement = () => {
                         <FaUsers />
                     </div>
                     <div className={styles.classInfo}>
-                        <h1>{myClass?.name} класс</h1>
-                        <p>Классный руководитель: {myClass?.teacherName}</p>
-                        <p>Кабинет: {myClass?.classroom} | Учебный год: {myClass?.year}/2025</p>
+                        <h1>{myClass.name} класс</h1>
+                        <p>Классный руководитель: {myClass.teacherName}</p>
+                        <p>Смена: {myClass.shift}</p>
                     </div>
                     <div className={styles.classStats}>
-                        <div className={styles.stat}>
+                        {/* <div className={styles.stat}>
                             <FaUserGraduate />
-                            <span>{myClass?.studentsCount || 0} учеников</span>
-                        </div>
+                            <span>{myClass.studentsCount} учеников</span>
+                        </div> */}
                     </div>
                 </div>
 
-                {/* Расписание класса - табличное */}
+                {/* Только расписание */}
                 <div className={styles.scheduleSection}>
                     <h2><FaRegCalendarAlt /> Расписание класса</h2>
-                    
                     <div className={styles.scheduleGrid}>
                         <div className={styles.topRow}>
                             {topRowDays.map(day => (

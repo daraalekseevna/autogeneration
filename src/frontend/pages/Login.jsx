@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/MainContent.css';
@@ -16,11 +16,28 @@ const Login = () => {
         username: '',
         password: '',
         showPassword: false,
+        rememberMe: false,
         error: '',
         isLoading: false
     });
 
     const navigate = useNavigate();
+
+    // При загрузке страницы проверяем сохраненные данные
+    useEffect(() => {
+        const savedUsername = localStorage.getItem('savedUsername');
+        const savedPassword = localStorage.getItem('savedPassword');
+        const rememberMe = localStorage.getItem('rememberMe') === 'true';
+        
+        if (rememberMe && savedUsername && savedPassword) {
+            setFormState(prev => ({
+                ...prev,
+                username: savedUsername,
+                password: savedPassword,
+                rememberMe: true
+            }));
+        }
+    }, []);
 
     const updateFormState = (updates) => {
         setFormState(prev => ({ ...prev, ...updates }));
@@ -45,16 +62,25 @@ const Login = () => {
 
             const { token, user } = response.data;
 
+            console.log('User data from backend:', user);
+
             // Сохраняем токен
             localStorage.setItem('token', token);
             
-            // Сохраняем данные пользователя
-            localStorage.setItem('user', JSON.stringify({
-                id: user.id,
-                username: user.login,
-                role: user.role,
-                loginTime: new Date().toISOString()
-            }));
+            // Сохраняем ВСЕ данные пользователя целиком
+            localStorage.setItem('user', JSON.stringify(user));
+
+            // Если "Запомнить меня" включено - сохраняем логин и пароль
+            if (formState.rememberMe) {
+                localStorage.setItem('savedUsername', formState.username);
+                localStorage.setItem('savedPassword', formState.password);
+                localStorage.setItem('rememberMe', 'true');
+            } else {
+                // Если не включено - удаляем сохраненные данные
+                localStorage.removeItem('savedUsername');
+                localStorage.removeItem('savedPassword');
+                localStorage.removeItem('rememberMe');
+            }
 
             // Устанавливаем токен для axios
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -127,7 +153,7 @@ const Login = () => {
                                     onChange={(e) => handleInputChange('username', e.target.value)}
                                     disabled={formState.isLoading}
                                     required
-                                    autoComplete={loginConfig.formFields.username.autoComplete}
+                                    autoComplete="username"
                                 />
                             </div>
                         </div>
@@ -159,9 +185,23 @@ const Login = () => {
                                     onChange={(e) => handleInputChange('password', e.target.value)}
                                     disabled={formState.isLoading}
                                     required
-                                    autoComplete={loginConfig.formFields.password.autoComplete}
+                                    autoComplete="current-password"
                                 />
                             </div>
+                        </div>
+
+                        {/* Чекбокс "Запомнить меня" */}
+                        <div className="form-group remember-me-group">
+                            <label className="remember-me-label">
+                                <input
+                                    type="checkbox"
+                                    className="remember-me-checkbox"
+                                    checked={formState.rememberMe}
+                                    onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
+                                    disabled={formState.isLoading}
+                                />
+                                <span className="remember-me-text">Запомнить меня</span>
+                            </label>
                         </div>
 
                         {formState.error && (

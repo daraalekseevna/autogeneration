@@ -25,12 +25,40 @@ const ClassSchedule = () => {
         const saved = localStorage.getItem('theme');
         return saved === 'dark';
     });
+    const [className, setClassName] = useState('');
     
-    const user = JSON.parse(localStorage.getItem('user')) || { name: '5А класс', role: 'class' };
-    const className = user.name || '5А класс';
-    const userRole = user.role || 'class';
+    const user = JSON.parse(localStorage.getItem('user'));
     
-    // Получаем расписание для класса
+    // Формируем название класса из данных бэкенда
+    useEffect(() => {
+        if (!user) {
+            console.log('No user, redirecting to login');
+            navigate('/login');
+            return;
+        }
+        
+        console.log('User data from localStorage:', user);
+        console.log('gradeNumber:', user.gradeNumber);
+        console.log('gradeLetter:', user.gradeLetter);
+        
+        // Если в user уже есть gradeNumber и gradeLetter
+        if (user.gradeNumber && user.gradeLetter) {
+            const name = `${user.gradeNumber}${user.gradeLetter} класс`;
+            console.log('Setting className from grade fields:', name);
+            setClassName(name);
+        } 
+        // Если есть name
+        else if (user.name) {
+            console.log('Setting className from name field:', user.name);
+            setClassName(user.name);
+        }
+        // Если ничего нет
+        else {
+            console.log('No class info found, using fallback');
+            setClassName('Класс');
+        }
+    }, [user, navigate]);
+
     const scheduleData = getScheduleByClassName(className);
 
     useEffect(() => {
@@ -147,6 +175,14 @@ const ClassSchedule = () => {
         );
     };
 
+    if (!className) {
+        return (
+            <div className={styles.container}>
+                <div style={{ textAlign: 'center', padding: '50px' }}>Загрузка...</div>
+            </div>
+        );
+    }
+
     return (
         <div className="main-content-page">
             <div className="animated-bg">
@@ -171,7 +207,7 @@ const ClassSchedule = () => {
                             <FaUserGraduate />
                         </div>
                         <div>
-                            <h1>{className} класс</h1>
+                            <h1>{className}</h1>
                             <p className={styles.currentDate}>
                                 <FaCalendarAlt />
                                 <span>{currentDate}</span>
