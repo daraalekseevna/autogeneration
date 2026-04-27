@@ -1,4 +1,5 @@
 // src/App.jsx
+import './frontend/styles/global-theme.css';
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './frontend/components/ProtectedRoute';

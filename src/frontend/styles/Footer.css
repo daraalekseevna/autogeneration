@@ -1,22 +1,16 @@
 /* Footer.css */
-@import url('https://fonts.cdnfonts.com/css/ms-reference-sans-serif');
-
-:root {
-    --primary: #21435A;
-    --dark: #1a2b3c;
-    --gray: #21435A;
-}
+/* Переменные темы в global-theme.css */
 
 footer {
     padding: 2rem 1.5rem;
     margin-top: 3rem;
-    color: #21435ab2;
-    border-top: 1px solid  #21435aa9;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border-color);
     width: 100%;
     max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
-    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-family);
 }
 
 .footer-content {
@@ -30,34 +24,34 @@ footer {
 .footer-item {
     text-align: right;
     min-width: 180px;
-    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-family);
 }
 
 .footer-item h3 {
     font-size: 0.6rem;
     font-weight: 600;
-    color: var(--dark);
+    color: var(--text-primary);
     margin-bottom: 0.25rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-family);
 }
 
 .footer-item p {
     font-size: 0.6rem;
-    color: var(--primary);
+    color: var(--text-secondary);
     font-weight: 500;
     line-height: 1.4;
-    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-family);
 }
 
 .footer-copyright {
     text-align: right;
     padding-top: 1rem;
-    border-top: 1px solid var(--gray);
+    border-top: 1px solid var(--border-color);
     font-size: 0.85rem;
-    color: #21435A;
-    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-secondary);
+    font-family: var(--font-family);
 }
 
 @media (max-width: 1024px) {

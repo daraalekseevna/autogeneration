@@ -1,4 +1,6 @@
 /* Полностью скопированы из MainContent.css и ScheduleViewer.css, плюс новые классы для таблицы */
+/* Переменные темы в global-theme.css */
+
 .page {
   min-height: 100vh;
   display: flex;
@@ -7,39 +9,7 @@
   color: var(--text-primary);
   font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
-.animatedBg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  overflow: hidden;
-}
-.glassCircle {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(35px);
-  opacity: 0.4;
-  animation: float 20s infinite ease-in-out;
-}
-body.dark-theme .glassCircle { opacity: 0.15; }
-.glassCircle:nth-child(1) { width: 500px; height: 480px; top: 10%; left: 5%; background: radial-gradient(circle, rgba(106,13,173,0.5) 0%, rgba(0,153,255,0.3) 100%); animation-duration: 30s; }
-.glassCircle:nth-child(2) { width: 450px; height: 420px; top: 60%; right: 8%; background: radial-gradient(circle, rgba(68,153,209,0.4) 0%, rgba(137,43,226,0.3) 100%); animation-duration: 28s; }
-.glassCircle:nth-child(3) { width: 380px; height: 400px; bottom: 15%; left: 12%; background: radial-gradient(circle, rgba(156,39,176,0.3) 0%, rgba(33,150,243,0.2) 100%); animation-duration: 32s; }
-.glassCircle:nth-child(4) { width: 320px; height: 300px; top: 25%; right: 22%; background: linear-gradient(135deg, rgba(106,13,173,0.4), rgba(68,153,209,0.3)); animation-duration: 26s; }
-.glassCircle:nth-child(5) { width: 280px; height: 260px; bottom: 35%; right: 28%; background: radial-gradient(circle, rgba(0,153,255,0.3), rgba(137,43,226,0.2)); animation-duration: 29s; }
-.glassCircle:nth-child(6) { width: 220px; height: 240px; top: 70%; left: 35%; background: radial-gradient(circle, rgba(137,43,226,0.3), rgba(107,163,202,0.2)); animation-duration: 27s; }
-.glassCircle:nth-child(7) { width: 180px; height: 160px; top: 15%; left: 40%; background: linear-gradient(45deg, rgba(156,39,176,0.4), rgba(0,153,255,0.3)); animation-duration: 24s; }
-.glassCircle:nth-child(8) { width: 650px; height: 620px; top: -100px; left: -150px; background: radial-gradient(circle, rgba(106,13,173,0.3), transparent); animation-duration: 35s; }
-.glassCircle:nth-child(9) { width: 550px; height: 580px; bottom: -120px; right: -100px; background: radial-gradient(circle, rgba(68,153,209,0.3), transparent); animation-duration: 33s; }
-.glassCircle:nth-child(10) { width: 300px; height: 320px; top: 40%; left: 60%; background: linear-gradient(120deg, rgba(106,13,173,0.4), rgba(68,153,209,0.3), rgba(156,39,176,0.2)); animation-duration: 31s; }
-@keyframes float {
-  0%,100% { transform: translate(0,0) rotate(0deg); }
-  25% { transform: translate(20px,-20px) rotate(2deg); }
-  50% { transform: translate(-15px,15px) rotate(-2deg); }
-  75% { transform: translate(10px,-10px) rotate(1deg); }
-}
+
 .topBar {
   position: fixed;
   top: 20px;
@@ -50,7 +20,9 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   z-index: 100;
   pointer-events: none;
 }
+
 .topBar > * { pointer-events: auto; }
+
 .backBtn, .themeBtn, .exportBtn, .importBtn {
   background: var(--bg-card);
   backdrop-filter: blur(10px);
@@ -65,12 +37,15 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   align-items: center;
   gap: 6px;
 }
+
 .backBtn:hover, .themeBtn:hover, .exportBtn:hover, .importBtn:hover {
   background: var(--btn-primary-bg);
   color: white;
   transform: translateY(-2px);
 }
+
 .rightButtons { display: flex; gap: 8px; }
+
 .container {
   max-width: 100%;
   margin: 80px 20px 20px;
@@ -81,6 +56,7 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   border: 1px solid var(--border-color);
   overflow-x: auto;
 }
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -88,12 +64,14 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   flex-wrap: wrap;
   margin-bottom: 20px;
 }
+
 .header h1 {
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 1.4rem;
 }
+
 .dragModeSelector {
   display: flex;
   gap: 8px;
@@ -101,6 +79,7 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   padding: 6px 12px;
   border-radius: 40px;
 }
+
 .dragModeSelector button {
   background: transparent;
   border: none;
@@ -110,41 +89,50 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   font-weight: 500;
   color: var(--text-secondary);
 }
+
 .dragModeSelector button.active {
   background: var(--btn-primary-bg);
   color: white;
 }
+
 .scheduleTableWrapper { overflow-x: auto; }
+
 .fullScheduleTable {
   width: 100%;
   border-collapse: collapse;
   min-width: 800px;
   font-size: 0.85rem;
 }
+
 .fullScheduleTable th, .fullScheduleTable td {
   border: 1px solid var(--border-color);
   padding: 8px;
   vertical-align: top;
 }
+
 .rowHeader {
   background: var(--bg-table-header);
   font-weight: 600;
   text-align: center;
   width: 100px;
 }
+
 .rowHeaderCell {
   background: rgba(0,0,0,0.02);
   text-align: center;
   vertical-align: middle;
 }
+
 .dayLessonInfo {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
+
 .dayName { font-weight: 700; font-size: 0.9rem; }
 .lessonNumber { font-size: 1.2rem; font-weight: 700; }
 .lessonTime { font-size: 0.7rem; color: var(--text-muted); }
+
 .classCol {
   background: linear-gradient(135deg, var(--btn-primary-bg), var(--btn-primary-hover));
   color: white;
@@ -152,6 +140,7 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   position: relative;
   text-align: center;
 }
+
 .copyDayBtn {
   background: rgba(255,255,255,0.2);
   border: none;
@@ -162,9 +151,12 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   font-size: 0.7rem;
   color: white;
 }
+
 .copyDayBtn:hover { background: rgba(255,255,255,0.4); }
+
 .cell { min-width: 200px; transition: background 0.1s; }
 .dragOver { background: rgba(33,67,90,0.1); }
+
 .lessonCard {
   position: relative;
   padding: 6px;
@@ -173,6 +165,7 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   background: rgba(255,255,255,0.05);
   font-size: 0.8rem;
 }
+
 .lessonActions {
   position: absolute;
   top: 2px;
@@ -182,7 +175,9 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   opacity: 0;
   transition: opacity 0.2s;
 }
+
 .lessonCard:hover .lessonActions { opacity: 1; }
+
 .lessonActions button {
   background: var(--bg-card-solid);
   border: none;
@@ -192,16 +187,19 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   font-size: 0.7rem;
   color: var(--text-muted);
 }
+
 .lessonActions button:hover {
   background: var(--btn-primary-bg);
   color: white;
 }
+
 .lessonSubject, .lessonTeacher, .lessonRoom {
   display: flex;
   align-items: center;
   gap: 4px;
   margin-bottom: 2px;
 }
+
 .dragHandle {
   cursor: grab;
   color: var(--text-muted);
@@ -209,6 +207,7 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   display: inline-flex;
   margin-right: 2px;
 }
+
 .subgroupBadge {
   font-size: 0.65rem;
   background: rgba(33,67,90,0.2);
@@ -217,6 +216,7 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   border-radius: 10px;
   margin-top: 4px;
 }
+
 .emptyCell {
   min-height: 80px;
   display: flex;
@@ -228,10 +228,12 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   border-radius: 8px;
   background: rgba(0,0,0,0.02);
 }
+
 .emptyCell:hover {
   border-color: var(--btn-primary-bg);
   color: var(--btn-primary-bg);
 }
+
 .modalOverlay {
   position: fixed;
   top:0; left:0; right:0; bottom:0;
@@ -242,6 +244,7 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   justify-content: center;
   z-index: 1000;
 }
+
 .modalContent {
   background: var(--bg-card-solid);
   border-radius: 20px;
@@ -249,17 +252,20 @@ body.dark-theme .glassCircle { opacity: 0.15; }
   max-width: 500px;
   padding: 20px;
 }
+
 .modalHeader {
   display: flex;
   justify-content: space-between;
   margin-bottom: 16px;
 }
+
 .closeModal {
   background: none;
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
 }
+
 .formGroup { margin-bottom: 12px; }
 .formGroup label {
   display: block;

@@ -1,4 +1,3 @@
-//НУЖНЫЙ ФАЙЛ
 // src/frontend/services/extracurricularAPI.js
 import axios from 'axios';
 
@@ -25,6 +24,17 @@ export const extracurricularAPI = {
             return response.data;
         } catch (error) {
             console.error('Error fetching activities:', error);
+            throw error;
+        }
+    },
+    
+    // Получить список учителей (ДОБАВЛЕНО)
+    getTeachers: async () => {
+        try {
+            const response = await axios.get(`${API_URL}/extracurricular/teachers`, getAuthHeaders());
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching teachers:', error);
             throw error;
         }
     },

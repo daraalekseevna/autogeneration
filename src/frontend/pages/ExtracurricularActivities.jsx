@@ -29,7 +29,7 @@ import {
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { extracurricularAPI } from '../services/extracurricularAPI';
-import { COLORS, WEEK_DAYS, TIME_SLOTS, TEACHERS } from '../config/extracurricularData';
+import { COLORS, WEEK_DAYS, TIME_SLOTS } from '../config/extracurricularData';
 import styles from '../styles/ExtracurricularActivities.module.css';
 
 // ========== КОМПОНЕНТ КНОПКИ ПЕРЕКЛЮЧЕНИЯ ТЕМЫ ==========
@@ -89,7 +89,7 @@ const Notification = ({ message, type, onClose }) => {
 };
 
 // ========== КОМПОНЕНТ ФОРМЫ ==========
-const ActivityForm = ({ isOpen, onClose, onSubmit, initialData }) => {
+const ActivityForm = ({ isOpen, onClose, onSubmit, initialData, teachersList }) => {
     const [form, setForm] = useState({
         title: '',
         teacher: '',
@@ -177,7 +177,6 @@ const ActivityForm = ({ isOpen, onClose, onSubmit, initialData }) => {
         }
     };
 
-    // Форматирование времени без секунд
     const formatTime = (time) => {
         return time ? time.substring(0, 5) : time;
     };
@@ -227,8 +226,8 @@ const ActivityForm = ({ isOpen, onClose, onSubmit, initialData }) => {
                                 disabled={isSubmitting}
                             >
                                 <option value="">Выберите преподавателя</option>
-                                {TEACHERS.map(t => (
-                                    <option key={t.id} value={t.name}>{t.name} ({t.subject})</option>
+                                {teachersList.map(t => (
+                                    <option key={t.id} value={t.name}>{t.name}</option>
                                 ))}
                             </select>
                             {errors.teacher && <span className={styles.errorText}>{errors.teacher}</span>}
@@ -430,7 +429,6 @@ const ActivityCard = React.memo(({ activity, onEdit, onDelete, canEdit }) => {
         backgroundColor: `${activity.color}08`
     };
 
-    // Форматирование времени без секунд
     const formatTime = (time) => {
         return time ? time.substring(0, 5) : time;
     };
@@ -520,6 +518,7 @@ const ExtracurricularActivities = () => {
     const canEdit = userRole === 'admin' || userRole === 'superadmin';
     
     const [activities, setActivities] = useState([]);
+    const [teachersList, setTeachersList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingActivity, setEditingActivity] = useState(null);
@@ -533,6 +532,7 @@ const ExtracurricularActivities = () => {
 
     useEffect(() => {
         loadData();
+        loadTeachers();
     }, []);
 
     const loadData = async () => {
@@ -545,6 +545,15 @@ const ExtracurricularActivities = () => {
             showNotification('Ошибка при загрузке данных', 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadTeachers = async () => {
+        try {
+            const teachers = await extracurricularAPI.getTeachers();
+            setTeachersList(teachers);
+        } catch (error) {
+            console.error('Error loading teachers:', error);
         }
     };
 
@@ -666,11 +675,11 @@ const ExtracurricularActivities = () => {
     if (loading) {
         return (
             <div className={styles.page}>
-                <div className={styles.animatedBg}>
-                    {[...Array(10)].map((_, i) => (
-                        <div key={i} className={styles.glassCircle}></div>
-                    ))}
-                </div>
+                <div className="animated-bg">
+                     {[...Array(10)].map((_, i) => (
+               <div key={i} className="glass-circle"></div>
+                      ))}
+            </div>
                 <div className={styles.topBar}>
                     <button className={styles.backBtn} onClick={handleBack}>
                         <FaArrowLeft />
@@ -692,11 +701,11 @@ const ExtracurricularActivities = () => {
 
     return (
         <div className={styles.page}>
-            <div className={styles.animatedBg}>
-                {[...Array(10)].map((_, i) => (
-                    <div key={i} className={styles.glassCircle}></div>
-                ))}
-            </div>
+           <div className="animated-bg">
+    {[...Array(10)].map((_, i) => (
+        <div key={i} className="glass-circle"></div>
+    ))}
+</div>
             
             <div className={styles.topBar}>
                 <button className={styles.backBtn} onClick={handleBack}>
@@ -820,6 +829,7 @@ const ExtracurricularActivities = () => {
                         }}
                         onSubmit={editingActivity ? handleUpdate : handleCreate}
                         initialData={editingActivity}
+                        teachersList={teachersList}
                     />
                 )}
 

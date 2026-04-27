@@ -147,9 +147,9 @@
 
 .dayContent {
     padding: 12px;
-    min-height: 200px;
-    max-height: 400px;
-    overflow-y: auto;
+    min-height: auto; /* Автоматическая высота */
+    max-height: none; /* Убираем ограничение высоты */
+    overflow-y: visible; /* Убираем скролл */
 }
 
 .lessonCard {

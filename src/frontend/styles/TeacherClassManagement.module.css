@@ -1,130 +1,15 @@
 /* src/frontend/styles/TeacherClassManagement.module.css */
-
-:root {
-    --primary: #21435A;
-    --primary-light: #2c5475;
-    --secondary: #21435A;
-    --secondary-light: #2c5475;
-    --accent: #21435A;
-    --accent-light: #2c5475;
-    --dark: #21435A;
-    --light: #f5f5f5;
-    --gray: #e0e0e0;
-    --gray-light: #f0f0f0;
-    --gray-dark: #8a8a8a;
-    
-    --bg-primary: transparent;
-    --bg-secondary: transparent;
-    --bg-card: rgba(255, 255, 255, 0.85);
-    --bg-card-hover: rgba(255, 255, 255, 0.95);
-    --bg-input: rgba(255, 255, 255, 0.9);
-    
-    --text-primary: #21435A;
-    --text-secondary: #2c5475;
-    --text-muted: #6c757d;
-    
-    --border-color: rgba(33, 67, 90, 0.15);
-    --border-light: rgba(33, 67, 90, 0.08);
-    
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
-
-body.dark-theme {
-    --primary: #21435A;
-    --primary-light: #2c5475;
-    --secondary: #21435A;
-    --secondary-light: #2c5475;
-    --accent: #21435A;
-    --accent-light: #2c5475;
-    --dark: #e0e0e0;
-    --light: #1a1a1a;
-    --gray: #6c757d;
-    --gray-light: #adb5bd;
-    --gray-dark: #495057;
-    
-    --bg-primary: transparent;
-    --bg-secondary: transparent;
-    --bg-card: rgba(26, 26, 26, 0.85);
-    --bg-card-hover: rgba(26, 26, 26, 0.95);
-    --bg-input: rgba(42, 42, 42, 0.9);
-    
-    --text-primary: #ffffff;
-    --text-secondary: #cccccc;
-    --text-muted: #888888;
-    
-    --border-color: rgba(255, 255, 255, 0.1);
-    --border-light: rgba(255, 255, 255, 0.05);
-    
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
-}
+/* Только специфичные стили для управления классами учителя */
+/* Переменные темы в global-theme.css */
 
 .page {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     position: relative;
-    background-color: transparent;
-    color: var(--text-primary);
 }
 
-.animatedBg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    overflow: hidden;
-}
-
-body.dark-theme .animatedBg {
-    background: #000000;
-}
-
-body:not(.dark-theme) .animatedBg {
-    background: #e8eef200;
-}
-
-.glassCircle {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(30px);
-    opacity: 0.2;
-    animation: float 20s infinite ease-in-out;
-    transform-origin: center;
-}
-
-body.dark-theme .glassCircle {
-    filter: blur(20px);
-    opacity: 0.2;
-    mix-blend-mode: screen;
-}
-
-body:not(.dark-theme) .glassCircle {
-    mix-blend-mode: overlay;
-}
-
-.glassCircle:nth-child(1) { width: 500px; height: 480px; top: 10%; left: 5%; background: radial-gradient(circle, rgba(106,13,173,0.7) 0%, rgba(0,153,255,0.6) 40%, transparent 70%); animation-duration: 30s; border-radius: 43% 57% 52% 48% / 48% 43% 57% 52%; }
-.glassCircle:nth-child(2) { width: 450px; height: 420px; top: 60%; right: 8%; background: radial-gradient(circle, rgba(68,153,209,0.7) 0%, rgba(137,43,226,0.6) 40%, transparent 70%); animation-duration: 28s; animation-delay: -7s; border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
-.glassCircle:nth-child(3) { width: 380px; height: 400px; bottom: 15%; left: 12%; background: radial-gradient(circle, rgba(156,39,176,0.65) 0%, rgba(107,163,202,0.6) 40%, transparent 70%); animation-duration: 32s; animation-delay: -12s; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
-.glassCircle:nth-child(4) { width: 320px; height: 300px; top: 25%; right: 22%; background: linear-gradient(135deg, rgba(106,13,173,0.65), rgba(68,153,209,0.6)); animation-duration: 26s; animation-delay: -5s; border-radius: 55% 45% 65% 35% / 45% 55% 45% 55%; }
-.glassCircle:nth-child(5) { width: 280px; height: 260px; bottom: 35%; right: 28%; background: radial-gradient(circle, rgba(0,153,255,0.6), rgba(137,43,226,0.55)); animation-duration: 29s; animation-delay: -15s; border-radius: 70% 30% 50% 50% / 60% 40% 60% 40%; }
-.glassCircle:nth-child(6) { width: 220px; height: 240px; top: 70%; left: 35%; background: radial-gradient(circle, rgba(137,43,226,0.6), rgba(107,163,202,0.55)); animation-duration: 27s; animation-delay: -20s; border-radius: 45% 55% 35% 65% / 55% 45% 55% 45%; opacity: 0.6; }
-.glassCircle:nth-child(7) { width: 180px; height: 160px; top: 15%; left: 40%; background: linear-gradient(45deg, rgba(156,39,176,0.65), rgba(0,153,255,0.6)); animation-duration: 24s; animation-delay: -8s; border-radius: 65% 35% 45% 55% / 35% 65% 35% 65%; opacity: 0.55; }
-.glassCircle:nth-child(8) { width: 650px; height: 620px; top: -100px; left: -150px; background: radial-gradient(circle, rgba(106,13,173,0.5), transparent); animation-duration: 35s; animation-delay: -25s; border-radius: 50%; opacity: 0.4; }
-.glassCircle:nth-child(9) { width: 550px; height: 580px; bottom: -120px; right: -100px; background: radial-gradient(circle, rgba(68,153,209,0.5), transparent); animation-duration: 33s; animation-delay: -18s; border-radius: 50%; opacity: 0.35; }
-.glassCircle:nth-child(10) { width: 300px; height: 320px; top: 40%; left: 60%; background: linear-gradient(120deg, rgba(106,13,173,0.6), rgba(68,153,209,0.55), rgba(156,39,176,0.5)); animation-duration: 31s; animation-delay: -10s; border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%; opacity: 0.6; }
-
-@keyframes float {
-    0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
-    20% { transform: translate(40px, 30px) rotate(2deg) scale(1.03); }
-    40% { transform: translate(-25px, 45px) rotate(-3deg) scale(0.98); }
-    60% { transform: translate(35px, -25px) rotate(4deg) scale(1.02); }
-    80% { transform: translate(-20px, -35px) rotate(-2deg) scale(0.99); }
-}
-
+/* ========== ВЕРХНЯЯ ПАНЕЛЬ С КНОПКАМИ ========== */
 .topBar {
     position: fixed;
     top: 20px;
@@ -190,11 +75,12 @@ body:not(.dark-theme) .glassCircle {
     color: white;
 }
 
+/* ========== ОСНОВНОЙ КОНТЕЙНЕР ========== */
 .container {
     flex: 1;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 50px 24px 24px 24px;
+    padding: 70px 24px 24px 24px;
     position: relative;
     z-index: 1;
     width: 100%;
@@ -224,11 +110,6 @@ body:not(.dark-theme) .glassCircle {
     margin-bottom: 10px;
 }
 
-.disabledCard p {
-    color: var(--text-secondary);
-    margin-bottom: 30px;
-}
-
 .backToTeacherBtn {
     padding: 10px 20px;
     background: var(--primary);
@@ -239,9 +120,15 @@ body:not(.dark-theme) .glassCircle {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    transition: all 0.2s;
 }
 
-/* Class Header - ПОЛНОСТЬЮ ПРОЗРАЧНЫЙ */
+.backToTeacherBtn:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+}
+
+/* ========== ШАПКА КЛАССА ========== */
 .classHeader {
     display: flex;
     align-items: center;
@@ -279,22 +166,12 @@ body:not(.dark-theme) .glassCircle {
     font-size: 14px;
 }
 
-.classStats .stat {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: rgba(33, 67, 90, 0.1);
-    border-radius: 30px;
-    color: var(--text-primary);
-}
-
-/* Schedule Section */
+/* ========== СЕКЦИЯ РАСПИСАНИЯ ========== */
 .scheduleSection {
     background: transparent;
     border-radius: 20px;
     padding: 0;
-    margin-bottom: 24px;
+    margin-top: 20px;
 }
 
 .scheduleSection h2 {
@@ -335,11 +212,11 @@ body:not(.dark-theme) .glassCircle {
 
 .dayTableWrapper:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-hover);
+    box-shadow: var(--shadow-md);
 }
 
 .dayTableHeader {
-    background: linear-gradient(135deg, #21435A 0%, #2c5475 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
     padding: 10px 14px;
     text-align: center;
 }
@@ -359,11 +236,9 @@ body:not(.dark-theme) .glassCircle {
 
 .dayTableContainer {
     overflow-x: auto;
-    overflow-y: auto;
+    overflow-y: visible;
     flex: 1;
-    max-height: 460px;
 }
-
 .scheduleTable {
     width: 100%;
     border-collapse: collapse;
@@ -422,7 +297,7 @@ body.dark-theme .lessonTimeCell {
     font-size: 0.75rem;
     color: var(--text-primary);
     display: inline-block;
-    background: rgba(33, 67, 90, 0.1);
+    background: var(--primary-soft);
     width: 24px;
     height: 24px;
     line-height: 24px;
@@ -503,6 +378,7 @@ body.dark-theme .lessonTimeCell {
     opacity: 0.5;
 }
 
+/* ========== ЗАГРУЗЧИК ========== */
 .loader {
     display: flex;
     flex-direction: column;
@@ -525,7 +401,7 @@ body.dark-theme .lessonTimeCell {
     to { transform: rotate(360deg); }
 }
 
-/* Адаптив */
+/* ========== АДАПТАЦИЯ ========== */
 @media (max-width: 1024px) {
     .topRow, .bottomRow {
         grid-template-columns: repeat(2, 1fr);
@@ -535,7 +411,7 @@ body.dark-theme .lessonTimeCell {
 
 @media (max-width: 768px) {
     .container {
-        padding: 45px 16px 16px 16px;
+        padding: 65px 16px 16px 16px;
     }
     
     .classHeader {
@@ -550,13 +426,9 @@ body.dark-theme .lessonTimeCell {
         gap: 16px;
     }
     
-    .timeCol {
-        width: 40px;
-    }
-    
-    .timeColFull {
-        width: 65px;
-    }
+    .timeCol { width: 40px; }
+    .timeColFull { width: 65px; }
+    .dayTableContainer { max-height: 420px; }
     
     .topBar {
         top: 12px;
@@ -569,84 +441,22 @@ body.dark-theme .lessonTimeCell {
         padding: 0 14px;
         font-size: 13px;
     }
-    
-    .dayTableContainer {
-        max-height: 420px;
-    }
-    
-    body.dark-theme .glassCircle:nth-child(1),
-    body.dark-theme .glassCircle:nth-child(2),
-    body.dark-theme .glassCircle:nth-child(3),
-    body:not(.dark-theme) .glassCircle:nth-child(1),
-    body:not(.dark-theme) .glassCircle:nth-child(2),
-    body:not(.dark-theme) .glassCircle:nth-child(3) {
-        width: 280px;
-        height: 260px;
-        filter: blur(50px);
-    }
-    
-    body.dark-theme .glassCircle:nth-child(4),
-    body.dark-theme .glassCircle:nth-child(5),
-    body.dark-theme .glassCircle:nth-child(6),
-    body:not(.dark-theme) .glassCircle:nth-child(4),
-    body:not(.dark-theme) .glassCircle:nth-child(5),
-    body:not(.dark-theme) .glassCircle:nth-child(6) {
-        width: 200px;
-        height: 180px;
-        filter: blur(45px);
-    }
-    
-    body.dark-theme .glassCircle:nth-child(7),
-    body.dark-theme .glassCircle:nth-child(10),
-    body:not(.dark-theme) .glassCircle:nth-child(7),
-    body:not(.dark-theme) .glassCircle:nth-child(10) {
-        width: 150px;
-        height: 140px;
-        filter: blur(40px);
-    }
-    
-    body.dark-theme .glassCircle:nth-child(8),
-    body.dark-theme .glassCircle:nth-child(9),
-    body:not(.dark-theme) .glassCircle:nth-child(8),
-    body:not(.dark-theme) .glassCircle:nth-child(9) {
-        display: none;
-    }
 }
 
 @media (max-width: 576px) {
     .container {
-        padding: 40px 12px 12px 12px;
+        padding: 60px 12px 12px 12px;
     }
     
-    .topRow, .bottomRow {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-    
-    .classHeader {
-        gap: 10px;
-        padding: 0 0 12px 0;
-    }
-    
-    .classInfo h1 {
-        font-size: 18px;
-    }
-    
-    .classInfo p {
-        font-size: 12px;
-    }
-    
-    .timeCol {
-        width: 36px;
-    }
-    
-    .timeColFull {
-        width: 58px;
-    }
-    
-    .lessonTime {
-        font-size: 0.55rem;
-    }
+    .classInfo h1 { font-size: 18px; }
+    .classInfo p { font-size: 12px; }
+    .timeCol { width: 36px; }
+    .timeColFull { width: 58px; }
+    .lessonTime { font-size: 0.55rem; }
+    .lessonSubject { font-size: 0.68rem; }
+    .lessonTeacher, .lessonRoom { font-size: 0.58rem; }
+    .lessonNumber { width: 22px; height: 22px; line-height: 22px; font-size: 0.7rem; }
+    .dayTableContainer { max-height: 380px; }
     
     .topBar {
         top: 10px;
@@ -661,28 +471,6 @@ body.dark-theme .lessonTimeCell {
     .backBtn, .themeBtn {
         width: 38px;
         padding: 0;
-    }
-    
-    .themeBtn svg {
-        font-size: 14px;
-    }
-    
-    .lessonSubject {
-        font-size: 0.68rem;
-    }
-    
-    .lessonTeacher, .lessonRoom {
-        font-size: 0.58rem;
-    }
-    
-    .lessonNumber {
-        width: 22px;
-        height: 22px;
-        line-height: 22px;
-        font-size: 0.7rem;
-    }
-    
-    .dayTableContainer {
-        max-height: 380px;
+        justify-content: center;
     }
 }

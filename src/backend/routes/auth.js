@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../models/database');
+const { logActivity } = require('./activity');
 
 const router = express.Router();
 
@@ -24,7 +25,6 @@ router.post('/login', async (req, res) => {
     }
 
     try {
-        // Ищем пользователя в таблице users
         const result = await db.query(
             'SELECT id, login, password_hash, role FROM users WHERE login = $1',
             [login]
@@ -47,14 +47,12 @@ router.post('/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
-        // Формируем ответ
         let responseUser = {
             id: user.id,
             login: user.login,
             role: user.role
         };
 
-        // Для КЛАССА - парсим логин и преобразуем букву
         if (user.role === 'class') {
             const match = user.login.match(/class(\d+)([A-Za-z]+)/i);
             if (match) {
@@ -69,8 +67,6 @@ router.post('/login', async (req, res) => {
                 responseUser.name = user.login;
             }
         }
-        
-        // ДЛЯ УЧИТЕЛЯ - получаем ФИО из таблицы teachers
         else if (user.role === 'teacher') {
             try {
                 const teacherResult = await db.query(
@@ -82,7 +78,6 @@ router.post('/login', async (req, res) => {
                     responseUser.firstName = t.first_name;
                     responseUser.lastName = t.last_name;
                     responseUser.middleName = t.middle_name || '';
-                    // Полное ФИО
                     responseUser.name = `${t.last_name} ${t.first_name} ${t.middle_name || ''}`.trim();
                 } else {
                     responseUser.name = user.login;
@@ -92,8 +87,6 @@ router.post('/login', async (req, res) => {
                 responseUser.name = user.login;
             }
         }
-        
-        // ДЛЯ АДМИНИСТРАТОРА - получаем ФИО из таблицы admins
         else if (user.role === 'admin') {
             try {
                 const adminResult = await db.query(
@@ -102,7 +95,6 @@ router.post('/login', async (req, res) => {
                 );
                 if (adminResult.rows.length > 0) {
                     responseUser.name = adminResult.rows[0].name;
-                    // Парсим ФИО для инициалов
                     const nameParts = responseUser.name.split(' ');
                     if (nameParts.length >= 2) {
                         responseUser.lastName = nameParts[0];
@@ -117,14 +109,22 @@ router.post('/login', async (req, res) => {
                 responseUser.name = user.login;
             }
         }
-        
-        // ДЛЯ СУПЕРАДМИНА
         else if (user.role === 'superadmin') {
             responseUser.name = 'Суперадминистратор';
             responseUser.lastName = 'Суперадмин';
             responseUser.firstName = '';
             responseUser.middleName = '';
         }
+
+        // ЛОГИРОВАНИЕ ВХОДА
+        await logActivity(
+            user.id,
+            user.login,
+            user.role,
+            'login',
+            `Вход в систему`,
+            `Успешная авторизация`
+        );
 
         console.log('Login response:', responseUser);
 

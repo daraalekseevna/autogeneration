@@ -75,7 +75,7 @@ const PersonalCabinet = ({ userData, onClose, onLogout }) => {
       superadmin: 'Суперадминистратор',
       admin: 'Администратор',
       teacher: 'Учитель',
-      class: 'Классный руководитель'
+      class: 'Класс'  // <-- ИСПРАВЛЕНО: было 'Классный руководитель'
     };
     return titles[currentUser?.role] || 'Пользователь';
   };

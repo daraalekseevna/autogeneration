@@ -1,4 +1,5 @@
-/* SuperAdmin.css - оптимизированная версия */
+/* SuperAdmin.css - оптимизированная версия с единой цветовой гаммой #21435A */
+/* Переменные темы в global-theme.css */
 
 .superadmin-container {
     width: 100%;
@@ -33,6 +34,7 @@
 .theme-btn-superadmin:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow);
+    border-color: var(--primary);
 }
 
 /* Заголовок */
@@ -72,13 +74,14 @@
 
 .stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow);
+    box-shadow: 0 4px 20px var(--primary-glow);
+    border-color: var(--primary);
 }
 
 .stat-number {
     font-size: 2rem;
     font-weight: bold;
-    color: var(--text-primary);
+    color: var(--primary);
     line-height: 1;
 }
 
@@ -115,19 +118,20 @@
 }
 
 .tab-button:hover {
-    background: rgba(33, 67, 90, 0.1);
+    background: var(--primary-soft);
     transform: translateY(-2px);
+    border-color: var(--primary);
 }
 
 .tab-button.active {
-    background: #21435A;
+    background: var(--primary);
     color: white;
-    border-color: #21435A;
+    border-color: var(--primary);
 }
 
 body.dark-theme .tab-button.active {
-    background: #2c5475;
-    border-color: #2c5475;
+    background: var(--primary-light);
+    border-color: var(--primary-light);
 }
 
 /* Контент */
@@ -194,7 +198,7 @@ body.dark-theme .tab-button.active {
 .form-select {
     width: 100%;
     padding: 0.7rem 0.9rem;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--border-solid);
     border-radius: 10px;
     font-size: 0.9rem;
     background: var(--bg-input);
@@ -205,20 +209,21 @@ body.dark-theme .tab-button.active {
 
 body.dark-theme .form-input,
 body.dark-theme .form-select {
-    border-color: #3a3a3a;
+    border-color: var(--border-color);
+    background: var(--bg-input);
 }
 
 .form-input:focus,
 .form-select:focus {
     outline: none;
-    border-color: #21435A;
-    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
 }
 
 body.dark-theme .form-input:focus,
 body.dark-theme .form-select:focus {
-    border-color: #2c5475;
-    box-shadow: 0 0 0 3px rgba(44, 84, 117, 0.2);
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(58, 109, 153, 0.2);
 }
 
 .form-select option {
@@ -233,12 +238,12 @@ body.dark-theme .form-select:focus {
     display: block;
 }
 
-/* Кнопка отправки - цвет #21435A */
+/* Кнопка отправки */
 .submit-button {
     width: 100%;
     padding: 0.75rem;
     border: none;
-    background: #21435A;
+    background: var(--primary);
     color: white;
     border-radius: 10px;
     cursor: pointer;
@@ -253,16 +258,16 @@ body.dark-theme .form-select:focus {
 }
 
 .submit-button:hover {
-    background: #2c5475;
+    background: var(--primary-light);
     transform: translateY(-2px);
 }
 
 body.dark-theme .submit-button {
-    background: #2c5475;
+    background: var(--primary-light);
 }
 
 body.dark-theme .submit-button:hover {
-    background: #3a6d99;
+    background: var(--primary);
 }
 
 /* Таблицы */
@@ -280,7 +285,7 @@ body.dark-theme .submit-button:hover {
     text-align: left;
     color: var(--text-primary);
     font-weight: 600;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 2px solid var(--primary-soft);
     font-size: 0.85rem;
 }
 
@@ -292,10 +297,10 @@ body.dark-theme .submit-button:hover {
 }
 
 .data-table tr:hover {
-    background: rgba(33, 67, 90, 0.05);
+    background: var(--primary-soft);
 }
 
-/* Кнопки действий - цвет #21435A */
+/* Кнопки действий */
 .action-button {
     padding: 0.5rem 1rem;
     border: none;
@@ -320,12 +325,12 @@ body.dark-theme .submit-button:hover {
 }
 
 .shift-button {
-    background: #21435A;
+    background: var(--primary);
     color: white;
 }
 
 body.dark-theme .shift-button {
-    background: #2c5475;
+    background: var(--primary-light);
 }
 
 .assign-button {
@@ -374,7 +379,7 @@ body.dark-theme .shift-button {
 .shift-stats {
     margin-top: 1.5rem;
     padding: 1rem;
-    background: rgba(33, 67, 90, 0.05);
+    background: var(--primary-soft);
     border-radius: 12px;
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -418,7 +423,7 @@ body.dark-theme .shift-button {
     position: fixed;
     top: 100px;
     right: 20px;
-    background: #21435A;
+    background: var(--primary);
     color: white;
     padding: 0.75rem 1.5rem;
     border-radius: 10px;
@@ -429,7 +434,7 @@ body.dark-theme .shift-button {
 }
 
 body.dark-theme .notification {
-    background: #2c5475;
+    background: var(--primary-light);
 }
 
 /* Загрузка */
@@ -447,7 +452,7 @@ body.dark-theme .notification {
     width: 40px;
     height: 40px;
     border: 3px solid var(--border-color);
-    border-top-color: #21435A;
+    border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -465,6 +470,387 @@ body.dark-theme .notification {
         transform: translateX(0);
         opacity: 1;
     }
+}
+
+/* ========== СТИЛИ ДЛЯ ВЫБОРА ПРЕДМЕТОВ ========== */
+
+/* Кнопка выбора предметов */
+.subject-selector-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: rgba(33, 67, 90, 0.85);
+    border: 1px solid rgba(33, 67, 90, 0.5);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.subject-selector-button:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+.subject-selector-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.subject-selector-icon {
+    color: white;
+}
+
+.subject-selector-text {
+    color: white;
+    font-weight: 500;
+}
+
+.subject-selector-arrow {
+    color: white;
+    font-size: 12px;
+}
+
+/* Темная тема для кнопки */
+body.dark-theme .subject-selector-button {
+    background: #3a3a3a;
+    border-color: #4a4a4a;
+}
+
+body.dark-theme .subject-selector-button:hover {
+    background: #4a4a4a;
+    border-color: #5a5a5a;
+}
+
+body.dark-theme .subject-selector-icon,
+body.dark-theme .subject-selector-text,
+body.dark-theme .subject-selector-arrow {
+    color: #e0e0e0;
+}
+
+/* Предпросмотр выбранных предметов */
+.subject-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.subject-preview-tag {
+    display: inline-block;
+    padding: 4px 8px;
+    background: var(--primary-soft);
+    border-radius: 16px;
+    font-size: 12px;
+    color: var(--primary);
+}
+
+body.dark-theme .subject-preview-tag {
+    background: rgba(58, 109, 153, 0.2);
+    color: var(--primary-light);
+}
+
+/* Теги предметов в таблице учителей */
+.subjects-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.subject-tag {
+    display: inline-block;
+    padding: 4px 8px;
+    background: var(--primary);
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 500;
+    color: white;
+}
+
+.no-subjects {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.edit-subjects-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-secondary);
+}
+
+.edit-subjects-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+body.dark-theme .edit-subjects-btn {
+    border-color: #4a4a4a;
+    color: #b0b0b0;
+}
+
+body.dark-theme .edit-subjects-btn:hover {
+    background: var(--primary-light);
+    border-color: var(--primary-light);
+    color: white;
+}
+
+/* ========== МОДАЛЬНОЕ ОКНО ДЛЯ ПРЕДМЕТОВ ========== */
+.subject-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.subject-modal-content {
+    background: var(--bg-card-solid);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+}
+
+.subject-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.subject-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary);
+}
+
+body.dark-theme .subject-modal-header h3 {
+    color: white;
+}
+
+.subject-modal-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+
+.subject-modal-close:hover {
+    color: var(--primary);
+}
+
+body.dark-theme .subject-modal-close {
+    color: #888;
+}
+
+body.dark-theme .subject-modal-close:hover {
+    color: white;
+}
+
+.subject-modal-search {
+    padding: 16px 20px;
+    position: relative;
+}
+
+.subject-modal-search .search-icon {
+    position: absolute;
+    left: 32px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.subject-modal-search input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+}
+
+.subject-modal-search input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+body.dark-theme .subject-modal-search input:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(58, 109, 153, 0.2);
+}
+
+.subject-modal-select-all {
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.select-all-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.select-all-label input {
+    accent-color: var(--primary);
+}
+
+.subject-modal-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+    max-height: 300px;
+}
+
+.subject-modal-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.subject-modal-list::-webkit-scrollbar-track {
+    background: var(--border-light);
+    border-radius: 3px;
+}
+
+.subject-modal-list::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 3px;
+}
+
+.subject-modal-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.subject-modal-item:hover {
+    background: var(--primary-soft);
+}
+
+.subject-modal-item input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+.subject-modal-item-name {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.subject-modal-empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+}
+
+.subject-modal-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.subject-modal-selected-count {
+    font-size: 13px;
+    color: var(--primary);
+    font-weight: 500;
+}
+
+body.dark-theme .subject-modal-selected-count {
+    color: var(--primary-light);
+}
+
+.subject-modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.subject-modal-cancel {
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-secondary);
+}
+
+.subject-modal-cancel:hover {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+}
+
+body.dark-theme .subject-modal-cancel {
+    border-color: #4a4a4a;
+    color: #ccc;
+}
+
+body.dark-theme .subject-modal-cancel:hover {
+    background: #4a4a4a;
+    border-color: #6a6a6a;
+    color: white;
+}
+
+.subject-modal-save {
+    padding: 8px 20px;
+    background: var(--primary);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.subject-modal-save:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+}
+
+body.dark-theme .subject-modal-save {
+    background: var(--primary-light);
+}
+
+body.dark-theme .subject-modal-save:hover {
+    background: var(--primary);
 }
 
 /* Адаптивность */
@@ -524,35 +910,7 @@ body.dark-theme .notification {
 }
 
 @media (max-width: 576px) {
-    .theme-toggle-superadmin {
-        top: 80px;
-        right: 8px;
-    }
-    
-    .theme-btn-superadmin {
-        padding: 5px 10px;
-        font-size: 0.7rem;
-    }
-    
     .stats-grid {
         grid-template-columns: 1fr;
-    }
-    
-    .stat-card {
-        padding: 0.8rem;
-    }
-    
-    .stat-number {
-        font-size: 1.2rem;
-    }
-    
-    .form-container,
-    .table-container {
-        padding: 1rem;
-    }
-    
-    .action-button {
-        padding: 0.3rem 0.6rem;
-        font-size: 0.65rem;
     }
 }

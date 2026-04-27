@@ -186,11 +186,11 @@ const TeacherClassManagement = () => {
     if (loading) {
         return (
             <div className={styles.page}>
-                <div className={styles.animatedBg}>
-                    {[...Array(10)].map((_, i) => (
-                        <div key={i} className={styles.glassCircle}></div>
-                    ))}
-                </div>
+                <div className="animated-bg">
+    {[...Array(10)].map((_, i) => (
+        <div key={i} className="glass-circle"></div>
+    ))}
+</div>
                 <Header />
                 <main className={styles.container}>
                     <div className={styles.loader}>
@@ -206,11 +206,11 @@ const TeacherClassManagement = () => {
     if (!myClass) {
         return (
             <div className={styles.page}>
-                <div className={styles.animatedBg}>
-                    {[...Array(10)].map((_, i) => (
-                        <div key={i} className={styles.glassCircle}></div>
-                    ))}
-                </div>
+                <div className="animated-bg">
+    {[...Array(10)].map((_, i) => (
+        <div key={i} className="glass-circle"></div>
+    ))}
+</div>
                 <div className={styles.topBar}>
                     <button className={styles.backBtn} onClick={() => navigate('/teacher')}>
                         <FaArrowLeft /> <span>Назад</span>
@@ -238,11 +238,11 @@ const TeacherClassManagement = () => {
 
     return (
         <div className={styles.page}>
-            <div className={styles.animatedBg}>
-                {[...Array(10)].map((_, i) => (
-                    <div key={i} className={styles.glassCircle}></div>
-                ))}
-            </div>
+            <div className="animated-bg">
+    {[...Array(10)].map((_, i) => (
+        <div key={i} className="glass-circle"></div>
+    ))}
+</div>
             
             <div className={styles.topBar}>
                 <button className={styles.backBtn} onClick={() => navigate('/teacher')}>

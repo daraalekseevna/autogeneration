@@ -1,6 +1,6 @@
-// SuperAdminDashboard.jsx - оптимизированная версия
+// SuperAdminDashboard.jsx - исправленная версия с красивым выбором предметов
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { FaTrash, FaCheck, FaTimes, FaSun, FaMoon, FaUserPlus, FaChalkboardTeacher, FaSchool, FaUsers, FaSync } from 'react-icons/fa';
+import { FaTrash, FaCheck, FaTimes, FaSun, FaMoon, FaUserPlus, FaChalkboardTeacher, FaSchool, FaUsers, FaSync, FaSearch, FaBook, FaChevronDown, FaChevronUp, FaEdit } from 'react-icons/fa';
 import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -8,6 +8,114 @@ import '../styles/MainContent.css';
 import '../styles/SuperAdmin.css';
 
 const API_URL = 'http://localhost:5000/api';
+
+// Компонент модального окна для выбора предметов
+const SubjectSelectorModal = ({ isOpen, onClose, subjects, selectedIds, onSave, teacherName }) => {
+  const [tempSelectedIds, setTempSelectedIds] = useState(selectedIds);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectAll, setSelectAll] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTempSelectedIds(selectedIds);
+      setSearchTerm('');
+      setSelectAll(false);
+    }
+  }, [isOpen, selectedIds]);
+
+  const filteredSubjects = subjects.filter(subject =>
+    subject.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const toggleSubject = (subjectId) => {
+    setTempSelectedIds(prev =>
+      prev.includes(subjectId)
+        ? prev.filter(id => id !== subjectId)
+        : [...prev, subjectId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setTempSelectedIds([]);
+    } else {
+      setTempSelectedIds(filteredSubjects.map(s => s.id));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const handleSave = () => {
+    onSave(tempSelectedIds);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="subject-modal-overlay" onClick={onClose}>
+      <div className="subject-modal-content" onClick={e => e.stopPropagation()}>
+        <div className="subject-modal-header">
+          <h3><FaBook /> Выбор предметов для {teacherName}</h3>
+          <button className="subject-modal-close" onClick={onClose}>
+            <FaTimes />
+          </button>
+        </div>
+        
+        <div className="subject-modal-search">
+          <FaSearch className="search-icon" />
+          <input
+            type="text"
+            placeholder="Поиск предметов..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        <div className="subject-modal-select-all">
+          <label className="select-all-label">
+            <input
+              type="checkbox"
+              checked={selectAll && filteredSubjects.length > 0}
+              onChange={handleSelectAll}
+            />
+            <span>Выбрать все ({filteredSubjects.length})</span>
+          </label>
+        </div>
+        
+        <div className="subject-modal-list">
+          {filteredSubjects.length === 0 ? (
+            <div className="subject-modal-empty">Предметы не найдены</div>
+          ) : (
+            filteredSubjects.map(subject => (
+              <label key={subject.id} className="subject-modal-item">
+                <input
+                  type="checkbox"
+                  checked={tempSelectedIds.includes(subject.id)}
+                  onChange={() => toggleSubject(subject.id)}
+                />
+                <span className="subject-modal-item-name">{subject.name}</span>
+              </label>
+            ))
+          )}
+        </div>
+        
+        <div className="subject-modal-footer">
+          <div className="subject-modal-selected-count">
+            Выбрано: {tempSelectedIds.length}
+          </div>
+          <div className="subject-modal-actions">
+            <button className="subject-modal-cancel" onClick={onClose}>
+              Отмена
+            </button>
+            <button className="subject-modal-save" onClick={handleSave}>
+              <FaCheck /> Сохранить
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const SuperAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('admins');
@@ -21,6 +129,11 @@ const SuperAdminDashboard = () => {
     const saved = localStorage.getItem('theme');
     return saved === 'dark';
   });
+  
+  // Модальное окно для предметов
+  const [subjectModalOpen, setSubjectModalOpen] = useState(false);
+  const [currentTeacher, setCurrentTeacher] = useState(null);
+  const [tempSubjectIds, setTempSubjectIds] = useState([]);
 
   // Формы
   const [newAdmin, setNewAdmin] = useState({ login: '', password: '', name: '', email: '' });
@@ -116,15 +229,37 @@ const SuperAdminDashboard = () => {
   };
 
   // Учителя
-  const handleSubjectChange = (e) => {
-    const options = e.target.options;
-    const selected = [];
-    for (let i = 0; i < options.length; i++) {
-      if (options[i].selected) {
-        selected.push(parseInt(options[i].value));
-      }
+  const openSubjectModal = (teacher = null) => {
+    if (teacher) {
+      setCurrentTeacher(teacher);
+      setTempSubjectIds(teacher.subjectIds || []);
+    } else {
+      setCurrentTeacher(null);
+      setTempSubjectIds(newTeacher.subjectIds);
     }
-    setNewTeacher({ ...newTeacher, subjectIds: selected });
+    setSubjectModalOpen(true);
+  };
+
+  const handleSaveSubjects = async (selectedIds) => {
+    if (currentTeacher) {
+      // Обновляем существующего учителя
+      try {
+        await axios.put(`${API_URL}/superadmin/teachers/${currentTeacher.id}`, {
+          ...currentTeacher,
+          subjectIds: selectedIds
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        showNotification('Предметы обновлены');
+        loadData();
+      } catch (err) {
+        console.error('Update subjects error:', err);
+        showNotification('Ошибка обновления предметов');
+      }
+    } else {
+      // Для нового учителя сохраняем в форму
+      setNewTeacher(prev => ({ ...prev, subjectIds: selectedIds }));
+    }
   };
 
   const handleAddTeacher = async (e) => {
@@ -237,7 +372,6 @@ const SuperAdminDashboard = () => {
     admins: admins.length,
     teachers: teachers.length,
     classes: classes.length,
-    students: classes.reduce((sum, c) => sum + (c.students_count || 0), 0),
     classesWithoutTeacher: classes.filter(c => !c.teacher_name).length,
     shift1: classes.filter(c => c.shift === 1).length,
     shift2: classes.filter(c => c.shift === 2).length
@@ -279,7 +413,6 @@ const SuperAdminDashboard = () => {
           <div className="stat-card"><div className="stat-number">{stats.admins}</div><div className="stat-label">Администраторов</div></div>
           <div className="stat-card"><div className="stat-number">{stats.teachers}</div><div className="stat-label">Учителей</div></div>
           <div className="stat-card"><div className="stat-number">{stats.classes}</div><div className="stat-label">Классов</div></div>
-          <div className="stat-card"><div className="stat-number">{stats.students}</div><div className="stat-label">Учеников</div></div>
         </div>
 
         <div className="tabs-container">
@@ -372,18 +505,44 @@ const SuperAdminDashboard = () => {
                     <input type="password" value={newTeacher.password} onChange={e => setNewTeacher({...newTeacher, password: e.target.value})} className="form-input" />
                   </div>
                 </div>
+                
+                {/* КРАСИВАЯ КНОПКА ВЫБОРА ПРЕДМЕТОВ */}
                 <div className="form-group">
                   <label className="form-label">Предметы</label>
-                  <select multiple className="form-select" value={newTeacher.subjectIds} onChange={handleSubjectChange}>
-                    {subjects.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                  <small className="form-help">Удерживайте Ctrl для выбора нескольких</small>
+                  <div 
+                    className="subject-selector-button"
+                    onClick={() => openSubjectModal(null)}
+                  >
+                    <div className="subject-selector-content">
+                      <FaBook className="subject-selector-icon" />
+                      <span className="subject-selector-text">
+                        {newTeacher.subjectIds.length === 0 
+                          ? 'Выберите предметы...' 
+                          : `Выбрано предметов: ${newTeacher.subjectIds.length}`}
+                      </span>
+                    </div>
+                    <FaChevronDown className="subject-selector-arrow" />
+                  </div>
+                  
+                  {/* Предпросмотр выбранных предметов */}
+                  {newTeacher.subjectIds.length > 0 && (
+                    <div className="subject-preview">
+                      {newTeacher.subjectIds.map(id => {
+                        const subject = subjects.find(s => s.id === id);
+                        return subject ? (
+                          <span key={id} className="subject-preview-tag">
+                            {subject.name}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
                 </div>
+                
                 <button type="submit" className="submit-button">Добавить учителя</button>
               </form>
             </div>
+            
             <div className="table-container">
               <h3 className="table-title">Список учителей ({teachers.length})</h3>
               <div className="table-responsive">
@@ -392,8 +551,27 @@ const SuperAdminDashboard = () => {
                   <tbody>
                     {teachers.map(t => (
                       <tr key={t.id}>
-                        <td>{t.name}</td>
-                        <td>{t.subjects ? t.subjects.map(s => s.name).join(', ') : ''}</td>
+                        <td style={{ fontWeight: 500 }}>{t.name}</td>
+                        <td>
+                          <div className="subjects-tags">
+                            {t.subjects && t.subjects.length > 0 ? (
+                              t.subjects.map(s => (
+                                <span key={s.id} className="subject-tag">
+                                  {s.name}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="no-subjects">Нет предметов</span>
+                            )}
+                            <button 
+                              className="edit-subjects-btn"
+                              onClick={() => openSubjectModal(t)}
+                              title="Редактировать предметы"
+                            >
+                              <FaEdit /> Изменить
+                            </button>
+                          </div>
+                        </td>
                         <td>
                           <button onClick={() => handleDeleteTeacher(t.id)} className="action-button delete-button">
                             <FaTrash /> Удалить
@@ -456,7 +634,7 @@ const SuperAdminDashboard = () => {
               <h3 className="table-title">Список классов ({classes.length})</h3>
               <div className="table-responsive">
                 <table className="data-table">
-                  <thead><tr><th>Класс</th><th>Смена</th><th>Учеников</th><th>Руководитель</th><th>Действия</th></tr></thead>
+                  <thead><tr><th>Класс</th><th>Смена</th><th>Руководитель</th><th>Действия</th></tr></thead>
                   <tbody>
                     {classes.map(c => (
                       <tr key={c.id}>
@@ -469,7 +647,6 @@ const SuperAdminDashboard = () => {
                             </button>
                           </div>
                         </td>
-                        <td>{c.students_count || 0}</td>
                         <td>
                           <div className="teacher-control">
                             <span>{c.teacher_name || 'Не назначен'}</span>
@@ -507,6 +684,17 @@ const SuperAdminDashboard = () => {
           </div>
         )}
       </main>
+      
+      {/* Модальное окно выбора предметов */}
+      <SubjectSelectorModal
+        isOpen={subjectModalOpen}
+        onClose={() => setSubjectModalOpen(false)}
+        subjects={subjects}
+        selectedIds={tempSubjectIds}
+        onSave={handleSaveSubjects}
+        teacherName={currentTeacher ? currentTeacher.name : 'нового учителя'}
+      />
+      
       <Footer />
     </div>
   );

@@ -1,65 +1,102 @@
+/* src/frontend/styles/RegisterUser.css */
+/* Переменные темы в global-theme.css */
+
 .register-page {
     max-width: 500px;
     margin: 2rem auto;
     padding: 2rem;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
 }
+
 .register-page h2 {
     text-align: center;
-    color: #21435A;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
 }
+
 .register-form .form-group {
     margin-bottom: 1.5rem;
 }
+
 .register-form label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
-    color: #21435A;
+    color: var(--text-primary);
 }
+
 .register-form input,
 .register-form select {
     width: 100%;
     padding: 0.75rem;
-    border: 2px solid rgba(33, 67, 90, 0.1);
-    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
     font-size: 1rem;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
 }
+
+.register-form input:focus,
+.register-form select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
 .register-form button {
     width: 100%;
     padding: 0.875rem;
-    background: linear-gradient(135deg, #21435A, #2c5475);
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
 }
+
 .register-form button:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(33, 67, 90, 0.2);
+    box-shadow: var(--shadow-md);
 }
+
 .register-form button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
+
 .error-message {
-    background: #ffebee;
-    color: #c62828;
+    background: rgba(244, 67, 54, 0.1);
+    color: var(--error);
     padding: 0.75rem;
     border-radius: 8px;
     margin-bottom: 1rem;
-    border-left: 4px solid #c62828;
+    border-left: 4px solid var(--error);
 }
+
 .success-message {
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: rgba(76, 175, 80, 0.1);
+    color: var(--success);
     padding: 0.75rem;
     border-radius: 8px;
     margin-bottom: 1rem;
-    border-left: 4px solid #2e7d32;
+    border-left: 4px solid var(--success);
+}
+
+/* Адаптация */
+@media (max-width: 576px) {
+    .register-page {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+    
+    .register-page h2 {
+        font-size: 1.3rem;
+    }
 }

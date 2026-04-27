@@ -1,4 +1,5 @@
 /* src/frontend/styles/ClassSchedule.module.css */
+/* Переменные темы в global-theme.css */
 
 /* Кнопка переключения темы */
 .themeToggle {
@@ -92,18 +93,19 @@
     align-items: center;
     gap: 8px;
     padding: 10px 20px;
-    background: #21435A;
+    background: var(--primary);
     border: none;
     border-radius: 30px;
     color: white;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .extracurricularBtn:hover {
-    background: #2c5475;
+    background: var(--primary-light);
+    transform: translateY(-2px);
 }
 
 .extracurricularBtn:active {
@@ -155,7 +157,7 @@
 }
 
 .dayTableHeader {
-    background: linear-gradient(135deg, #21435A 0%, #2c5475 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
     padding: 10px 14px;
     text-align: center;
 }
@@ -173,12 +175,13 @@
     display: block;
 }
 
+/* УДАЛИТЬ или ИЗМЕНИТЬ эти строки: */
 .dayTableContainer {
     overflow-x: auto;
-    overflow-y: auto;
+    overflow-y: auto;  /* ← убрать */
     flex: 1;
-    max-height: 460px;
-}
+    max-height: 460px;  /* ← убрать */
+}м
 
 .scheduleTable {
     width: 100%;
@@ -238,7 +241,7 @@ body.dark-theme .lessonTimeCell {
     font-size: 0.75rem;
     color: var(--text-primary);
     display: inline-block;
-    background: rgba(33, 67, 90, 0.1);
+    background: var(--primary-soft);
     width: 24px;
     height: 24px;
     line-height: 24px;
@@ -380,44 +383,6 @@ body.dark-theme .lessonTimeCell {
     
     .extracurricularBtn svg {
         font-size: 13px;
-    }
-    
-    body.dark-theme .glassCircle:nth-child(1),
-    body.dark-theme .glassCircle:nth-child(2),
-    body.dark-theme .glassCircle:nth-child(3),
-    body:not(.dark-theme) .glassCircle:nth-child(1),
-    body:not(.dark-theme) .glassCircle:nth-child(2),
-    body:not(.dark-theme) .glassCircle:nth-child(3) {
-        width: 280px;
-        height: 260px;
-        filter: blur(50px);
-    }
-    
-    body.dark-theme .glassCircle:nth-child(4),
-    body.dark-theme .glassCircle:nth-child(5),
-    body.dark-theme .glassCircle:nth-child(6),
-    body:not(.dark-theme) .glassCircle:nth-child(4),
-    body:not(.dark-theme) .glassCircle:nth-child(5),
-    body:not(.dark-theme) .glassCircle:nth-child(6) {
-        width: 200px;
-        height: 180px;
-        filter: blur(45px);
-    }
-    
-    body.dark-theme .glassCircle:nth-child(7),
-    body.dark-theme .glassCircle:nth-child(10),
-    body:not(.dark-theme) .glassCircle:nth-child(7),
-    body:not(.dark-theme) .glassCircle:nth-child(10) {
-        width: 150px;
-        height: 140px;
-        filter: blur(40px);
-    }
-    
-    body.dark-theme .glassCircle:nth-child(8),
-    body.dark-theme .glassCircle:nth-child(9),
-    body:not(.dark-theme) .glassCircle:nth-child(8),
-    body:not(.dark-theme) .glassCircle:nth-child(9) {
-        display: none;
     }
 }
 

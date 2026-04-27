@@ -1,4 +1,4 @@
-// ExcelGenerator.jsx - Полный компонент с расширенными настройками перемен
+// ExcelGenerator.jsx - Полный компонент с расширенными настройками перемен и интеграцией с БД
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'; 
 import { 
     FaFileExcel, 
@@ -28,6 +28,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import '../styles/ExcelGenerator.css';
 import { useNavigate } from 'react-router-dom';
+import { scheduleAPI } from '../services/scheduleAPI'; // ДОБАВЛЕН ИМПОРТ
 
 // Константы
 const ALL_CLASSES = ['1А', '1Б', '2А', '2Б', '3А', '3Б', '4А', '4Б', '5А', '5Б', '6А', '6Б', '7А', '7Б', '8А', '8Б', '9А', '9Б', '10А', '10Б', '11А', '11Б'];
@@ -37,8 +38,8 @@ const MAX_LESSONS = 8;
 // Начальные настройки с поддержкой нескольких больших перемен
 const INITIAL_SETTINGS = {
     // Время и уроки
-    startTime: '08:30',
-    lessonDuration: 45,
+    startTime: '08:00',
+    lessonDuration: 40,
     maxLessonsPerDay: 7,
     
     // Перемены - гибкая настройка
@@ -230,6 +231,35 @@ const ExcelGenerator = () => {
     const fileInputRef = useRef(null);
     const generationIntervalRef = useRef(null);
     
+    // ========== ЗАГРУЗКА НАСТРОЕК ИЗ БД ==========
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const savedSettings = await scheduleAPI.getSettings();
+                if (savedSettings) {
+                    setSettings({
+                        startTime: savedSettings.start_time || '08:30',
+                        lessonDuration: savedSettings.lesson_duration || 45,
+                        maxLessonsPerDay: savedSettings.max_lessons_per_day || 7,
+                        shortBreakDuration: savedSettings.short_break_duration || 10,
+                        breaks: savedSettings.breaks || INITIAL_SETTINGS.breaks,
+                        workDays: savedSettings.work_days || INITIAL_SETTINGS.workDays,
+                        saturdayLessons: savedSettings.saturday_lessons || false,
+                        secondShift: savedSettings.second_shift || false,
+                        secondShiftStart: savedSettings.second_shift_start || '14:00',
+                        secondShiftClasses: savedSettings.second_shift_classes || INITIAL_SETTINGS.secondShiftClasses,
+                        allowEmptyLessons: savedSettings.allow_empty_lessons || false,
+                        balanceLoad: savedSettings.balance_load !== undefined ? savedSettings.balance_load : true
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        };
+        
+        loadSettings();
+    }, []);
+    
     // Очистка интервала
     useEffect(() => {
         return () => {
@@ -297,11 +327,19 @@ const ExcelGenerator = () => {
         }
     }, []);
     
-    // Генерация расписания
-    const handleGenerate = useCallback(() => {
+    // ========== ГЕНЕРАЦИЯ РАСПИСАНИЯ С СОХРАНЕНИЕМ НАСТРОЕК ==========
+    const handleGenerate = useCallback(async () => {
         if (!file) {
             alert('Пожалуйста, загрузите Excel файл с данными');
             return;
+        }
+        
+        // Сохраняем настройки перед генерацией
+        try {
+            await scheduleAPI.saveSettings(settings);
+            console.log('Настройки сохранены в БД');
+        } catch (error) {
+            console.error('Error saving settings:', error);
         }
         
         setIsGenerating(true);
@@ -342,7 +380,7 @@ const ExcelGenerator = () => {
                 return newProgress;
             });
         }, 80);
-    }, [file, fileData, settings.workDays, settings.saturdayLessons, settings.maxLessonsPerDay]);
+    }, [file, fileData, settings]);
     
     // Общие обработчики настроек
     const handleSettingChange = useCallback((key, value) => {
@@ -408,7 +446,7 @@ const ExcelGenerator = () => {
     
     // Просмотр расписания
     const handleViewSchedule = useCallback(() => {
-        navigate('/schedule', { state: { generated: true } });
+        navigate('/admin/schedule', { state: { generated: true } });
     }, [navigate]);
     
     // Скачивание расписания
@@ -464,14 +502,9 @@ const ExcelGenerator = () => {
                 <div className="excel-gen-page-header">
                     <div className="excel-gen-page-title">
                         <h1>
-                            <FaFileExcel />
                             Генератор расписаний
                         </h1>
                     </div>
-                    <p className="excel-gen-page-subtitle">
-                        Загрузите Excel файл с данными о классах, учителях и кабинетах, 
-                        и система создаст оптимальное расписание
-                    </p>
                     <div className="excel-gen-page-actions">
                         <button 
                             className={`excel-gen-btn ${showSettings ? 'excel-gen-btn-primary' : 'excel-gen-btn-outline'}`}

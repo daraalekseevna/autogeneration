@@ -1,6 +1,7 @@
 /* src/frontend/styles/PersonalCabinet.css - с поддержкой темной темы */
+/* Переменные темы в global-theme.css */
 
-/* ===== ПЕРЕМЕННЫЕ ===== */
+/* ===== ЛОКАЛЬНЫЕ ПЕРЕМЕННЫЕ ===== */
 :root {
     --cabinet-bg-modal: rgba(0, 0, 0, 0.5);
     --cabinet-bg-content: #ffffff;

@@ -1,4 +1,5 @@
-/* ExcelGenerator.css - Стили для страницы генератора Excel (только элементы и текст для темной темы) */
+/* ExcelGenerator.css - Стили для страницы генератора Excel */
+/* Переменные темы в global-theme.css */
 
 .excel-gen-page {
     min-height: 100vh;
@@ -9,7 +10,7 @@
     margin: 0 auto;
     position: relative;
     overflow-x: hidden;
-    font-family: 'MS Reference Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-family);
 }
 
 /* ========== ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ ========== */
@@ -39,100 +40,6 @@
     transform: translateY(-2px);
     box-shadow: var(--shadow);
 }
-
-/* ========== ТЕМНАЯ ТЕМА ========== */
-body.dark-theme {
-    --primary: #2c5475;
-    --primary-light: #3a6a8f;
-    --secondary: #2c5475;
-    --secondary-light: #3a6a8f;
-    --accent: #2c5475;
-    --accent-light: #3a6a8f;
-    
-    --bg-primary: #000000;
-    --bg-secondary: #111111;
-    --bg-card: #1a1a1a;
-    --bg-card-hover: #222222;
-    --bg-input: #2a2a2a;
-    
-    --text-primary: #ffffff;
-    --text-secondary: #cccccc;
-    --text-muted: #888888;
-    
-    --border-color: #333333;
-    --border-light: #2a2a2a;
-    
-    --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.4);
-}
-
-/* ========== СВЕТЛАЯ ТЕМА (по умолчанию) ========== */
-body {
-    --primary: #21435A;
-    --primary-light: #2c5475;
-    --secondary: #21435A;
-    --secondary-light: #2c5475;
-    --accent: #21435A;
-    --accent-light: #2c5475;
-    
-    --bg-primary: #f5f5f5;
-    --bg-secondary: #ffffff;
-    --bg-card: rgba(255, 255, 255, 0.92);
-    --bg-card-hover: rgba(255, 255, 255, 0.97);
-    --bg-input: #ffffff;
-    
-    --text-primary: #21435A;
-    --text-secondary: #2c5475;
-    --text-muted: #6c757d;
-    
-    --border-color: rgba(33, 67, 90, 0.1);
-    --border-light: rgba(33, 67, 90, 0.05);
-    
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.1);
-}
-
-body {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* --- АНИМИРОВАННЫЙ ФОН (НЕ ТРОГАЕМ) --- */
-.animated-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    overflow: hidden;
-    background: linear-gradient(135deg, 
-        rgba(245, 245, 245, 0.144) 0%, 
-        rgba(232, 240, 254, 0.788) 50%, 
-        rgba(245, 240, 255, 0.5) 100%);
-}
-
-/* Темная тема - не меняем фон, оставляем как есть */
-body.dark-theme .animated-bg {
-    background: linear-gradient(135deg, 
-        rgba(0, 0, 0, 0.3) 0%, 
-        rgba(0, 0, 0, 0.2) 50%, 
-        rgba(0, 0, 0, 0.3) 100%);
-}
-
-/* Круги - оставляем без изменений */
-.glass-circle {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(35px);
-    opacity: 0.6;
-    mix-blend-mode: soft-light;
-    animation: float 5s infinite ease-in-out;
-    transform-origin: center;
-}
-
-/* ... все стили для .glass-circle оставляем без изменений ... */
 
 /* --- КНОПКА НАЗАД --- */
 .excel-gen-back-btn {
@@ -535,7 +442,7 @@ body.dark-theme .animated-bg {
 .excel-gen-setting-item select:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
+    box-shadow: 0 0 0 3px var(--primary-soft);
 }
 
 /* --- ДНИ НЕДЕЛИ --- */
@@ -699,7 +606,7 @@ body.dark-theme .animated-bg {
 .excel-gen-break-number {
     font-weight: 700;
     color: var(--primary);
-    background: rgba(33, 67, 90, 0.1);
+    background: var(--primary-soft);
     width: 32px;
     height: 32px;
     display: flex;

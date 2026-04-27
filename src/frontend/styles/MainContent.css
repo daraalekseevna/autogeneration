@@ -1,5 +1,5 @@
-/* MainContent.css - Светлая тема с кругами как в темной (одинаковое расположение) */
-@import url('https://fonts.cdnfonts.com/css/ms-reference-sans-serif');
+/* MainContent.css - Стили для главной страницы */
+/* Переменные темы, анимированный фон и круги в global-theme.css */
 
 * {
     margin: 0;
@@ -14,6 +14,83 @@
     top: 100px;
     right: 20px;
     z-index: 100;
+}
+
+/* Стили для кнопки обновления */
+.refresh-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.refresh-btn:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: rotate(180deg);
+}
+
+.refresh-btn.refreshing {
+    animation: spin 0.5s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Стили для кнопки обновления статуса */
+.refresh-status-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.refresh-status-btn:hover {
+    background: var(--bg-hover);
+    color: var(--primary);
+    transform: rotate(180deg);
+}
+
+.status-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.status-header .column-title {
+    margin-bottom: 0;
+}
+
+/* Анимация загрузки */
+.loading-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+}
+
+.loading-activities {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
 }
 
 .theme-btn {
@@ -34,367 +111,6 @@
 .theme-btn:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow);
-}
-
-/* ========== ТЕМНАЯ ТЕМА ========== */
-body.dark-theme {
-    --primary: #2c5475;
-    --primary-light: #2c5475;
-    --secondary: #2c5475;
-    --secondary-light: #2c5475;
-    --accent: #2c5475;
-    --accent-light: #2c5475;
-    --dark: #e0e0e0;
-    --light: #1a1a1a;
-    --gray: #6c757d;
-    --gray-light: #adb5bd;
-    --gray-dark: #495057;
-    
-    --bg-primary: #000000;
-    --bg-secondary: #111111;
-    --bg-card: #1a1a1a;
-    --bg-card-hover: #222222;
-    --bg-input: #2a2a2a;
-    
-    --text-primary: #ffffff;
-    --text-secondary: #cccccc;
-    --text-muted: #888888;
-    
-    --border-color: #333333;
-    --border-light: #2a2a2a;
-    
-    --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.4);
-}
-
-/* ========== СВЕТЛАЯ ТЕМА ========== */
-body {
-    --primary: #21435A;
-    --primary-light: #2c5475;
-    --secondary: #21435A;
-    --secondary-light: #2c5475;
-    --accent: #21435A;
-    --accent-light: #2c5475;
-    --dark: #21435A;
-    --light: #f5f5f5;
-    --gray: #e0e0e0;
-    --gray-light: #f0f0f0;
-    --gray-dark: #8a8a8a;
-    
-    --bg-primary: #f5f5f5;
-    --bg-secondary: #ffffff;
-    --bg-card: rgba(255, 255, 255, 0.92);
-    --bg-card-hover: rgba(255, 255, 255, 0.97);
-    --bg-input: #ffffff;
-    
-    --text-primary: #21435A;
-    --text-secondary: #2c5475;
-    --text-muted: #6c757d;
-    
-    --border-color: rgba(33, 67, 90, 0.1);
-    --border-light: rgba(33, 67, 90, 0.05);
-    
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.1);
-}
-
-body {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    line-height: 1.6;
-    min-height: 100vh;
-    position: relative;
-    overflow-x: hidden;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Анимированный фон */
-.animated-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    overflow: hidden;
-}
-
-/* Темная тема - черный фон */
-body.dark-theme .animated-bg {
-    background: #000000;
-}
-
-/* Светлая тема - светлый фон */
-body:not(.dark-theme) .animated-bg {
-    background: #e8eef200;
-}
-
-/* ========== КРУГИ ДЛЯ ТЕМНОЙ ТЕМЫ ========== */
-body.dark-theme .glass-circle {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(20px);
-    opacity: 0.2;
-    animation: float 20s infinite ease-in-out;
-    transform-origin: center;
-    mix-blend-mode: screen;
-}
-
-body.dark-theme .glass-circle:nth-child(1) {
-    width: 500px;
-    height: 480px;
-    top: 10%;
-    left: 5%;
-    background: radial-gradient(circle at 30% 30%, rgba(106, 13, 173, 0.7) 0%, rgba(0, 153, 255, 0.6) 40%, transparent 70%);
-    animation-duration: 30s;
-    border-radius: 43% 57% 52% 48% / 48% 43% 57% 52%;
-}
-
-body.dark-theme .glass-circle:nth-child(2) {
-    width: 450px;
-    height: 420px;
-    top: 60%;
-    right: 8%;
-    background: radial-gradient(circle at 70% 20%, rgba(68, 153, 209, 0.7) 0%, rgba(137, 43, 226, 0.6) 40%, transparent 70%);
-    animation-duration: 28s;
-    animation-delay: -7s;
-    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-}
-
-body.dark-theme .glass-circle:nth-child(3) {
-    width: 380px;
-    height: 400px;
-    bottom: 15%;
-    left: 12%;
-    background: radial-gradient(circle at 50% 50%, rgba(156, 39, 176, 0.65) 0%, rgba(107, 163, 202, 0.6) 40%, transparent 70%);
-    animation-duration: 32s;
-    animation-delay: -12s;
-    border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
-}
-
-body.dark-theme .glass-circle:nth-child(4) {
-    width: 320px;
-    height: 300px;
-    top: 25%;
-    right: 22%;
-    background: linear-gradient(135deg, rgba(106, 13, 173, 0.65) 0%, rgba(68, 153, 209, 0.6) 50%, transparent 100%);
-    animation-duration: 26s;
-    animation-delay: -5s;
-    border-radius: 55% 45% 65% 35% / 45% 55% 45% 55%;
-}
-
-body.dark-theme .glass-circle:nth-child(5) {
-    width: 280px;
-    height: 260px;
-    bottom: 35%;
-    right: 28%;
-    background: radial-gradient(circle at 80% 50%, rgba(0, 153, 255, 0.6) 0%, rgba(137, 43, 226, 0.55) 40%, transparent 70%);
-    animation-duration: 29s;
-    animation-delay: -15s;
-    border-radius: 70% 30% 50% 50% / 60% 40% 60% 40%;
-}
-
-body.dark-theme .glass-circle:nth-child(6) {
-    width: 220px;
-    height: 240px;
-    top: 70%;
-    left: 35%;
-    background: radial-gradient(circle at 40% 60%, rgba(137, 43, 226, 0.6) 0%, rgba(107, 163, 202, 0.55) 40%, transparent 70%);
-    animation-duration: 27s;
-    animation-delay: -20s;
-    border-radius: 45% 55% 35% 65% / 55% 45% 55% 45%;
-    opacity: 0.6;
-}
-
-body.dark-theme .glass-circle:nth-child(7) {
-    width: 180px;
-    height: 160px;
-    top: 15%;
-    left: 40%;
-    background: linear-gradient(45deg, rgba(156, 39, 176, 0.65) 0%, rgba(0, 153, 255, 0.6) 60%, transparent 100%);
-    animation-duration: 24s;
-    animation-delay: -8s;
-    border-radius: 65% 35% 45% 55% / 35% 65% 35% 65%;
-    opacity: 0.55;
-}
-
-body.dark-theme .glass-circle:nth-child(8) {
-    width: 650px;
-    height: 620px;
-    top: -100px;
-    left: -150px;
-    background: radial-gradient(circle at center, rgba(106, 13, 173, 0.5) 0%, transparent 60%);
-    animation-duration: 35s;
-    animation-delay: -25s;
-    border-radius: 50%;
-    opacity: 0.4;
-}
-
-body.dark-theme .glass-circle:nth-child(9) {
-    width: 550px;
-    height: 580px;
-    bottom: -120px;
-    right: -100px;
-    background: radial-gradient(circle at center, rgba(68, 153, 209, 0.5) 0%, transparent 70%);
-    animation-duration: 33s;
-    animation-delay: -18s;
-    border-radius: 50%;
-    opacity: 0.35;
-}
-
-body.dark-theme .glass-circle:nth-child(10) {
-    width: 300px;
-    height: 320px;
-    top: 40%;
-    left: 60%;
-    background: linear-gradient(120deg, rgba(106, 13, 173, 0.6) 0%, rgba(68, 153, 209, 0.55) 30%, rgba(156, 39, 176, 0.5) 70%, transparent 100%);
-    animation-duration: 31s;
-    animation-delay: -10s;
-    border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%;
-    opacity: 0.6;
-}
-
-/* ========== КРУГИ ДЛЯ СВЕТЛОЙ ТЕМЫ - ТОЧНО ТАКОЕ ЖЕ РАСПОЛОЖЕНИЕ ========== */
-body:not(.dark-theme) .glass-circle {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(30px);
-    opacity: 0.2;
-    animation: float 20s infinite ease-in-out;
-    transform-origin: center;
-    mix-blend-mode: overlay;
-}
-
-body:not(.dark-theme) .glass-circle:nth-child(1) {
-    width: 500px;
-    height: 480px;
-    top: 10%;
-    left: 5%;
-    background: radial-gradient(circle at 30% 30%, rgba(106, 13, 173, 0.8) 0%, rgba(0, 153, 255, 0.7) 40%, transparent 70%);
-    animation-duration: 30s;
-    border-radius: 43% 57% 52% 48% / 48% 43% 57% 52%;
-}
-
-body:not(.dark-theme) .glass-circle:nth-child(2) {
-    width: 450px;
-    height: 420px;
-    top: 60%;
-    right: 8%;
-    background: radial-gradient(circle at 70% 20%, rgba(68, 153, 209, 0.8) 0%, rgba(137, 43, 226, 0.7) 40%, transparent 70%);
-    animation-duration: 28s;
-    animation-delay: -7s;
-    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-}
-
-body:not(.dark-theme) .glass-circle:nth-child(3) {
-    width: 380px;
-    height: 400px;
-    bottom: 15%;
-    left: 12%;
-    background: radial-gradient(circle at 50% 50%, rgba(156, 39, 176, 0.75) 0%, rgba(107, 163, 202, 0.7) 40%, transparent 70%);
-    animation-duration: 32s;
-    animation-delay: -12s;
-    border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
-}
-
-body:not(.dark-theme) .glass-circle:nth-child(4) {
-    width: 320px;
-    height: 300px;
-    top: 25%;
-    right: 22%;
-    background: linear-gradient(135deg, rgba(106, 13, 173, 0.75) 0%, rgba(68, 153, 209, 0.7) 50%, transparent 100%);
-    animation-duration: 26s;
-    animation-delay: -5s;
-    border-radius: 55% 45% 65% 35% / 45% 55% 45% 55%;
-}
-
-body:not(.dark-theme) .glass-circle:nth-child(5) {
-    width: 280px;
-    height: 260px;
-    bottom: 35%;
-    right: 28%;
-    background: radial-gradient(circle at 80% 50%, rgba(0, 153, 255, 0.7) 0%, rgba(137, 43, 226, 0.65) 40%, transparent 70%);
-    animation-duration: 29s;
-    animation-delay: -15s;
-    border-radius: 70% 30% 50% 50% / 60% 40% 60% 40%;
-}
-
-body:not(.dark-theme) .glass-circle:nth-child(6) {
-    width: 220px;
-    height: 240px;
-    top: 70%;
-    left: 35%;
-    background: radial-gradient(circle at 40% 60%, rgba(137, 43, 226, 0.7) 0%, rgba(107, 163, 202, 0.65) 40%, transparent 70%);
-    animation-duration: 27s;
-    animation-delay: -20s;
-    border-radius: 45% 55% 35% 65% / 55% 45% 55% 45%;
-    opacity: 0.65;
-}
-
-body:not(.dark-theme) .glass-circle:nth-child(7) {
-    width: 180px;
-    height: 160px;
-    top: 15%;
-    left: 40%;
-    background: linear-gradient(45deg, rgba(156, 39, 176, 0.75) 0%, rgba(0, 153, 255, 0.7) 60%, transparent 100%);
-    animation-duration: 24s;
-    animation-delay: -8s;
-    border-radius: 65% 35% 45% 55% / 35% 65% 35% 65%;
-    opacity: 0.6;
-}
-
-body:not(.dark-theme) .glass-circle:nth-child(8) {
-    width: 650px;
-    height: 620px;
-    top: -100px;
-    left: -150px;
-    background: radial-gradient(circle at center, rgba(106, 13, 173, 0.6) 0%, transparent 60%);
-    animation-duration: 35s;
-    animation-delay: -25s;
-    border-radius: 50%;
-    opacity: 0.45;
-}
-
-body:not(.dark-theme) .glass-circle:nth-child(9) {
-    width: 550px;
-    height: 580px;
-    bottom: -120px;
-    right: -100px;
-    background: radial-gradient(circle at center, rgba(68, 153, 209, 0.6) 0%, transparent 70%);
-    animation-duration: 33s;
-    animation-delay: -18s;
-    border-radius: 50%;
-    opacity: 0.4;
-}
-
-body:not(.dark-theme) .glass-circle:nth-child(10) {
-    width: 300px;
-    height: 320px;
-    top: 40%;
-    left: 60%;
-    background: linear-gradient(120deg, rgba(106, 13, 173, 0.7) 0%, rgba(68, 153, 209, 0.65) 30%, rgba(156, 39, 176, 0.6) 70%, transparent 100%);
-    animation-duration: 31s;
-    animation-delay: -10s;
-    border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%;
-    opacity: 0.65;
-}
-
-@keyframes float {
-    0%, 100% {
-        transform: translate(0, 0) rotate(0deg) scale(1);
-    }
-    20% {
-        transform: translate(40px, 30px) rotate(2deg) scale(1.03);
-    }
-    40% {
-        transform: translate(-25px, 45px) rotate(-3deg) scale(0.98);
-    }
-    60% {
-        transform: translate(35px, -25px) rotate(4deg) scale(1.02);
-    }
-    80% {
-        transform: translate(-20px, -35px) rotate(-2deg) scale(0.99);
-    }
 }
 
 /* ========== КАРТОЧКИ ========== */
@@ -676,15 +392,15 @@ body.dark-theme .activity-column {
 }
 
 .status-ok {
-    background-color: #4caf50;
+    background-color: var(--success);
 }
 
 .status-info {
-    background-color: #2196f3;
+    background-color: var(--info);
 }
 
 .status-warning {
-    background-color: #ff9800;
+    background-color: var(--warning);
 }
 
 .status-content {
@@ -900,7 +616,7 @@ body.dark-theme .activity-column {
 .log-user {
     font-size: 0.7rem;
     color: var(--primary);
-    background: rgba(58, 110, 165, 0.1);
+    background: var(--primary-soft);
     padding: 0.15rem 0.5rem;
     border-radius: 12px;
 }
@@ -1069,45 +785,6 @@ body.dark-theme .activity-column {
     .theme-btn {
         padding: 6px 12px;
         font-size: 0.75rem;
-    }
-    
-    /* Уменьшаем круги на мобильных */
-    body.dark-theme .glass-circle:nth-child(1),
-    body.dark-theme .glass-circle:nth-child(2),
-    body.dark-theme .glass-circle:nth-child(3),
-    body:not(.dark-theme) .glass-circle:nth-child(1),
-    body:not(.dark-theme) .glass-circle:nth-child(2),
-    body:not(.dark-theme) .glass-circle:nth-child(3) {
-        width: 280px;
-        height: 260px;
-        filter: blur(50px);
-    }
-    
-    body.dark-theme .glass-circle:nth-child(4),
-    body.dark-theme .glass-circle:nth-child(5),
-    body.dark-theme .glass-circle:nth-child(6),
-    body:not(.dark-theme) .glass-circle:nth-child(4),
-    body:not(.dark-theme) .glass-circle:nth-child(5),
-    body:not(.dark-theme) .glass-circle:nth-child(6) {
-        width: 200px;
-        height: 180px;
-        filter: blur(45px);
-    }
-    
-    body.dark-theme .glass-circle:nth-child(7),
-    body.dark-theme .glass-circle:nth-child(10),
-    body:not(.dark-theme) .glass-circle:nth-child(7),
-    body:not(.dark-theme) .glass-circle:nth-child(10) {
-        width: 150px;
-        height: 140px;
-        filter: blur(40px);
-    }
-    
-    body.dark-theme .glass-circle:nth-child(8),
-    body.dark-theme .glass-circle:nth-child(9),
-    body:not(.dark-theme) .glass-circle:nth-child(8),
-    body:not(.dark-theme) .glass-circle:nth-child(9) {
-        display: none;
     }
 }
 

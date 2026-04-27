@@ -1,17 +1,13 @@
 // src/frontend/pages/TeacherMySchedule.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     FaArrowLeft, 
     FaRegCalendarAlt,
-    FaRegClock,
-    FaRegUser,
-    FaRegBuilding,
     FaSun,
     FaMoon,
     FaStar,
     FaBook,
-    FaUser,
     FaChalkboardTeacher,
     FaMapMarkerAlt,
     FaClock
@@ -19,7 +15,7 @@ import {
 import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { WEEK_DAYS, TIME_SLOTS } from '../config/teacherScheduleData';
+import { WEEK_DAYS } from '../config/teacherScheduleData';
 import styles from '../styles/TeacherMySchedule.module.css';
 
 const API_URL = 'http://localhost:5000/api';
@@ -53,63 +49,87 @@ const ThemeToggle = () => {
     );
 };
 
-// ========== КОМПОНЕНТ ТАБЛИЦЫ ДНЯ ==========
+// ========== КАРТОЧКА УРОКА ==========
+const LessonCard = ({ lesson }) => {
+    const cardColor = lesson.color || '#21435A';
+    
+    const cardStyle = {
+        borderLeftColor: cardColor,
+        backgroundColor: `${cardColor}10`
+    };
+
+    return (
+        <div className={styles.lessonCard} style={cardStyle}>
+            <div className={styles.lessonCardSubject}>
+                <FaBook />
+                <span>{lesson.title}</span>
+            </div>
+            <div className={styles.lessonCardRoom}>
+                <FaMapMarkerAlt />
+                <span>Каб. {lesson.room}</span>
+            </div>
+        </div>
+    );
+};
+
+// ========== КАРТОЧКА ДОПОЛНИТЕЛЬНОГО ЗАНЯТИЯ ==========
+const ExtracurricularCard = ({ activity }) => {
+    const cardColor = activity.color || '#ffa502';
+    
+    const cardStyle = {
+        borderLeftColor: cardColor,
+        backgroundColor: `${cardColor}10`
+    };
+
+    // Форматирование времени (убираем секунды)
+    const formatTime = (time) => {
+        if (!time) return '';
+        return time.length > 5 ? time.substring(0, 5) : time;
+    };
+
+    return (
+        <div className={styles.extracurricularCard} style={cardStyle}>
+            <div className={styles.extracurricularCardTime}>
+                <FaClock />
+                <span>{formatTime(activity.startTime)} - {formatTime(activity.endTime)}</span>
+            </div>
+            <div className={styles.extracurricularCardInfo}>
+                <div className={styles.extracurricularCardHeader}>
+                    <FaStar className={styles.extracurricularStar} style={{ color: cardColor }} />
+                    <span className={styles.extracurricularCardName}>{activity.name}</span>
+                </div>
+                <div className={styles.extracurricularCardRoom}>
+                    <FaMapMarkerAlt />
+                    <span>Каб. {activity.room}</span>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ========== ТАБЛИЦА ДНЯ ==========
 const DayScheduleTable = ({ day, lessons, activities }) => {
-    // Слоты времени для уроков (1-7 уроки)
+    // Фиксированные слоты времени для уроков (уже без секунд)
     const timeSlots = [
-        { number: 1, time: '08:30', endTime: '09:15' },
-        { number: 2, time: '09:25', endTime: '10:10' },
-        { number: 3, time: '10:20', endTime: '11:05' },
-        { number: 4, time: '11:20', endTime: '12:05' },
-        { number: 5, time: '12:15', endTime: '13:00' },
-        { number: 6, time: '13:10', endTime: '13:55' },
-        { number: 7, time: '14:05', endTime: '14:50' }
+        { number: 1, time: '08:30' },
+        { number: 2, time: '09:25' },
+        { number: 3, time: '10:20' },
+        { number: 4, time: '11:20' },
+        { number: 5, time: '12:15' },
+        { number: 6, time: '13:10' },
+        { number: 7, time: '14:05' }
     ];
 
-    // Получаем уроки для этого дня
-    const dayLessons = lessons.filter(lesson => 
-        lesson.days && lesson.days.includes(day.name)
-    );
-
-    // Создаем карту уроков по времени
-    const lessonsByTime = {};
-    dayLessons.forEach(lesson => {
-        lessonsByTime[lesson.startTime] = { ...lesson, type: 'lesson' };
+    // Получаем уроки для этого дня по номеру урока
+    const lessonsByNumber = {};
+    lessons.forEach(lesson => {
+        if (lesson.days && lesson.days.includes(day.name)) {
+            lessonsByNumber[lesson.number] = lesson;
+        }
     });
 
     // Получаем дополнительные занятия для этого дня
-    const dayActivities = (activities[day.name] || []).map(act => ({
-        ...act,
-        type: 'extracurricular',
-        title: act.name,
-        startTime: act.startTime,
-        endTime: act.endTime
-    }));
-
-    // Объединяем уроки и дополнительные занятия
-    const allItems = [...Object.values(lessonsByTime), ...dayActivities];
-    
-    // Сортируем по времени начала
-    allItems.sort((a, b) => (a.startTime || '99:99').localeCompare(b.startTime || '99:99'));
-
-    // Функция для получения цвета предмета
-    const getSubjectColor = (title) => {
-        const colors = {
-            'Математика': '#2196F3',
-            'Русский язык': '#4CAF50',
-            'Литература': '#8BC34A',
-            'Английский язык': '#FF9800',
-            'История': '#9C27B0',
-            'Обществознание': '#673AB7',
-            'География': '#00BCD4',
-            'Биология': '#4CAF50',
-            'Физика': '#3F51B5',
-            'Химия': '#FF5722',
-            'Физкультура': '#795548',
-            'Информатика': '#607D8B'
-        };
-        return colors[title] || '#9E9E9E';
-    };
+    const dayActivities = (activities[day.name] || []);
 
     return (
         <div className={styles.dayTableWrapper}>
@@ -121,87 +141,50 @@ const DayScheduleTable = ({ day, lessons, activities }) => {
                 <table className={styles.scheduleTable}>
                     <thead>
                         <tr>
-                            <th className={styles.timeCol}>Время</th>
+                            <th className={styles.timeCol}>Урок</th>
+                            <th className={styles.timeColFull}>Время</th>
                             <th className={styles.contentCol}>Занятие</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {allItems.length === 0 ? (
-                            <tr>
-                                <td colSpan="2" className={styles.emptySlot}>Нет занятий</td>
-                            </tr>
-                        ) : (
-                            allItems.map((item, idx) => {
-                                if (item.type === 'lesson') {
-                                    // Отображение урока
-                                    return (
-                                        <tr key={idx} className={styles.scheduleRow}>
-                                            <td className={styles.lessonTimeCell}>
-                                                <div className={styles.lessonTime}>
-                                                    <FaClock />
-                                                    <span>{item.startTime}</span>
-                                                </div>
-                                            </td>
-                                            <td className={styles.lessonContentCell}>
-                                                <div 
-                                                    className={styles.lessonItem}
-                                                    style={{ 
-                                                        borderLeftColor: getSubjectColor(item.title),
-                                                        backgroundColor: `${getSubjectColor(item.title)}10`
-                                                    }}
-                                                >
-                                                    <div className={styles.lessonInfo}>
-                                                        <div className={styles.lessonSubject}>
-                                                            <FaBook />
-                                                            <span>{item.title}</span>
-                                                        </div>
-                                                        <div className={styles.lessonTeacher}>
-                                                            <FaChalkboardTeacher />
-                                                            <span>{item.className || item.teacher}</span>
-                                                        </div>
-                                                        <div className={styles.lessonRoom}>
-                                                            <FaMapMarkerAlt />
-                                                            <span>Каб. {item.room}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                } else {
-                                    // Отображение дополнительного занятия
-                                    return (
-                                        <tr key={idx} className={styles.extracurricularRow}>
-                                            <td className={styles.lessonTimeCell}>
-                                                <div className={styles.lessonTime}>
-                                                    <FaClock />
-                                                    <span>{item.startTime} - {item.endTime}</span>
-                                                </div>
-                                            </td>
-                                            <td className={styles.lessonContentCell}>
-                                                <div className={styles.extracurricularItem}>
-                                                    <div className={styles.extracurricularHeader}>
-                                                        <FaStar className={styles.extracurricularIcon} />
-                                                        <span className={styles.extracurricularName}>{item.title}</span>
-                                                    </div>
-                                                    {item.description && (
-                                                        <div className={styles.extracurricularDesc}>
-                                                            {item.description}
-                                                        </div>
-                                                    )}
-                                                    <div className={styles.extracurricularRoom}>
-                                                        <FaMapMarkerAlt />
-                                                        <span>Каб. {item.room}</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                }
-                            })
-                        )}
+                        {timeSlots.map((slot) => {
+                            const lesson = lessonsByNumber[slot.number];
+                            
+                            return (
+                                <tr key={slot.number} className={styles.scheduleRow}>
+                                    <td className={styles.lessonNumCell}>
+                                        <div className={styles.lessonNumber}>{slot.number}</div>
+                                    </td>
+                                    <td className={styles.lessonTimeCell}>
+                                        <div className={styles.lessonTime}>
+                                            <FaClock />
+                                            <span>{slot.time}</span>
+                                        </div>
+                                    </td>
+                                    <td className={styles.lessonContentCell}>
+                                        {lesson ? (
+                                            <LessonCard lesson={lesson} />
+                                        ) : (
+                                            <div className={styles.emptySlot}>—</div>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
+                
+                {/* Дополнительные занятия после таблицы уроков */}
+                {dayActivities.length > 0 && (
+                    <div className={styles.extracurricularSection}>
+                        <div className={styles.extracurricularTitle}>
+                            <FaStar /> Дополнительные занятия
+                        </div>
+                        {dayActivities.map((activity, idx) => (
+                            <ExtracurricularCard key={idx} activity={activity} />
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -229,10 +212,9 @@ const TeacherMySchedule = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            // Загружаем расписание уроков с бэкенда
+            // Загружаем расписание уроков
             const scheduleResponse = await axios.get(`${API_URL}/teacher/my-schedule`, getAuthHeaders());
             
-            // Преобразуем данные с бэкенда в нужный формат
             const scheduleData = scheduleResponse.data.schedule || {};
             const formattedLessons = [];
             
@@ -241,12 +223,11 @@ const TeacherMySchedule = () => {
                     formattedLessons.push({
                         id: lesson.id,
                         title: lesson.subject,
-                        teacher: 'Я',
                         room: lesson.room,
-                        startTime: getTimeByLessonNumber(lesson.number),
+                        number: lesson.number,
                         days: [day],
                         className: lesson.className,
-                        color: getSubjectColor(lesson.subject)
+                        color: lesson.color || '#21435A'
                     });
                 });
             });
@@ -264,38 +245,6 @@ const TeacherMySchedule = () => {
         }
     };
 
-    // Функция для получения времени по номеру урока
-    const getTimeByLessonNumber = (number) => {
-        const timeMap = {
-            1: '08:30',
-            2: '09:25',
-            3: '10:20',
-            4: '11:20',
-            5: '12:15',
-            6: '13:10',
-            7: '14:05'
-        };
-        return timeMap[number] || '08:30';
-    };
-
-    const getSubjectColor = (subject) => {
-        const colors = {
-            'Математика': '#2196F3',
-            'Русский язык': '#4CAF50',
-            'Литература': '#8BC34A',
-            'Английский язык': '#FF9800',
-            'История': '#9C27B0',
-            'Обществознание': '#673AB7',
-            'География': '#00BCD4',
-            'Биология': '#4CAF50',
-            'Физика': '#3F51B5',
-            'Химия': '#FF5722',
-            'Физкультура': '#795548',
-            'Информатика': '#607D8B'
-        };
-        return colors[subject] || '#9E9E9E';
-    };
-
     // Разделяем дни на две строки
     const topRowDays = WEEK_DAYS.slice(0, 3);
     const bottomRowDays = WEEK_DAYS.slice(3, 6);
@@ -303,11 +252,11 @@ const TeacherMySchedule = () => {
     if (loading) {
         return (
             <div className={styles.page}>
-                <div className={styles.animatedBg}>
-                    {[...Array(10)].map((_, i) => (
-                        <div key={i} className={styles.glassCircle}></div>
-                    ))}
-                </div>
+                <div className="animated-bg">
+    {[...Array(10)].map((_, i) => (
+        <div key={i} className="glass-circle"></div>
+    ))}
+</div>
                 <div className={styles.topBar}>
                     <button className={styles.backBtn} onClick={() => navigate('/teacher')}>
                         <FaArrowLeft /> <span>Назад</span>
@@ -328,11 +277,11 @@ const TeacherMySchedule = () => {
 
     return (
         <div className={styles.page}>
-            <div className={styles.animatedBg}>
-                {[...Array(10)].map((_, i) => (
-                    <div key={i} className={styles.glassCircle}></div>
-                ))}
-            </div>
+            <div className="animated-bg">
+    {[...Array(10)].map((_, i) => (
+        <div key={i} className="glass-circle"></div>
+    ))}
+</div>
             
             <div className={styles.topBar}>
                 <button className={styles.backBtn} onClick={() => navigate('/teacher')}>

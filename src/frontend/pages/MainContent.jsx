@@ -1,18 +1,26 @@
-// MainContent.jsx - с переключателем светлой/темной темы
+// MainContent.jsx - с интеграцией реального журнала событий и статистики
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     FaPlay, FaEdit, FaEye, FaInfoCircle, FaHistory, 
     FaSearch, FaFilter, FaCalendarAlt, FaChalkboardTeacher,
-    FaUsers, FaBookOpen, FaSun, FaMoon
+    FaUsers, FaBookOpen, FaSun, FaMoon, FaSync
 } from 'react-icons/fa';
+import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { activityAPI } from '../services/activityAPI';
 import '../styles/MainContent.css';
 
-// Импортируем конфигурации
-import { statusConfig } from '../config/statusConfig';
-import { activityConfig } from '../config/activityConfig';
+const API_URL = 'http://localhost:5000/api';
+
+// Получить заголовки с токеном
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+        headers: { Authorization: `Bearer ${token}` }
+    };
+};
 
 // Конфигурация карточек действий
 const actionCardsConfig = {
@@ -63,17 +71,106 @@ const ActionCard = ({ config, onButtonClick }) => {
     );
 };
 
-// Компонент колонки статуса
+// Компонент колонки статуса (с реальными данными из БД)
 const StatusColumn = () => {
+    const [stats, setStats] = useState({
+        totalClasses: 0,
+        teachersCount: 0,
+        scheduledLessons: 0,
+        todayEvents: 0
+    });
+    const [loading, setLoading] = useState(true);
+    const [lastUpdate, setLastUpdate] = useState(null);
+
+    useEffect(() => {
+        loadStats();
+    }, []);
+
+    const loadStats = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get(`${API_URL}/activity/stats`, getAuthHeaders());
+            setStats(response.data);
+            setLastUpdate(new Date());
+        } catch (error) {
+            console.error('Error loading stats:', error);
+            // Моковые данные на случай ошибки
+            setStats({
+                totalClasses: 12,
+                teachersCount: 25,
+                scheduledLessons: 98,
+                todayEvents: 5
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const statusItems = [
+        { 
+            id: 1, 
+            label: 'Статус генерации', 
+            value: stats.scheduledLessons > 0 ? 'Расписание сгенерировано' : 'Расписание не сгенерировано', 
+            type: stats.scheduledLessons > 0 ? 'success' : 'warning',
+            details: stats.scheduledLessons > 0 ? `${stats.scheduledLessons} уроков в расписании` : 'Запустите генерацию расписания'
+        },
+        { 
+            id: 2, 
+            label: 'Активность сегодня', 
+            value: `${stats.todayEvents} событий`, 
+            type: 'info'
+        },
+        { 
+            id: 3, 
+            label: 'Всего классов', 
+            value: stats.totalClasses, 
+            type: 'info'
+        },
+        { 
+            id: 4, 
+            label: 'Учителей в системе', 
+            value: stats.teachersCount, 
+            type: 'info'
+        }
+    ];
+
+    const statusTypes = {
+        success: { indicatorClass: 'status-success', name: 'Успешно' },
+        info: { indicatorClass: 'status-info', name: 'Информация' },
+        warning: { indicatorClass: 'status-warning', name: 'Внимание' }
+    };
+
+    const formatDate = (date) => {
+        if (!date) return '—';
+        return new Date(date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    };
+
+    if (loading) {
+        return (
+            <div className="status-column">
+                <h2 className="column-title">
+                    <FaInfoCircle className="column-icon" />
+                    Текущее состояние
+                </h2>
+                <div className="loading-state">Загрузка...</div>
+            </div>
+        );
+    }
+
     return (
         <div className="status-column">
-            <h2 className="column-title">
-                <FaInfoCircle className="column-icon" />
-                Текущее состояние
-            </h2>
+            <div className="status-header">
+                <h2 className="column-title">
+                    <FaInfoCircle className="column-icon" />
+                    Текущее состояние
+                </h2>
+                <button className="refresh-status-btn" onClick={loadStats} title="Обновить">
+                    <FaSync />
+                </button>
+            </div>
             <ul className="status-list">
-                {statusConfig.currentStatus.map((item) => {
-                    const statusInfo = statusConfig.statusTypes[item.type] || statusConfig.statusTypes.info;
+                {statusItems.map((item) => {
+                    const statusInfo = statusTypes[item.type] || statusTypes.info;
                     
                     return (
                         <li key={item.id} className="status-item">
@@ -87,11 +184,6 @@ const StatusColumn = () => {
                                 {item.details && (
                                     <div className="status-details">{item.details}</div>
                                 )}
-                                {item.timestamp && (
-                                    <div className="status-timestamp">
-                                        {statusConfig.formatDate(item.timestamp)}
-                                    </div>
-                                )}
                             </div>
                         </li>
                     );
@@ -102,52 +194,88 @@ const StatusColumn = () => {
                 <div className="stat-item">
                     <FaChalkboardTeacher className="stat-icon" />
                     <span className="stat-label">Классы</span>
-                    <span className="stat-value">
-                        {statusConfig.statistics.totalClasses}
-                    </span>
+                    <span className="stat-value">{stats.totalClasses}</span>
                 </div>
                 <div className="stat-item">
                     <FaUsers className="stat-icon" />
                     <span className="stat-label">Учителя</span>
-                    <span className="stat-value">
-                        {statusConfig.statistics.teachersCount}
-                    </span>
+                    <span className="stat-value">{stats.teachersCount}</span>
                 </div>
                 <div className="stat-item">
                     <FaBookOpen className="stat-icon" />
                     <span className="stat-label">Занятия</span>
-                    <span className="stat-value">
-                        {statusConfig.statistics.scheduledLessons}
-                    </span>
+                    <span className="stat-value">{stats.scheduledLessons}</span>
                 </div>
             </div>
         </div>
     );
 };
 
-// Компонент колонки активности
+// Компонент колонки активности (с реальными данными)
 const ActivityColumn = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterType, setFilterType] = useState('all');
-    
-    const getFilteredActivities = () => {
-        let activities = activityConfig.activityLog;
-        
-        if (filterType !== 'all') {
-            activities = activities.filter(item => item.type === filterType);
+    const [activities, setActivities] = useState([]);
+    const [total, setTotal] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [eventTypes] = useState({
+        generate: { name: 'Генерация', className: 'log-generate' },
+        extracurricular: { name: 'Внешкольные', className: 'log-extracurricular' },
+        view: { name: 'Просмотр', className: 'log-view' },
+        edit: { name: 'Редактирование', className: 'log-edit' },
+        delete: { name: 'Удаление', className: 'log-delete' },
+        create: { name: 'Создание', className: 'log-create' },
+        login: { name: 'Вход', className: 'log-login' },
+        system: { name: 'Система', className: 'log-system' }
+    });
+
+    useEffect(() => {
+        loadActivities();
+    }, [filterType, searchQuery]);
+
+    const loadActivities = async () => {
+        setLoading(true);
+        try {
+            const filters = { type: filterType, limit: 20 };
+            const data = await activityAPI.getActivities(filters);
+            setActivities(data.activities || []);
+            setTotal(data.total || 0);
+        } catch (error) {
+            console.error('Error loading activities:', error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
         }
-        
-        if (searchQuery) {
-            activities = activities.filter(item => 
-                item.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                item.user.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-        }
-        
-        return activities.slice(0, 5);
     };
-    
-    const filteredActivities = getFilteredActivities();
+
+    const handleRefresh = async () => {
+        setRefreshing(true);
+        await loadActivities();
+    };
+
+    const formatTime = (time) => {
+        const date = new Date(time);
+        return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    };
+
+    const formatDate = (time) => {
+        const date = new Date(time);
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        if (date.toDateString() === today.toDateString()) {
+            return `Сегодня, ${formatTime(time)}`;
+        } else if (date.toDateString() === yesterday.toDateString()) {
+            return `Вчера, ${formatTime(time)}`;
+        }
+        return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    };
+
+    const getEventType = (type) => {
+        return eventTypes[type] || eventTypes.system;
+    };
 
     return (
         <div className="activity-column">
@@ -177,48 +305,61 @@ const ActivityColumn = () => {
                             className="filter-select"
                         >
                             <option value="all">Все события</option>
-                            {Object.entries(activityConfig.eventTypes).map(([key, type]) => (
-                                <option key={key} value={key}>
-                                    {type.name}
-                                </option>
-                            ))}
+                            <option value="generate">Генерация</option>
+                            <option value="extracurricular">Внешкольные</option>
+                            <option value="view">Просмотр</option>
+                            <option value="edit">Редактирование</option>
+                            <option value="create">Создание</option>
+                            <option value="delete">Удаление</option>
+                            <option value="login">Вход в систему</option>
                         </select>
                     </div>
+                    
+                    <button 
+                        className={`refresh-btn ${refreshing ? 'refreshing' : ''}`} 
+                        onClick={handleRefresh} 
+                        title="Обновить"
+                    >
+                        <FaSync />
+                    </button>
                 </div>
             </div>
 
             <div className="activity-log">
-                {filteredActivities.map((activity) => {
-                    const eventType = activityConfig.eventTypes[activity.type] || activityConfig.eventTypes.system;
-                    
-                    return (
-                        <div key={activity.id} className={`log-entry ${eventType.className}`}>
-                            <div className="log-header">
-                                <span className="log-time">
-                                    {activityConfig.formatTime(activity.time)}
-                                </span>
-                                <span className="log-type-badge">
-                                    {eventType.name}
-                                </span>
-                                <span className="log-user">
-                                    {activity.user !== 'system' ? `@${activity.user}` : 'Система'}
-                                </span>
+                {loading ? (
+                    <div className="loading-activities">Загрузка...</div>
+                ) : activities.length === 0 ? (
+                    <div className="no-activities">События не найдены</div>
+                ) : (
+                    activities.map((activity) => {
+                        const eventType = getEventType(activity.type);
+                        
+                        return (
+                            <div key={activity.id} className={`log-entry ${eventType.className}`}>
+                                <div className="log-header">
+                                    <span className="log-time">
+                                        {formatDate(activity.time)}
+                                    </span>
+                                    <span className="log-type-badge">
+                                        {eventType.name}
+                                    </span>
+                                    <span className="log-user">
+                                        {activity.user !== 'Система' ? `@${activity.user}` : 'Система'}
+                                    </span>
+                                </div>
+                                <div className="log-text">{activity.text}</div>
+                                {activity.details && (
+                                    <div className="log-details">{activity.details}</div>
+                                )}
                             </div>
-                            <div className="log-text">{activity.text}</div>
-                        </div>
-                    );
-                })}
+                        );
+                    })
+                )}
             </div>
-            
-            {filteredActivities.length === 0 && (
-                <div className="no-activities">
-                    События не найдены
-                </div>
-            )}
             
             <div className="activity-footer">
                 <span className="activity-count">
-                    Показано {filteredActivities.length} из {activityConfig.activityLog.length} событий
+                    Показано {activities.length} из {total} событий
                 </span>
             </div>
         </div>
@@ -234,7 +375,6 @@ const MainContent = () => {
     useEffect(() => {
         updateCurrentDate();
         
-        // Загружаем сохраненную тему из localStorage
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') {
             setIsDarkTheme(true);

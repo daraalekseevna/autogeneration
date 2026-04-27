@@ -5,7 +5,9 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const superadminRoutes = require('./routes/superadmin');
 const teacherRoutes = require('./routes/teacher');
-const extracurricularRoutes = require('./routes/extracurricular'); // ДОБАВЛЕНО
+const extracurricularRoutes = require('./routes/extracurricular');
+const scheduleRoutes = require('./routes/schedule');
+const activityRoutes = require('./routes/activity');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -17,7 +19,9 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/superadmin', superadminRoutes);
 app.use('/api/teacher', teacherRoutes);
-app.use('/api/extracurricular', extracurricularRoutes); // ДОБАВЛЕНО
+app.use('/api/extracurricular', extracurricularRoutes);
+app.use('/api/schedule', scheduleRoutes);
+app.use('/api/activity', activityRoutes.router);
 
 // Проверочный маршрут
 app.get('/api/health', (req, res) => {

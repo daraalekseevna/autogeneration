@@ -1,10 +1,48 @@
 const express = require('express');
 const db = require('../models/database');
 const { authenticateToken } = require('../middleware/auth');
+const { logActivity } = require('./activity');
 
 const router = express.Router();
 
-// Получить все дополнительные занятия (с фильтрацией)
+// ========== КОНКРЕТНЫЕ МАРШРУТЫ (ДО /:id) ==========
+
+router.get('/teachers', authenticateToken, async (req, res) => {
+    try {
+        console.log('=== /teachers route called ===');
+        
+        const result = await db.query(`
+            SELECT t.id, t.first_name, t.last_name, t.middle_name, u.login
+            FROM teachers t
+            INNER JOIN users u ON t.user_id = u.id
+            WHERE u.role = 'teacher'
+            ORDER BY t.last_name, t.first_name
+        `);
+        
+        console.log(`Found ${result.rows.length} teachers in database`);
+        
+        if (result.rows.length === 0) {
+            console.log('No teachers found in database');
+            return res.json([]);
+        }
+        
+        const teachers = result.rows.map(t => ({
+            id: t.id,
+            name: `${t.last_name} ${t.first_name} ${t.middle_name || ''}`.trim(),
+            firstName: t.first_name,
+            lastName: t.last_name,
+            middleName: t.middle_name || '',
+            login: t.login
+        }));
+        
+        res.json(teachers);
+        
+    } catch (err) {
+        console.error('Error getting teachers from DB:', err);
+        res.status(500).json({ message: 'Ошибка получения списка учителей', error: err.message });
+    }
+});
+
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const { teacher, day, search } = req.query;
@@ -62,15 +100,21 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 });
 
-// Получить занятие по ID
+// ========== МАРШРУТЫ С ПАРАМЕТРАМИ (В КОНЦЕ) ==========
+
 router.get('/:id', authenticateToken, async (req, res) => {
     try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({ message: 'Неверный ID' });
+        }
+        
         const result = await db.query(
             `SELECT ea.*, t.first_name, t.last_name, t.middle_name
              FROM extracurricular_activities ea
              LEFT JOIN teachers t ON ea.teacher_id = t.id
              WHERE ea.id = $1`,
-            [req.params.id]
+            [id]
         );
         
         if (result.rows.length === 0) {
@@ -97,7 +141,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Создать новое занятие (только для админов)
+// Создать новое занятие - details = null
 router.post('/', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
         return res.status(403).json({ message: 'Доступ запрещен' });
@@ -119,6 +163,8 @@ router.post('/', authenticateToken, async (req, res) => {
             if (teacherResult.rows.length > 0) {
                 actualTeacherId = teacherResult.rows[0].id;
                 teacherName = `${teacherResult.rows[0].last_name} ${teacherResult.rows[0].first_name}`.trim();
+            } else {
+                teacherName = teacher;
             }
         }
         
@@ -131,6 +177,16 @@ router.post('/', authenticateToken, async (req, res) => {
         );
         
         const row = result.rows[0];
+        
+        await logActivity(
+            req.user.id,
+            req.user.login,
+            req.user.role,
+            'extracurricular',
+            `Создано дополнительное занятие: ${title}`,
+            null
+        );
+        
         res.json({
             id: row.id,
             title: row.title,
@@ -150,13 +206,24 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 });
 
-// Обновить занятие (только для админов)
+// Обновить занятие - details = null
 router.put('/:id', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
         return res.status(403).json({ message: 'Доступ запрещен' });
     }
     
     try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({ message: 'Неверный ID' });
+        }
+        
+        const oldActivity = await db.query(
+            'SELECT title FROM extracurricular_activities WHERE id = $1',
+            [id]
+        );
+        const oldTitle = oldActivity.rows[0]?.title || 'неизвестно';
+        
         const { title, teacher, teacherId, days, startTime, endTime, room, description, color } = req.body;
         
         let actualTeacherId = teacherId;
@@ -172,6 +239,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
             if (teacherResult.rows.length > 0) {
                 actualTeacherId = teacherResult.rows[0].id;
                 teacherName = `${teacherResult.rows[0].last_name} ${teacherResult.rows[0].first_name}`.trim();
+            } else {
+                teacherName = teacher;
             }
         }
         
@@ -182,7 +251,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
                  updated_at = CURRENT_TIMESTAMP
              WHERE id = $10
              RETURNING *`,
-            [title, actualTeacherId, teacherName, days, startTime, endTime, room, description, color, req.params.id]
+            [title, actualTeacherId, teacherName, days, startTime, endTime, room, description, color, id]
         );
         
         if (result.rows.length === 0) {
@@ -190,6 +259,16 @@ router.put('/:id', authenticateToken, async (req, res) => {
         }
         
         const row = result.rows[0];
+        
+        await logActivity(
+            req.user.id,
+            req.user.login,
+            req.user.role,
+            'edit',
+            `Обновлено дополнительное занятие: ${oldTitle} → ${title}`,
+            null
+        );
+        
         res.json({
             id: row.id,
             title: row.title,
@@ -209,21 +288,41 @@ router.put('/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Удалить занятие (только для админов)
+// Удалить занятие - details = null
 router.delete('/:id', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
         return res.status(403).json({ message: 'Доступ запрещен' });
     }
     
     try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({ message: 'Неверный ID' });
+        }
+        
+        const activity = await db.query(
+            'SELECT title FROM extracurricular_activities WHERE id = $1',
+            [id]
+        );
+        const title = activity.rows[0]?.title || 'неизвестно';
+        
         const result = await db.query(
             'DELETE FROM extracurricular_activities WHERE id = $1 RETURNING id',
-            [req.params.id]
+            [id]
         );
         
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Занятие не найдено' });
         }
+        
+        await logActivity(
+            req.user.id,
+            req.user.login,
+            req.user.role,
+            'delete',
+            `Удалено дополнительное занятие: ${title}`,
+            null
+        );
         
         res.json({ message: 'Занятие удалено' });
         
