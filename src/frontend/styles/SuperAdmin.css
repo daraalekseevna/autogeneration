@@ -102,14 +102,14 @@
 }
 
 .tab-button {
-    padding: 0.75rem 1.5rem;
+    padding: 0.6rem 1.2rem;
     border: none;
     background: var(--bg-card);
     color: var(--text-primary);
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     transition: all 0.2s ease;
     border: 1px solid var(--border-color);
     display: flex;
@@ -281,47 +281,73 @@ body.dark-theme .submit-button:hover {
 }
 
 .data-table th {
-    padding: 1rem 0.75rem;
+    padding: 0.8rem 0.6rem;
     text-align: left;
     color: var(--text-primary);
     font-weight: 600;
     border-bottom: 2px solid var(--primary-soft);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
 }
 
 .data-table td {
-    padding: 1rem 0.75rem;
+    padding: 0.8rem 0.6rem;
     border-bottom: 1px solid var(--border-color);
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    vertical-align: middle;
 }
 
 .data-table tr:hover {
     background: var(--primary-soft);
 }
 
-/* Кнопки действий */
+/* ========== КНОПКИ ДЕЙСТВИЙ - СТОЛБИКОМ ========== */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+}
+
 .action-button {
-    padding: 0.5rem 1rem;
+    padding: 5px 10px;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
+    gap: 5px;
+    transition: all 0.2s ease;
     font-weight: 500;
-    transition: all 0.2s;
+    width: auto;
+    min-width: 85px;
+    white-space: nowrap;
 }
 
 .action-button:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     opacity: 0.9;
+}
+
+/* Цвета кнопок */
+.edit-button {
+    background: #21435A;
+    color: white;
+}
+
+.edit-button:hover {
+    background: #2c5475;
 }
 
 .delete-button {
     background: #dc2626;
     color: white;
+}
+
+.delete-button:hover {
+    background: #b91c1c;
 }
 
 .shift-button {
@@ -334,8 +360,12 @@ body.dark-theme .shift-button {
 }
 
 .assign-button {
-    background: #10b981;
+    background: #21435A;
     color: white;
+}
+
+.assign-button:hover {
+    background: #2c5475;
 }
 
 .unassign-button {
@@ -343,26 +373,36 @@ body.dark-theme .shift-button {
     color: white;
 }
 
-/* Элементы управления */
+.unassign-button:hover {
+    background: #dc2626;
+}
+
+/* ========== КОНТРОЛЫ В ТАБЛИЦАХ ========== */
 .shift-control {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    gap: 6px;
 }
 
 .teacher-control {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.teacher-control span {
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    text-align: center;
 }
 
 .shift-badge {
     display: inline-block;
-    padding: 0.25rem 0.75rem;
+    padding: 3px 10px;
     border-radius: 20px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 500;
     color: white;
 }
@@ -565,25 +605,25 @@ body.dark-theme .subject-preview-tag {
     padding: 4px 8px;
     background: var(--primary);
     border-radius: 16px;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
     color: white;
 }
 
 .no-subjects {
     color: var(--text-secondary);
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .edit-subjects-btn {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 4px 8px;
+    padding: 3px 8px;
     background: transparent;
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    font-size: 11px;
+    font-size: 10px;
     cursor: pointer;
     transition: all 0.2s;
     color: var(--text-secondary);
@@ -853,7 +893,75 @@ body.dark-theme .subject-modal-save:hover {
     background: var(--primary);
 }
 
-/* Адаптивность */
+/* ========== СТИЛИ ДЛЯ ВЫБОРА УЧИТЕЛЯ ========== */
+.teacher-selector-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 0 20px;
+}
+
+.teacher-selector-option {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.teacher-selector-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.teacher-selector-item:hover {
+    background: var(--primary-soft);
+}
+
+.teacher-selector-name {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.teacher-selector-item input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #21435A;
+}
+
+/* Темная тема для модального окна выбора учителя */
+body.dark-theme .teacher-selector-option {
+    border-bottom-color: #3a3a4a;
+}
+
+body.dark-theme .teacher-selector-item:hover {
+    background: rgba(58, 109, 153, 0.2);
+}
+
+body.dark-theme .teacher-selector-name {
+    color: #e0e0e0;
+}
+
+/* ========== АДАПТИВНОСТЬ ========== */
+@media (max-width: 1024px) {
+    .action-buttons {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .action-button {
+        min-width: 70px;
+        padding: 4px 8px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 0.6rem 0.4rem;
+    }
+}
+
 @media (max-width: 768px) {
     .theme-toggle-superadmin {
         top: 85px;
@@ -887,30 +995,90 @@ body.dark-theme .subject-modal-save:hover {
     }
     
     .tab-button {
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
     }
     
     .data-table th,
     .data-table td {
-        padding: 0.75rem 0.5rem;
-        font-size: 0.8rem;
+        padding: 0.5rem 0.3rem;
+        font-size: 0.75rem;
     }
     
     .action-button {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.7rem;
+        padding: 4px 6px;
+        font-size: 0.65rem;
+        min-width: 60px;
+    }
+    
+    .action-button span {
+        font-size: 0.65rem;
     }
     
     .shift-control,
     .teacher-control {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
+    }
+    
+    .subject-modal-content {
+        width: 95%;
+        max-width: none;
     }
 }
 
 @media (max-width: 576px) {
     .stats-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 0.4rem 0.2rem;
+        font-size: 0.7rem;
+    }
+    
+    .action-button span {
+        display: none;
+    }
+    
+    .action-button {
+        min-width: 28px;
+        width: 28px;
+        padding: 5px;
+    }
+    
+    .action-button svg {
+        margin: 0;
+        font-size: 0.7rem;
+    }
+    
+    .shift-badge {
+        font-size: 0.6rem;
+        padding: 2px 6px;
+    }
+    
+    .teacher-control span {
+        font-size: 0.65rem;
+    }
+    
+    .subject-tag {
+        font-size: 8px;
+        padding: 2px 5px;
+    }
+    
+    .edit-subjects-btn {
+        font-size: 8px;
+        padding: 2px 5px;
+    }
+    
+    .form-container,
+    .table-container {
+        padding: 1rem;
+    }
+    
+    .form-title,
+    .table-title {
+        font-size: 1rem;
     }
 }

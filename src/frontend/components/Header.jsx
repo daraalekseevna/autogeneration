@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { FaUserCircle } from 'react-icons/fa';
 import PersonalCabinet from './PersonalCabinet';
-import '../styles/header.css';
+import '../styles/Header.css';
 import logo from '../assets/logo.png';
 
 const Header = () => {

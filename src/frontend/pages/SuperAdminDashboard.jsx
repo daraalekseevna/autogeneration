@@ -1,6 +1,6 @@
-// SuperAdminDashboard.jsx - исправленная версия с красивым выбором предметов
+// SuperAdminDashboard.jsx - с редактированием и привязкой учителей к классу
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { FaTrash, FaCheck, FaTimes, FaSun, FaMoon, FaUserPlus, FaChalkboardTeacher, FaSchool, FaUsers, FaSync, FaSearch, FaBook, FaChevronDown, FaChevronUp, FaEdit } from 'react-icons/fa';
+import { FaTrash, FaCheck, FaTimes, FaSun, FaMoon, FaUserPlus, FaChalkboardTeacher, FaSchool, FaUsers, FaSync, FaSearch, FaBook, FaChevronDown, FaChevronUp, FaEdit, FaUserCheck, FaUserSlash } from 'react-icons/fa';
 import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -117,6 +117,288 @@ const SubjectSelectorModal = ({ isOpen, onClose, subjects, selectedIds, onSave, 
   );
 };
 
+// Компонент модального окна для выбора учителя (классный руководитель)
+const TeacherSelectorModal = ({ isOpen, onClose, teachers, selectedTeacherId, onSave, className }) => {
+  const [tempTeacherId, setTempTeacherId] = useState(selectedTeacherId);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTempTeacherId(selectedTeacherId);
+    }
+  }, [isOpen, selectedTeacherId]);
+
+  const handleSave = () => {
+    onSave(tempTeacherId);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="subject-modal-overlay" onClick={onClose}>
+      <div className="subject-modal-content" onClick={e => e.stopPropagation()}>
+        <div className="subject-modal-header">
+          <h3><FaChalkboardTeacher /> Назначить классного руководителя для {className}</h3>
+          <button className="subject-modal-close" onClick={onClose}>
+            <FaTimes />
+          </button>
+        </div>
+        
+        <div className="teacher-selector-list">
+          <div className="teacher-selector-option">
+            <label className="teacher-selector-item">
+              <input
+                type="radio"
+                name="teacher"
+                value=""
+                checked={tempTeacherId === null || tempTeacherId === ''}
+                onChange={() => setTempTeacherId(null)}
+              />
+              <span className="teacher-selector-name">Не назначен</span>
+            </label>
+          </div>
+          {teachers.map(teacher => (
+            <div key={teacher.id} className="teacher-selector-option">
+              <label className="teacher-selector-item">
+                <input
+                  type="radio"
+                  name="teacher"
+                  value={teacher.id}
+                  checked={tempTeacherId === teacher.id}
+                  onChange={() => setTempTeacherId(teacher.id)}
+                />
+                <span className="teacher-selector-name">{teacher.name}</span>
+              </label>
+            </div>
+          ))}
+        </div>
+        
+        <div className="subject-modal-footer">
+          <div className="subject-modal-actions">
+            <button className="subject-modal-cancel" onClick={onClose}>
+              Отмена
+            </button>
+            <button className="subject-modal-save" onClick={handleSave}>
+              <FaCheck /> Сохранить
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Компонент модального окна для редактирования администратора
+const AdminEditModal = ({ isOpen, onClose, admin, onSave }) => {
+  const [formData, setFormData] = useState({ name: '', login: '', password: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (admin && isOpen) {
+      setFormData({
+        name: admin.name || '',
+        login: admin.login || '',
+        password: ''
+      });
+    }
+  }, [admin, isOpen]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (admin && admin.id) {
+      setIsSubmitting(true);
+      try {
+        await onSave(admin.id, formData);
+        onClose();
+      } catch (error) {
+        console.error('Save error:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  if (!isOpen || !admin || !admin.id) return null;
+
+  return (
+    <div className="subject-modal-overlay" onClick={onClose}>
+      <div className="subject-modal-content" onClick={e => e.stopPropagation()}>
+        <div className="subject-modal-header">
+          <h3><FaEdit /> Редактировать администратора</h3>
+          <button className="subject-modal-close" onClick={onClose} disabled={isSubmitting}>
+            <FaTimes />
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>ФИО *</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              className="form-input"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+          <div className="form-group">
+            <label>Логин *</label>
+            <input
+              type="text"
+              value={formData.login}
+              onChange={(e) => setFormData({...formData, login: e.target.value})}
+              className="form-input"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+          <div className="form-group">
+            <label>Новый пароль (оставьте пустым, чтобы не менять)</label>
+            <input
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              className="form-input"
+              placeholder="Оставьте пустым"
+              disabled={isSubmitting}
+            />
+          </div>
+          
+          <div className="subject-modal-footer">
+            <div className="subject-modal-actions">
+              <button type="button" className="subject-modal-cancel" onClick={onClose} disabled={isSubmitting}>
+                Отмена
+              </button>
+              <button type="submit" className="subject-modal-save" disabled={isSubmitting}>
+                <FaCheck /> {isSubmitting ? 'Сохранение...' : 'Сохранить'}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Компонент модального окна для редактирования учителя
+const TeacherEditModal = ({ isOpen, onClose, teacher, onSave }) => {
+  const [formData, setFormData] = useState({ lastName: '', firstName: '', middleName: '', login: '', password: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (teacher && isOpen) {
+      setFormData({
+        lastName: teacher.last_name || teacher.lastName || '',
+        firstName: teacher.first_name || teacher.firstName || '',
+        middleName: teacher.middle_name || teacher.middleName || '',
+        login: teacher.login || '',
+        password: ''
+      });
+    }
+  }, [teacher, isOpen]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (teacher && teacher.id) {
+      setIsSubmitting(true);
+      try {
+        await onSave(teacher.id, formData);
+        onClose();
+      } catch (error) {
+        console.error('Save error:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  if (!isOpen || !teacher || !teacher.id) return null;
+
+  return (
+    <div className="subject-modal-overlay" onClick={onClose}>
+      <div className="subject-modal-content" onClick={e => e.stopPropagation()}>
+        <div className="subject-modal-header">
+          <h3><FaEdit /> Редактировать учителя</h3>
+          <button className="subject-modal-close" onClick={onClose} disabled={isSubmitting}>
+            <FaTimes />
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Фамилия *</label>
+              <input
+                type="text"
+                value={formData.lastName}
+                onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                className="form-input"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="form-group">
+              <label>Имя *</label>
+              <input
+                type="text"
+                value={formData.firstName}
+                onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                className="form-input"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
+          <div className="form-group">
+            <label>Отчество</label>
+            <input
+              type="text"
+              value={formData.middleName}
+              onChange={(e) => setFormData({...formData, middleName: e.target.value})}
+              className="form-input"
+              disabled={isSubmitting}
+            />
+          </div>
+          <div className="form-group">
+            <label>Логин *</label>
+            <input
+              type="text"
+              value={formData.login}
+              onChange={(e) => setFormData({...formData, login: e.target.value})}
+              className="form-input"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+          <div className="form-group">
+            <label>Новый пароль (оставьте пустым, чтобы не менять)</label>
+            <input
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              className="form-input"
+              placeholder="Оставьте пустым"
+              disabled={isSubmitting}
+            />
+          </div>
+          
+          <div className="subject-modal-footer">
+            <div className="subject-modal-actions">
+              <button type="button" className="subject-modal-cancel" onClick={onClose} disabled={isSubmitting}>
+                Отмена
+              </button>
+              <button type="submit" className="subject-modal-save" disabled={isSubmitting}>
+                <FaCheck /> {isSubmitting ? 'Сохранение...' : 'Сохранить'}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const SuperAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('admins');
   const [admins, setAdmins] = useState([]);
@@ -130,13 +412,18 @@ const SuperAdminDashboard = () => {
     return saved === 'dark';
   });
   
-  // Модальное окно для предметов
+  // Модальные окна
   const [subjectModalOpen, setSubjectModalOpen] = useState(false);
+  const [teacherSelectorOpen, setTeacherSelectorOpen] = useState(false);
+  const [adminEditOpen, setAdminEditOpen] = useState(false);
+  const [teacherEditOpen, setTeacherEditOpen] = useState(false);
   const [currentTeacher, setCurrentTeacher] = useState(null);
+  const [currentAdmin, setCurrentAdmin] = useState(null);
+  const [currentClass, setCurrentClass] = useState(null);
   const [tempSubjectIds, setTempSubjectIds] = useState([]);
 
   // Формы
-  const [newAdmin, setNewAdmin] = useState({ login: '', password: '', name: '', email: '' });
+  const [newAdmin, setNewAdmin] = useState({ login: '', password: '', name: '' });
   const [newTeacher, setNewTeacher] = useState({
     lastName: '', firstName: '', middleName: '',
     subjectIds: [],
@@ -149,7 +436,6 @@ const SuperAdminDashboard = () => {
 
   const token = localStorage.getItem('token');
 
-  // Тема
   useEffect(() => {
     if (isDarkTheme) {
       document.body.classList.add('dark-theme');
@@ -162,7 +448,6 @@ const SuperAdminDashboard = () => {
 
   const toggleTheme = () => setIsDarkTheme(!isDarkTheme);
 
-  // Загрузка данных
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -194,10 +479,10 @@ const SuperAdminDashboard = () => {
     setTimeout(() => setNotification(''), 3000);
   };
 
-  // Администраторы
+  // ============= АДМИНИСТРАТОРЫ =============
   const handleAddAdmin = async (e) => {
     e.preventDefault();
-    if (!newAdmin.login || !newAdmin.password || !newAdmin.name || !newAdmin.email) {
+    if (!newAdmin.login || !newAdmin.password || !newAdmin.name) {
       showNotification('Заполните все поля');
       return;
     }
@@ -206,11 +491,31 @@ const SuperAdminDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       showNotification('Администратор добавлен');
-      setNewAdmin({ login: '', password: '', name: '', email: '' });
+      setNewAdmin({ login: '', password: '', name: '' });
       loadData();
     } catch (err) {
       console.error('Add admin error:', err);
       showNotification(err.response?.data?.message || 'Ошибка');
+    }
+  };
+
+  const handleEditAdmin = (admin) => {
+    setCurrentAdmin(admin);
+    setAdminEditOpen(true);
+  };
+
+  const handleSaveAdmin = async (id, data) => {
+    try {
+      await axios.put(`${API_URL}/superadmin/admins/${id}`, data, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      showNotification('Администратор обновлён');
+      loadData();
+      setAdminEditOpen(false);
+      setCurrentAdmin(null);
+    } catch (err) {
+      console.error('Edit admin error:', err);
+      showNotification(err.response?.data?.message || 'Ошибка обновления');
     }
   };
 
@@ -228,7 +533,7 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  // Учителя
+  // ============= УЧИТЕЛЯ =============
   const openSubjectModal = (teacher = null) => {
     if (teacher) {
       setCurrentTeacher(teacher);
@@ -242,10 +547,8 @@ const SuperAdminDashboard = () => {
 
   const handleSaveSubjects = async (selectedIds) => {
     if (currentTeacher) {
-      // Обновляем существующего учителя
       try {
         await axios.put(`${API_URL}/superadmin/teachers/${currentTeacher.id}`, {
-          ...currentTeacher,
           subjectIds: selectedIds
         }, {
           headers: { Authorization: `Bearer ${token}` }
@@ -257,8 +560,35 @@ const SuperAdminDashboard = () => {
         showNotification('Ошибка обновления предметов');
       }
     } else {
-      // Для нового учителя сохраняем в форму
       setNewTeacher(prev => ({ ...prev, subjectIds: selectedIds }));
+    }
+    setSubjectModalOpen(false);
+  };
+
+  const handleEditTeacher = (teacher) => {
+    setCurrentTeacher(teacher);
+    setTeacherEditOpen(true);
+  };
+
+  const handleSaveTeacher = async (id, data) => {
+    try {
+      const updateData = {
+        lastName: data.lastName,
+        firstName: data.firstName,
+        middleName: data.middleName || '',
+        login: data.login,
+        password: data.password || ''
+      };
+      await axios.put(`${API_URL}/superadmin/teachers/${id}`, updateData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      showNotification('Учитель обновлён');
+      loadData();
+      setTeacherEditOpen(false);
+      setCurrentTeacher(null);
+    } catch (err) {
+      console.error('Edit teacher error:', err);
+      showNotification(err.response?.data?.message || 'Ошибка обновления');
     }
   };
 
@@ -295,7 +625,31 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  // Классы
+  // ============= КЛАССЫ =============
+  const openTeacherSelector = (classItem) => {
+    setCurrentClass(classItem);
+    setTeacherSelectorOpen(true);
+  };
+
+  const handleAssignTeacher = async (teacherId) => {
+    if (!currentClass) return;
+    
+    try {
+      await axios.put(`${API_URL}/superadmin/classes/${currentClass.id}`, { 
+        teacherId: teacherId 
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      showNotification(teacherId ? 'Классный руководитель назначен' : 'Классный руководитель отвязан');
+      loadData();
+      setTeacherSelectorOpen(false);
+      setCurrentClass(null);
+    } catch (err) {
+      console.error('Assign teacher error:', err);
+      showNotification('Ошибка');
+    }
+  };
+
   const handleAddClass = async (e) => {
     e.preventDefault();
     if (!newClass.number || !newClass.letter || !newClass.login || !newClass.password) {
@@ -329,30 +683,6 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  const handleToggleTeacher = async (classId, currentTeacherId) => {
-    try {
-      if (currentTeacherId) {
-        await axios.put(`${API_URL}/superadmin/classes/${classId}`, { teacherId: null }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        showNotification('Классный руководитель отвязан');
-      } else {
-        if (teachers.length === 0) {
-          showNotification('Нет учителей для назначения');
-          return;
-        }
-        await axios.put(`${API_URL}/superadmin/classes/${classId}`, { teacherId: teachers[0].id }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        showNotification('Классный руководитель назначен');
-      }
-      loadData();
-    } catch (err) {
-      console.error('Toggle teacher error:', err);
-      showNotification('Ошибка');
-    }
-  };
-
   const handleDeleteClass = async (id) => {
     if (!window.confirm('Удалить класс?')) return;
     try {
@@ -367,7 +697,6 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  // Статистика
   const stats = useMemo(() => ({
     admins: admins.length,
     teachers: teachers.length,
@@ -427,6 +756,7 @@ const SuperAdminDashboard = () => {
           </button>
         </div>
 
+        {/* ============= АДМИНИСТРАТОРЫ ============= */}
         {activeTab === 'admins' && (
           <div className="content-grid">
             <div className="form-container">
@@ -444,10 +774,6 @@ const SuperAdminDashboard = () => {
                   <label className="form-label">ФИО *</label>
                   <input type="text" value={newAdmin.name} onChange={(e) => setNewAdmin({...newAdmin, name: e.target.value})} className="form-input" />
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Email *</label>
-                  <input type="email" value={newAdmin.email} onChange={(e) => setNewAdmin({...newAdmin, email: e.target.value})} className="form-input" />
-                </div>
                 <button type="submit" className="submit-button">Добавить администратора</button>
               </form>
             </div>
@@ -455,17 +781,27 @@ const SuperAdminDashboard = () => {
               <h3 className="table-title">Список администраторов ({admins.length})</h3>
               <div className="table-responsive">
                 <table className="data-table">
-                  <thead><tr><th>Логин</th><th>ФИО</th><th>Email</th><th>Действия</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th>Логин</th>
+                      <th>ФИО</th>
+                      <th>Действия</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {admins.map(a => (
                       <tr key={a.id}>
                         <td>{a.login}</td>
                         <td>{a.name}</td>
-                        <td>{a.email}</td>
                         <td>
-                          <button onClick={() => handleDeleteAdmin(a.id)} className="action-button delete-button">
-                            <FaTrash /> Удалить
-                          </button>
+                          <div className="action-buttons">
+                            <button onClick={() => handleEditAdmin(a)} className="action-button edit-button">
+                              <FaEdit /> <span>Редактировать</span>
+                            </button>
+                            <button onClick={() => handleDeleteAdmin(a.id)} className="action-button delete-button">
+                              <FaTrash /> <span>Удалить</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -476,6 +812,7 @@ const SuperAdminDashboard = () => {
           </div>
         )}
 
+        {/* ============= УЧИТЕЛЯ ============= */}
         {activeTab === 'teachers' && (
           <div className="content-grid">
             <div className="form-container">
@@ -506,7 +843,6 @@ const SuperAdminDashboard = () => {
                   </div>
                 </div>
                 
-                {/* КРАСИВАЯ КНОПКА ВЫБОРА ПРЕДМЕТОВ */}
                 <div className="form-group">
                   <label className="form-label">Предметы</label>
                   <div 
@@ -524,7 +860,6 @@ const SuperAdminDashboard = () => {
                     <FaChevronDown className="subject-selector-arrow" />
                   </div>
                   
-                  {/* Предпросмотр выбранных предметов */}
                   {newTeacher.subjectIds.length > 0 && (
                     <div className="subject-preview">
                       {newTeacher.subjectIds.map(id => {
@@ -547,7 +882,13 @@ const SuperAdminDashboard = () => {
               <h3 className="table-title">Список учителей ({teachers.length})</h3>
               <div className="table-responsive">
                 <table className="data-table">
-                  <thead><tr><th>ФИО</th><th>Предметы</th><th>Действия</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th>ФИО</th>
+                      <th>Предметы</th>
+                      <th>Действия</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {teachers.map(t => (
                       <tr key={t.id}>
@@ -568,15 +909,20 @@ const SuperAdminDashboard = () => {
                               onClick={() => openSubjectModal(t)}
                               title="Редактировать предметы"
                             >
-                              <FaEdit /> Изменить
+                              <FaEdit /> Предметы
                             </button>
                           </div>
                         </td>
-                        <td>
-                          <button onClick={() => handleDeleteTeacher(t.id)} className="action-button delete-button">
-                            <FaTrash /> Удалить
-                          </button>
-                        </td>
+                        <table>
+                          <div className="action-buttons">
+                            <button onClick={() => handleEditTeacher(t)} className="action-button edit-button">
+                              <FaEdit /> <span>Редактировать</span>
+                            </button>
+                            <button onClick={() => handleDeleteTeacher(t.id)} className="action-button delete-button">
+                              <FaTrash /> <span>Удалить</span>
+                            </button>
+                          </div>
+                        </table>
                       </tr>
                     ))}
                   </tbody>
@@ -586,6 +932,7 @@ const SuperAdminDashboard = () => {
           </div>
         )}
 
+        {/* ============= КЛАССЫ ============= */}
         {activeTab === 'classes' && (
           <div className="content-grid">
             <div className="form-container">
@@ -623,7 +970,9 @@ const SuperAdminDashboard = () => {
                     <label className="form-label">Классный руководитель</label>
                     <select value={newClass.teacherId} onChange={e => setNewClass({...newClass, teacherId: e.target.value})} className="form-select">
                       <option value="">Не назначен</option>
-                      {teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                      {teachers.map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -634,7 +983,14 @@ const SuperAdminDashboard = () => {
               <h3 className="table-title">Список классов ({classes.length})</h3>
               <div className="table-responsive">
                 <table className="data-table">
-                  <thead><tr><th>Класс</th><th>Смена</th><th>Руководитель</th><th>Действия</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th>Класс</th>
+                      <th>Смена</th>
+                      <th>Руководитель</th>
+                      <th>Действия</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {classes.map(c => (
                       <tr key={c.id}>
@@ -650,15 +1006,21 @@ const SuperAdminDashboard = () => {
                         <td>
                           <div className="teacher-control">
                             <span>{c.teacher_name || 'Не назначен'}</span>
-                            <button onClick={() => handleToggleTeacher(c.id, c.teacher_id)} className={`action-button ${c.teacher_name ? 'unassign-button' : 'assign-button'}`}>
-                              {c.teacher_name ? <FaTimes /> : <FaCheck />} {c.teacher_name ? 'Отвязать' : 'Назначить'}
+                            <button 
+                              onClick={() => openTeacherSelector(c)} 
+                              className="action-button assign-button"
+                              title={c.teacher_name ? 'Сменить классного руководителя' : 'Назначить классного руководителя'}
+                            >
+                              <FaUserCheck /> {c.teacher_name ? 'Сменить' : 'Назначить'}
                             </button>
                           </div>
                         </td>
                         <td>
-                          <button onClick={() => handleDeleteClass(c.id)} className="action-button delete-button">
-                            <FaTrash /> Удалить
-                          </button>
+                          <div className="action-buttons">
+                            <button onClick={() => handleDeleteClass(c.id)} className="action-button delete-button">
+                              <FaTrash /> <span>Удалить</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -685,14 +1047,37 @@ const SuperAdminDashboard = () => {
         )}
       </main>
       
-      {/* Модальное окно выбора предметов */}
+      {/* Модальные окна */}
       <SubjectSelectorModal
         isOpen={subjectModalOpen}
         onClose={() => setSubjectModalOpen(false)}
         subjects={subjects}
         selectedIds={tempSubjectIds}
         onSave={handleSaveSubjects}
-        teacherName={currentTeacher ? currentTeacher.name : 'нового учителя'}
+        teacherName={currentTeacher?.name || 'нового учителя'}
+      />
+      
+      <TeacherSelectorModal
+        isOpen={teacherSelectorOpen}
+        onClose={() => setTeacherSelectorOpen(false)}
+        teachers={teachers}
+        selectedTeacherId={currentClass?.teacher_id || null}
+        onSave={handleAssignTeacher}
+        className={currentClass?.name || ''}
+      />
+      
+      <AdminEditModal
+        isOpen={adminEditOpen}
+        onClose={() => setAdminEditOpen(false)}
+        admin={currentAdmin}
+        onSave={handleSaveAdmin}
+      />
+      
+      <TeacherEditModal
+        isOpen={teacherEditOpen}
+        onClose={() => setTeacherEditOpen(false)}
+        teacher={currentTeacher}
+        onSave={handleSaveTeacher}
       />
       
       <Footer />

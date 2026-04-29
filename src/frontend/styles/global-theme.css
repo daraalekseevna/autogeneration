@@ -101,9 +101,7 @@ body {
     overflow-x: hidden;
 }
 
-/* ========== АНИМИРОВАННЫЙ ФОН (поддержка обоих вариантов) ========== */
-
-/* Поддержка .animated-bg и .animatedBg */
+/* ========== АНИМИРОВАННЫЙ ФОН ========== */
 .animatedBg,
 .animated-bg {
     position: fixed;
@@ -125,7 +123,6 @@ body:not(.dark-theme) .animated-bg {
     background: #e8eef200;
 }
 
-/* Поддержка .glass-circle и .glassCircle */
 .glassCircle,
 .glass-circle {
     position: absolute;
@@ -148,7 +145,7 @@ body:not(.dark-theme) .glass-circle {
     mix-blend-mode: overlay;
 }
 
-/* Круги для ВСЕХ вариантов */
+/* Круги */
 .glassCircle:nth-child(1),
 .glass-circle:nth-child(1) {
     width: 500px; height: 480px;
@@ -313,6 +310,94 @@ body:not(.dark-theme) .glass-circle {
     transform: translateX(-3px);
 }
 
+/* ========== УБИРАЕМ СКРОЛЛ С ТАБЛИЦ ========== */
+.dayTableContainer {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    max-height: none !important;
+}
+
+.dayContent {
+    overflow-y: visible !important;
+    max-height: none !important;
+}
+
+.table-responsive {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    max-height: none !important;
+}
+
+.scheduleTable {
+    width: 100%;
+}
+
+/* Скрываем вертикальный скролл */
+.dayTableContainer::-webkit-scrollbar {
+    height: 4px;
+}
+
+.dayTableContainer::-webkit-scrollbar-track {
+    background: var(--border-light);
+    border-radius: 4px;
+}
+
+.dayTableContainer::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 4px;
+}
+
+/* ========== АДАПТАЦИЯ КНОПКИ ТЕМЫ ========== */
+@media (max-width: 768px) {
+    .theme-btn span,
+    .themeBtn span,
+    .theme-btn-superadmin span,
+    .cabinet-header-actions .theme-toggle-cabinet span {
+        display: none;
+    }
+    
+    .theme-btn,
+    .themeBtn,
+    .theme-btn-superadmin {
+        width: 42px !important;
+        min-width: 42px !important;
+        padding: 0 !important;
+        justify-content: center !important;
+    }
+    
+    .theme-btn svg,
+    .themeBtn svg,
+    .theme-btn-superadmin svg {
+        margin: 0 !important;
+        font-size: 16px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .theme-btn,
+    .themeBtn,
+    .theme-btn-superadmin {
+        width: 38px !important;
+        min-width: 38px !important;
+        height: 38px !important;
+    }
+    
+    .theme-btn svg,
+    .themeBtn svg,
+    .theme-btn-superadmin svg {
+        font-size: 14px !important;
+    }
+    
+    .cabinet-header-actions .theme-toggle-cabinet {
+        width: 28px !important;
+        height: 28px !important;
+    }
+    
+    .cabinet-header-actions .theme-toggle-cabinet svg {
+        font-size: 12px !important;
+    }
+}
+
 /* ========== ЗАГРУЗЧИК ========== */
 .loader {
     display: flex;
@@ -409,6 +494,14 @@ body:not(.dark-theme) .glass-circle {
     .glass-circle:nth-child(9) {
         display: none;
     }
+    
+    .dayTableContainer {
+        overflow-x: auto !important;
+    }
+    
+    .scheduleTable {
+        min-width: 550px;
+    }
 }
 
 @media (max-width: 576px) {
@@ -434,8 +527,13 @@ body:not(.dark-theme) .glass-circle {
     .back-btn {
         padding: 8px 12px;
     }
+    
+    .scheduleTable {
+        min-width: 480px;
+    }
 }
 
+/* ========== ПЕЧАТЬ ========== */
 @media print {
     .theme-toggle,
     .back-btn,
@@ -457,22 +555,4 @@ body:not(.dark-theme) .glass-circle {
         border: 1px solid #ccc !important;
         break-inside: avoid;
     }
-}
-/* src/frontend/styles/global-theme.css */
-/* Добавьте эти стили в конец файла */
-
-/* ========== УБИРАЕМ СКРОЛЛ С КАРТОЧЕК ДНЕЙ ========== */
-.dayTableContainer {
-    overflow-y: visible !important;
-    overflow-x: auto !important;
-    max-height: none !important;
-}
-
-.dayTableContainer::-webkit-scrollbar {
-    display: none;
-}
-
-/* Для Firefox */
-.dayTableContainer {
-    scrollbar-width: none;
 }

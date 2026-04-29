@@ -1,9 +1,9 @@
-// ScheduleViewer.jsx - Административная панель с расписанием всей школы
+// ScheduleViewer.jsx - финальная версия
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  FaCalendar, FaEdit, FaSave, FaTimes, FaPrint, 
-  FaFilter, FaSearch, FaArrowLeft, FaPlus, FaTrash, 
-  FaClock, FaSchool, FaSync, FaBook, FaGraduationCap, 
+import {
+  FaCalendar, FaEdit, FaSave, FaTimes, FaPrint,
+  FaSearch, FaArrowLeft, FaPlus, FaTrash,
+  FaClock, FaSchool, FaSync, FaBook, FaGraduationCap,
   FaMapMarkerAlt, FaHourglassHalf, FaSun, FaMoon,
   FaFileExcel, FaChalkboardTeacher, FaRegSave,
   FaLock, FaUnlock, FaGripVertical, FaDownload, FaUpload,
@@ -20,15 +20,22 @@ const CLASSES = ['1А', '1Б', '2А', '2Б', '3А', '3Б', '4А', '4Б', '5А', 
 const DAYS = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
 const FULL_DAYS = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
 
-const TIME_SLOTS = [
-  { number: 1, start: '08:30', end: '09:15' },
-  { number: 2, start: '09:25', end: '10:10' },
-  { number: 3, start: '10:20', end: '11:05' },
-  { number: 4, start: '11:20', end: '12:05' },
-  { number: 5, start: '12:15', end: '13:00' },
-  { number: 6, start: '13:10', end: '13:55' },
-  { number: 7, start: '14:05', end: '14:50' }
-];
+// Слоты для первой и второй смены
+const SHIFT_SLOTS = {
+  first: [
+    { number: 1, start: '08:30', end: '09:15' },
+    { number: 2, start: '09:25', end: '10:10' },
+    { number: 3, start: '10:20', end: '11:05' },
+    { number: 4, start: '11:20', end: '12:05' },
+    { number: 5, start: '12:15', end: '13:00' }
+  ],
+  second: [
+    { number: 6, start: '13:30', end: '14:15' },
+    { number: 7, start: '14:25', end: '15:10' },
+    { number: 8, start: '15:20', end: '16:05' },
+    { number: 9, start: '16:15', end: '17:00' }
+  ]
+};
 
 const SUBJECT_COLORS = {
   'Математика': '#4CAF50', 'Русский язык': '#2196F3', 'Литература': '#9C27B0',
@@ -41,52 +48,38 @@ const getSubjectColor = (subject) => SUBJECT_COLORS[subject] || '#9E9E9E';
 
 const ScheduleViewer = () => {
   const navigate = useNavigate();
-  
-  // Режимы: 'single' - один класс, 'all' - все классы
-  const [viewMode, setViewMode] = useState('all');
-  const [selectedClass, setSelectedClass] = useState('5А');
   const [editMode, setEditMode] = useState(false);
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [schedules, setSchedules] = useState({});
   const [loading, setLoading] = useState(true);
-  
   const [editingCell, setEditingCell] = useState(null);
   const [editValue, setEditValue] = useState({ subject: '', teacher: '', room: '' });
-  
   const [showTeachers, setShowTeachers] = useState(true);
   const [showRooms, setShowRooms] = useState(true);
-  
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  
-  // Генерация дефолтного расписания для одного класса
+  const [dragMode, setDragMode] = useState('lesson'); // 'lesson' или 'field'
+
+  // Генерация дефолтного расписания
   const getDefaultSchedule = useCallback(() => {
     const schedule = {};
     DAYS.forEach(day => {
       schedule[day] = {};
-      TIME_SLOTS.forEach(slot => {
+      [...SHIFT_SLOTS.first, ...SHIFT_SLOTS.second].forEach(slot => {
         const num = slot.number;
-        if (num === 1) {
-          schedule[day][num] = { subject: 'Математика', teacher: 'Иванова А.П.', room: '201' };
-        } else if (num === 2) {
-          schedule[day][num] = { subject: 'Русский язык', teacher: 'Петрова С.И.', room: '305' };
-        } else if (num === 3) {
-          schedule[day][num] = { subject: 'Литература', teacher: 'Сидорова О.В.', room: '208' };
-        } else if (num === 4) {
-          schedule[day][num] = { subject: 'Английский язык', teacher: 'Смирнова Е.А.', room: '401' };
-        } else if (num === 5) {
-          schedule[day][num] = { subject: 'История', teacher: 'Федоров П.К.', room: '312' };
-        } else if (num === 6) {
-          schedule[day][num] = { subject: 'Биология', teacher: 'Николаева М.В.', room: 'Лаборатория' };
-        } else {
-          schedule[day][num] = null;
-        }
+        if (num === 1) schedule[day][num] = { subject: 'Математика', teacher: 'Иванова А.П.', room: '201' };
+        else if (num === 2) schedule[day][num] = { subject: 'Русский язык', teacher: 'Петрова С.И.', room: '305' };
+        else if (num === 3) schedule[day][num] = { subject: 'Литература', teacher: 'Сидорова О.В.', room: '208' };
+        else if (num === 4) schedule[day][num] = { subject: 'Английский язык', teacher: 'Смирнова Е.А.', room: '401' };
+        else if (num === 5) schedule[day][num] = { subject: 'История', teacher: 'Федоров П.К.', room: '312' };
+        else if (num === 6) schedule[day][num] = { subject: 'Биология', teacher: 'Николаева М.В.', room: 'Лаборатория' };
+        else schedule[day][num] = null;
       });
     });
     return schedule;
   }, []);
-  
+
   // Загрузка данных
   useEffect(() => {
     const saved = localStorage.getItem('school_schedules');
@@ -100,20 +93,17 @@ const ScheduleViewer = () => {
       setSchedules(allSchedules);
     }
     setLoading(false);
-    
     const theme = localStorage.getItem('theme');
     if (theme === 'dark') {
       setIsDarkTheme(true);
       document.body.classList.add('dark-theme');
     }
   }, [getDefaultSchedule]);
-  
-  // Сохранение в localStorage
+
   const saveToLocalStorage = useCallback((newSchedules) => {
     localStorage.setItem('school_schedules', JSON.stringify(newSchedules));
   }, []);
-  
-  // Сохранение в историю
+
   const saveToHistory = useCallback((newSchedules) => {
     setHistory(prev => {
       const newHistory = prev.slice(0, historyIndex + 1);
@@ -122,29 +112,38 @@ const ScheduleViewer = () => {
     });
     setHistoryIndex(prev => Math.min(prev + 1, 29));
   }, [historyIndex]);
-  
-  // Обновление расписания
+
   const updateSchedules = useCallback((newSchedules) => {
     setSchedules(newSchedules);
     saveToLocalStorage(newSchedules);
     saveToHistory(newSchedules);
   }, [saveToLocalStorage, saveToHistory]);
-  
-  // Обновление урока
+
   const updateLesson = useCallback((className, day, slotNum, lessonData) => {
     const newSchedules = JSON.parse(JSON.stringify(schedules));
     if (!newSchedules[className]) newSchedules[className] = {};
     if (!newSchedules[className][day]) newSchedules[className][day] = {};
-    
+
     if (lessonData && (lessonData.subject || lessonData.teacher || lessonData.room)) {
       newSchedules[className][day][slotNum] = lessonData;
     } else {
       delete newSchedules[className][day][slotNum];
     }
-    
     updateSchedules(newSchedules);
   }, [schedules, updateSchedules]);
-  
+
+  const updateLessonField = useCallback((className, day, slotNum, field, value) => {
+    const newSchedules = JSON.parse(JSON.stringify(schedules));
+    if (!newSchedules[className]) newSchedules[className] = {};
+    if (!newSchedules[className][day]) newSchedules[className][day] = {};
+    const existing = newSchedules[className][day][slotNum] || { subject: '', teacher: '', room: '' };
+    existing[field] = value;
+    if (existing.subject || existing.teacher || existing.room) {
+      newSchedules[className][day][slotNum] = existing;
+    }
+    updateSchedules(newSchedules);
+  }, [schedules, updateSchedules]);
+
   const toggleTheme = () => {
     const newTheme = !isDarkTheme;
     setIsDarkTheme(newTheme);
@@ -156,7 +155,7 @@ const ScheduleViewer = () => {
       localStorage.setItem('theme', 'light');
     }
   };
-  
+
   const startEdit = (className, day, slotNum, lesson) => {
     if (!editMode) return;
     setEditingCell({ className, day, slotNum });
@@ -166,82 +165,77 @@ const ScheduleViewer = () => {
       room: lesson?.room || ''
     });
   };
-  
+
   const saveEdit = () => {
     if (!editingCell) return;
     const { className, day, slotNum } = editingCell;
-    updateLesson(className, day, slotNum, { ...editValue });
+    if (editValue.subject || editValue.teacher || editValue.room) {
+      updateLesson(className, day, slotNum, { ...editValue });
+    } else {
+      updateLesson(className, day, slotNum, null);
+    }
     setEditingCell(null);
   };
-  
+
   const deleteLesson = (className, day, slotNum) => {
     if (!editMode) return;
     if (window.confirm('Удалить этот урок?')) {
       updateLesson(className, day, slotNum, null);
     }
   };
-  
+
+  // Drag and drop для целого урока
   const handleDragStart = (e, className, day, slotNum, lesson) => {
     if (!editMode) return;
-    e.dataTransfer.setData('text/plain', JSON.stringify({ className, day, slotNum, lesson }));
+    e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'lesson', className, day, slotNum, lesson }));
     e.dataTransfer.effectAllowed = 'move';
   };
-  
+
+  // Drag and drop для полей
+  const handleFieldDragStart = (e, className, day, slotNum, field, value) => {
+    if (!editMode || dragMode !== 'field') return;
+    e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'field', className, day, slotNum, field, value }));
+    e.dataTransfer.effectAllowed = 'copy';
+  };
+
   const handleDragOver = (e) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = editMode ? (dragMode === 'field' ? 'copy' : 'move') : 'none';
   };
-  
+
   const handleDrop = (e, targetClass, targetDay, targetSlot) => {
     e.preventDefault();
     if (!editMode) return;
-    
-    const sourceData = JSON.parse(e.dataTransfer.getData('text/plain'));
-    if (!sourceData) return;
-    
-    const sourceLesson = schedules[sourceData.className]?.[sourceData.day]?.[sourceData.slotNum];
-    if (!sourceLesson) return;
-    
-    updateLesson(sourceData.className, sourceData.day, sourceData.slotNum, null);
-    updateLesson(targetClass, targetDay, targetSlot, sourceLesson);
+
+    const rawData = e.dataTransfer.getData('text/plain');
+    if (!rawData) return;
+    const sourceData = JSON.parse(rawData);
+
+    if (sourceData.type === 'lesson') {
+      const sourceLesson = schedules[sourceData.className]?.[sourceData.day]?.[sourceData.slotNum];
+      if (!sourceLesson) return;
+      updateLesson(sourceData.className, sourceData.day, sourceData.slotNum, null);
+      updateLesson(targetClass, targetDay, targetSlot, sourceLesson);
+    } else if (sourceData.type === 'field' && dragMode === 'field') {
+      updateLessonField(targetClass, targetDay, targetSlot, sourceData.field, sourceData.value);
+    }
   };
-  
+
   const exportToExcel = () => {
     const data = [];
     
-    if (viewMode === 'all') {
-      // Экспорт всех классов
-      CLASSES.forEach(className => {
-        const schedule = schedules[className] || {};
-        DAYS.forEach((day, idx) => {
-          TIME_SLOTS.forEach(slot => {
-            const lesson = schedule[day]?.[slot.number];
-            if (lesson) {
-              data.push({
-                'Класс': className,
-                'День': FULL_DAYS[idx],
-                'Урок': slot.number,
-                'Время': `${slot.start}-${slot.end}`,
-                'Предмет': lesson.subject,
-                'Учитель': lesson.teacher,
-                'Кабинет': lesson.room
-              });
-            }
-          });
-        });
-      });
-    } else {
-      // Экспорт одного класса
-      const schedule = schedules[selectedClass] || {};
-      DAYS.forEach((day, idx) => {
-        TIME_SLOTS.forEach(slot => {
-          const lesson = schedule[day]?.[slot.number];
+    // Экспорт 1 смены
+    SHIFT_SLOTS.first.forEach(slot => {
+      DAYS.forEach((day, dayIdx) => {
+        CLASSES.forEach(className => {
+          const lesson = schedules[className]?.[day]?.[slot.number];
           if (lesson) {
             data.push({
-              'Класс': selectedClass,
-              'День': FULL_DAYS[idx],
+              'Смена': '1 смена',
+              'День': FULL_DAYS[dayIdx],
               'Урок': slot.number,
               'Время': `${slot.start}-${slot.end}`,
+              'Класс': className,
               'Предмет': lesson.subject,
               'Учитель': lesson.teacher,
               'Кабинет': lesson.room
@@ -249,20 +243,39 @@ const ScheduleViewer = () => {
           }
         });
       });
-    }
+    });
+    
+    // Экспорт 2 смены
+    SHIFT_SLOTS.second.forEach(slot => {
+      DAYS.forEach((day, dayIdx) => {
+        CLASSES.forEach(className => {
+          const lesson = schedules[className]?.[day]?.[slot.number];
+          if (lesson) {
+            data.push({
+              'Смена': '2 смена',
+              'День': FULL_DAYS[dayIdx],
+              'Урок': slot.number,
+              'Время': `${slot.start}-${slot.end}`,
+              'Класс': className,
+              'Предмет': lesson.subject,
+              'Учитель': lesson.teacher,
+              'Кабинет': lesson.room
+            });
+          }
+        });
+      });
+    });
     
     if (data.length === 0) {
       alert('Нет данных для экспорта');
       return;
     }
-    
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Расписание');
-    const fileName = viewMode === 'all' ? 'raspisanie_vse_klassy.xlsx' : `raspisanie_${selectedClass}.xlsx`;
-    XLSX.writeFile(wb, fileName);
+    XLSX.writeFile(wb, `raspisanie_vse_smeny.xlsx`);
   };
-  
+
   const undo = () => {
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
@@ -271,7 +284,7 @@ const ScheduleViewer = () => {
       saveToLocalStorage(history[newIndex]);
     }
   };
-  
+
   const redo = () => {
     if (historyIndex < history.length - 1) {
       const newIndex = historyIndex + 1;
@@ -280,15 +293,17 @@ const ScheduleViewer = () => {
       saveToLocalStorage(history[newIndex]);
     }
   };
-  
-  const resetClassSchedule = () => {
-    if (window.confirm(`Сбросить расписание для ${selectedClass} класса?`)) {
-      const newSchedules = JSON.parse(JSON.stringify(schedules));
-      newSchedules[selectedClass] = getDefaultSchedule();
+
+  const resetAllSchedules = () => {
+    if (window.confirm('Сбросить расписание для всех классов?')) {
+      const newSchedules = {};
+      CLASSES.forEach(className => {
+        newSchedules[className] = getDefaultSchedule();
+      });
       updateSchedules(newSchedules);
     }
   };
-  
+
   const isMatchSearch = (lesson) => {
     if (!searchTerm) return true;
     const lowerSearch = searchTerm.toLowerCase();
@@ -296,7 +311,155 @@ const ScheduleViewer = () => {
             lesson.teacher?.toLowerCase().includes(lowerSearch) ||
             lesson.room?.toLowerCase().includes(lowerSearch));
   };
-  
+
+  // Компонент таблицы для смены
+  const ScheduleTable = ({ shiftName, timeSlots }) => (
+    <div className="schedule-table-container">
+      <div className="schedule-table-header">
+        <h3><span className="shift-title-icon">{shiftName === '1 смена' ? <FaSun /> : <FaMoon />}</span> {shiftName}</h3>
+      </div>
+      <div className="horizontal-schedule-wrapper">
+        <table className="horizontal-schedule-table">
+          <thead>
+            <tr>
+              <th className="day-time-col">День / Урок</th>
+              {CLASSES.map(className => (
+                <th key={className} className="class-header-col">
+                  {className}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {DAYS.map(day => (
+              <React.Fragment key={day}>
+                {timeSlots.map((slot, slotIdx) => (
+                  <tr key={`${day}-${slot.number}`}>
+                    {slotIdx === 0 && (
+                      <td className="day-rowspan-cell" rowSpan={timeSlots.length}>
+                        <div className="day-name-cell">
+                          <span className="day-name">{FULL_DAYS[DAYS.indexOf(day)]}</span>
+                        </div>
+                      </td>
+                    )}
+                    <td className="time-cell">
+                      <div className="time-info">
+                        <span className="slot-num">{slot.number}</span>
+                        <span className="slot-time">{slot.start}–{slot.end}</span>
+                      </div>
+                    </td>
+                    {CLASSES.map(className => {
+                      const lesson = schedules[className]?.[day]?.[slot.number];
+                      const matchesSearch = lesson && isMatchSearch(lesson);
+                      const isEditing = editingCell?.className === className && 
+                                       editingCell?.day === day && 
+                                       editingCell?.slotNum === slot.number;
+
+                      return (
+                        <td
+                          key={`${className}-${day}-${slot.number}`}
+                          className={`lesson-cell ${editMode ? 'edit-mode' : ''} ${matchesSearch ? 'highlight' : ''}`}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, className, day, slot.number)}
+                          onClick={() => !isEditing && editMode && startEdit(className, day, slot.number, lesson)}
+                        >
+                          {isEditing ? (
+                            <div className="inline-edit-form">
+                              <input
+                                type="text"
+                                placeholder="Предмет"
+                                value={editValue.subject}
+                                onChange={(e) => setEditValue({...editValue, subject: e.target.value})}
+                                autoFocus
+                              />
+                              <div className="inline-edit-row">
+                                <input
+                                  type="text"
+                                  placeholder="Учитель"
+                                  value={editValue.teacher}
+                                  onChange={(e) => setEditValue({...editValue, teacher: e.target.value})}
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="Кабинет"
+                                  value={editValue.room}
+                                  onChange={(e) => setEditValue({...editValue, room: e.target.value})}
+                                />
+                              </div>
+                              <div className="inline-edit-actions">
+                                <button onClick={saveEdit} className="save-inline">✓</button>
+                                <button onClick={() => setEditingCell(null)} className="cancel-inline">✗</button>
+                              </div>
+                            </div>
+                          ) : lesson ? (
+                            <div
+                              className={`lesson-card-horizontal ${editMode && dragMode === 'lesson' ? 'draggable' : ''}`}
+                              draggable={editMode && dragMode === 'lesson'}
+                              onDragStart={(e) => handleDragStart(e, className, day, slot.number, lesson)}
+                              style={{ borderLeftColor: getSubjectColor(lesson.subject) }}
+                            >
+                              <div className="lesson-header-horizontal">
+                                <span className="lesson-subject-horizontal">{lesson.subject}</span>
+                                {editMode && (
+                                  <button 
+                                    className="delete-lesson-btn"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      deleteLesson(className, day, slot.number);
+                                    }}
+                                  >
+                                    <FaTrash />
+                                  </button>
+                                )}
+                              </div>
+                              {showTeachers && (
+                                <div 
+                                  className={`lesson-field-horizontal ${editMode && dragMode === 'field' ? 'draggable-field' : ''}`}
+                                  draggable={editMode && dragMode === 'field'}
+                                  onDragStart={(e) => {
+                                    e.stopPropagation();
+                                    handleFieldDragStart(e, className, day, slot.number, 'teacher', lesson.teacher);
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <FaGraduationCap /> {lesson.teacher}
+                                </div>
+                              )}
+                              {showRooms && (
+                                <div 
+                                  className={`lesson-field-horizontal ${editMode && dragMode === 'field' ? 'draggable-field' : ''}`}
+                                  draggable={editMode && dragMode === 'field'}
+                                  onDragStart={(e) => {
+                                    e.stopPropagation();
+                                    handleFieldDragStart(e, className, day, slot.number, 'room', lesson.room);
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <FaMapMarkerAlt /> {lesson.room}
+                                </div>
+                              )}
+                            </div>
+                          ) : editMode ? (
+                            <div className="empty-slot-add-horizontal">
+                              <FaPlus />
+                              <span>Добавить</span>
+                            </div>
+                          ) : (
+                            <div className="empty-slot-horizontal">—</div>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="schedule-viewer-page">
@@ -312,19 +475,19 @@ const ScheduleViewer = () => {
       </div>
     );
   }
-  
+
   return (
     <div className={`schedule-viewer-page ${isDarkTheme ? 'dark-theme' : 'light-theme'}`}>
       <div className="animated-bg">
         {[...Array(6)].map((_, i) => <div key={i} className="glass-circle"></div>)}
       </div>
-      
+
       <button className="schedule-back-btn" onClick={() => navigate(-1)}>
         <FaArrowLeft />
       </button>
-      
+
       <Header />
-      
+
       <div className="schedule-viewer-container">
         <div className="theme-toggle">
           <button className="theme-btn" onClick={toggleTheme}>
@@ -332,352 +495,82 @@ const ScheduleViewer = () => {
             <span>{isDarkTheme ? 'Светлая' : 'Темная'}</span>
           </button>
         </div>
-        
-        {/* Переключатель режима просмотра */}
-        <div className="view-mode-panel">
-          <button 
-            className={`view-mode-btn ${viewMode === 'all' ? 'active' : ''}`}
-            onClick={() => setViewMode('all')}
-          >
-            <FaUsers /> Все классы
-          </button>
-          <button 
-            className={`view-mode-btn ${viewMode === 'single' ? 'active' : ''}`}
-            onClick={() => setViewMode('single')}
-          >
-            <FaChalkboardTeacher /> Один класс
-          </button>
+
+        {/* Компактная панель управления */}
+        <div className="compact-control-bar">
+          <div className="compact-buttons-group">
+            <button className={`compact-btn ${editMode ? 'active' : ''}`} onClick={() => setEditMode(!editMode)}>
+              {editMode ? <FaLock /> : <FaUnlock />}
+              <span>{editMode ? 'Закрыть' : 'Правка'}</span>
+            </button>
+            <button className="compact-btn" onClick={undo} disabled={!editMode || historyIndex <= 0}>
+              <FaUndo />
+            </button>
+            <button className="compact-btn" onClick={redo} disabled={!editMode || historyIndex >= history.length - 1}>
+              <FaRedo />
+            </button>
+            <button className="compact-btn" onClick={exportToExcel}>
+              <FaFileExcel />
+            </button>
+            <button className="compact-btn" onClick={() => window.print()}>
+              <FaPrint />
+            </button>
+            <button className="compact-btn compact-btn-danger" onClick={resetAllSchedules}>
+              <FaSync /> <span>Сброс всех</span>
+            </button>
+          </div>
+          <div className="compact-filters">
+            <div className="compact-search">
+              <FaSearch />
+              <input
+                type="text"
+                placeholder="Поиск..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && <FaTimes className="compact-clear" onClick={() => setSearchTerm('')} />}
+            </div>
+            <label className="compact-check">
+              <input type="checkbox" checked={showTeachers} onChange={(e) => setShowTeachers(e.target.checked)} />
+              <span>Учителя</span>
+            </label>
+            <label className="compact-check">
+              <input type="checkbox" checked={showRooms} onChange={(e) => setShowRooms(e.target.checked)} />
+              <span>Кабинеты</span>
+            </label>
+          </div>
         </div>
-        
-        {viewMode === 'single' && (
-          <div className="class-selector-panel">
-            <div className="class-selector-header">
-              <FaChalkboardTeacher />
-              <span>Выберите класс:</span>
-            </div>
-            <div className="class-grid">
-              {CLASSES.map(className => (
-                <button
-                  key={className}
-                  className={`class-card ${selectedClass === className ? 'active' : ''}`}
-                  onClick={() => setSelectedClass(className)}
-                >
-                  <span className="class-name">{className}</span>
-                </button>
-              ))}
-            </div>
+
+        {/* Режим перетаскивания */}
+        {editMode && (
+          <div className="drag-mode-panel">
+            <span>Режим Drag & Drop:</span>
+            <button className={`drag-mode-btn ${dragMode === 'lesson' ? 'active' : ''}`} onClick={() => setDragMode('lesson')}>
+              <FaGripVertical /> Целый урок
+            </button>
+            <button className={`drag-mode-btn ${dragMode === 'field' ? 'active' : ''}`} onClick={() => setDragMode('field')}>
+              <FaMapMarkerAlt /> Поля (учитель/кабинет)
+            </button>
           </div>
         )}
-        
-        {/* Панель управления */}
-        <div className="control-bar">
-          <div className="class-info">
-            <h2>
-              <FaSchool /> 
-              {viewMode === 'all' ? 'Расписание всех классов' : `${selectedClass} класс`}
-            </h2>
-          </div>
-          
-          <div className="action-buttons">
-            {editMode && (
-              <>
-                <button className="btn btn-secondary" onClick={undo} title="Отменить">
-                  <FaUndo />
-                </button>
-                <button className="btn btn-secondary" onClick={redo} title="Вернуть">
-                  <FaRedo />
-                </button>
-              </>
-            )}
-            
-            <button className={`btn ${editMode ? 'btn-warning' : 'btn-primary'}`} onClick={() => setEditMode(!editMode)}>
-              {editMode ? <FaLock /> : <FaUnlock />}
-              {editMode ? 'Закрыть' : 'Редактировать'}
-            </button>
-            
-            {editMode && viewMode === 'single' && (
-              <button className="btn btn-danger" onClick={resetClassSchedule}>
-                <FaSync /> Сброс класса
-              </button>
-            )}
-            
-            <button className="btn btn-secondary" onClick={exportToExcel}>
-              <FaFileExcel /> Excel
-            </button>
-            <button className="btn btn-secondary" onClick={() => window.print()}>
-              <FaPrint /> Печать
-            </button>
-          </div>
-        </div>
-        
-        {/* Поиск и фильтры */}
-        <div className="search-panel">
-          <div className="search-wrapper">
-            <FaSearch />
-            <input
-              type="text"
-              placeholder="Поиск по предмету, учителю или кабинету..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-            {searchTerm && (
-              <button className="clear-search" onClick={() => setSearchTerm('')}>
-                <FaTimes />
-              </button>
-            )}
-          </div>
-          <div className="filters">
-            <label className="filter-chip">
-              <input type="checkbox" checked={showTeachers} onChange={(e) => setShowTeachers(e.target.checked)} />
-              Учителя
-            </label>
-            <label className="filter-chip">
-              <input type="checkbox" checked={showRooms} onChange={(e) => setShowRooms(e.target.checked)} />
-              Кабинеты
-            </label>
-          </div>
-        </div>
-        
-        {/* Расписание */}
-        <div className="schedule-content">
-          {viewMode === 'all' ? (
-            // Режим "Все классы" - каждый класс показывается отдельной таблицей
-            CLASSES.map(className => {
-              const schedule = schedules[className] || {};
-              const lessonsCount = Object.values(schedule).reduce((sum, day) => sum + Object.keys(day).length, 0);
-              
-              return (
-                <div key={className} className="class-schedule-card">
-                  <div className="class-schedule-header">
-                    <h3><FaChalkboardTeacher /> {className} класс</h3>
-                    <span className="lesson-count-badge">{lessonsCount} уроков</span>
-                  </div>
-                  
-                  <div className="schedule-table-wrapper">
-                    <table className="schedule-table">
-                      <thead>
-                        <tr>
-                          <th className="time-col">Урок</th>
-                          {DAYS.map((day, idx) => (
-                            <th key={day} className="day-col">
-                              <div className="day-header">
-                                <span className="day-short">{day}</span>
-                                <span className="day-full">{FULL_DAYS[idx]}</span>
-                              </div>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {TIME_SLOTS.map((slot) => (
-                          <tr key={slot.number}>
-                            <td className="time-cell">
-                              <div className="time-info">
-                                <span className="slot-num">{slot.number}</span>
-                                <span className="slot-time">{slot.start}-{slot.end}</span>
-                              </div>
-                            </td>
-                            
-                            {DAYS.map((day) => {
-                              const lesson = schedule[day]?.[slot.number];
-                              const matchesSearch = lesson && isMatchSearch(lesson);
-                              
-                              return (
-                                <td
-                                  key={`${className}-${day}-${slot.number}`}
-                                  className={`lesson-cell ${editMode ? 'edit-mode' : ''} ${matchesSearch ? 'highlight' : ''}`}
-                                  onDragOver={handleDragOver}
-                                  onDrop={(e) => handleDrop(e, className, day, slot.number)}
-                                  onClick={() => editMode && startEdit(className, day, slot.number, lesson)}
-                                >
-                                  {lesson ? (
-                                    <div
-                                      className={`lesson-card ${editMode ? 'draggable' : ''}`}
-                                      draggable={editMode}
-                                      onDragStart={(e) => handleDragStart(e, className, day, slot.number, lesson)}
-                                      style={{ borderLeftColor: getSubjectColor(lesson.subject) }}
-                                    >
-                                      {editMode && <div className="drag-icon"><FaGripVertical /></div>}
-                                      <div className="lesson-subject">{lesson.subject}</div>
-                                      {showTeachers && (
-                                        <div className="lesson-teacher">
-                                          <FaGraduationCap /> {lesson.teacher}
-                                        </div>
-                                      )}
-                                      {showRooms && (
-                                        <div className="lesson-room">
-                                          <FaMapMarkerAlt /> {lesson.room}
-                                        </div>
-                                      )}
-                                      {editMode && (
-                                        <button 
-                                          className="delete-lesson"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            deleteLesson(className, day, slot.number);
-                                          }}
-                                        >
-                                          <FaTrash />
-                                        </button>
-                                      )}
-                                    </div>
-                                  ) : editMode ? (
-                                    <div className="empty-slot-add">
-                                      <FaPlus />
-                                      <span>Добавить</span>
-                                    </div>
-                                  ) : (
-                                    <div className="empty-slot">—</div>
-                                  )}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            // Режим "Один класс"
-            (() => {
-              const schedule = schedules[selectedClass] || {};
-              
-              return (
-                <div className="single-class-schedule">
-                  <div className="schedule-table-wrapper">
-                    <table className="schedule-table">
-                      <thead>
-                        <tr>
-                          <th className="time-col">Урок / Время</th>
-                          {DAYS.map((day, idx) => (
-                            <th key={day} className="day-col">
-                              <div className="day-header">
-                                <span className="day-short">{day}</span>
-                                <span className="day-full">{FULL_DAYS[idx]}</span>
-                              </div>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {TIME_SLOTS.map((slot) => (
-                          <tr key={slot.number}>
-                            <td className="time-cell">
-                              <div className="time-info">
-                                <span className="slot-num">{slot.number}</span>
-                                <span className="slot-time">{slot.start}-{slot.end}</span>
-                              </div>
-                            </td>
-                            
-                            {DAYS.map((day) => {
-                              const lesson = schedule[day]?.[slot.number];
-                              const isEditing = editingCell?.className === selectedClass && 
-                                               editingCell?.day === day && 
-                                               editingCell?.slotNum === slot.number;
-                              const matchesSearch = lesson && isMatchSearch(lesson);
-                              
-                              return (
-                                <td
-                                  key={`${selectedClass}-${day}-${slot.number}`}
-                                  className={`lesson-cell ${editMode ? 'edit-mode' : ''} ${matchesSearch ? 'highlight' : ''}`}
-                                  onDragOver={handleDragOver}
-                                  onDrop={(e) => handleDrop(e, selectedClass, day, slot.number)}
-                                  onClick={() => !isEditing && editMode && startEdit(selectedClass, day, slot.number, lesson)}
-                                >
-                                  {isEditing ? (
-                                    <div className="edit-form">
-                                      <input
-                                        type="text"
-                                        placeholder="Предмет"
-                                        value={editValue.subject}
-                                        onChange={(e) => setEditValue({...editValue, subject: e.target.value})}
-                                        autoFocus
-                                      />
-                                      <input
-                                        type="text"
-                                        placeholder="Учитель"
-                                        value={editValue.teacher}
-                                        onChange={(e) => setEditValue({...editValue, teacher: e.target.value})}
-                                      />
-                                      <input
-                                        type="text"
-                                        placeholder="Кабинет"
-                                        value={editValue.room}
-                                        onChange={(e) => setEditValue({...editValue, room: e.target.value})}
-                                      />
-                                      <div className="edit-actions">
-                                        <button onClick={saveEdit} className="save-btn-small">Сохранить</button>
-                                        <button onClick={() => setEditingCell(null)} className="cancel-btn-small">Отмена</button>
-                                      </div>
-                                    </div>
-                                  ) : lesson ? (
-                                    <div
-                                      className={`lesson-card ${editMode ? 'draggable' : ''}`}
-                                      draggable={editMode}
-                                      onDragStart={(e) => handleDragStart(e, selectedClass, day, slot.number, lesson)}
-                                      style={{ borderLeftColor: getSubjectColor(lesson.subject) }}
-                                    >
-                                      {editMode && <div className="drag-icon"><FaGripVertical /></div>}
-                                      <div className="lesson-subject">{lesson.subject}</div>
-                                      {showTeachers && (
-                                        <div className="lesson-teacher">
-                                          <FaGraduationCap /> {lesson.teacher}
-                                        </div>
-                                      )}
-                                      {showRooms && (
-                                        <div className="lesson-room">
-                                          <FaMapMarkerAlt /> {lesson.room}
-                                        </div>
-                                      )}
-                                      {editMode && (
-                                        <button 
-                                          className="delete-lesson"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            deleteLesson(selectedClass, day, slot.number);
-                                          }}
-                                        >
-                                          <FaTrash />
-                                        </button>
-                                      )}
-                                    </div>
-                                  ) : editMode ? (
-                                    <div className="empty-slot-add">
-                                      <FaPlus />
-                                      <span>Добавить урок</span>
-                                    </div>
-                                  ) : (
-                                    <div className="empty-slot">—</div>
-                                  )}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              );
-            })()
-          )}
-        </div>
-        
+
+        {/* 1 смена */}
+        <ScheduleTable shiftName="1 смена" timeSlots={SHIFT_SLOTS.first} />
+
+        {/* 2 смена */}
+        <ScheduleTable shiftName="2 смена" timeSlots={SHIFT_SLOTS.second} />
+
         {/* Подсказки */}
         {editMode && (
-          <div className="admin-tips">
-            <div className="tip-item"><FaGripVertical /> Перетащите карточку для перемещения урока</div>
-            <div className="tip-item">Нажмите на ячейку для редактирования</div>
-            <div className="tip-item">Нажмите на корзину для удаления</div>
-            <div className="tip-item"><FaUndo /> <FaRedo /> Отмена и повтор действий</div>
+          <div className="admin-tips-compact">
+            <span className="tip-compact"><FaGripVertical /> Перетащите карточку для перемещения урока</span>
+            <span className="tip-compact"><FaMapMarkerAlt /> Перетащите поле (учитель/кабинет) для копирования</span>
+            <span className="tip-compact">Нажмите на ячейку → ручное редактирование</span>
+            <span className="tip-compact"><FaUndo /> <FaRedo /> Отмена/повтор</span>
           </div>
         )}
       </div>
-      
+
       <Footer />
     </div>
   );

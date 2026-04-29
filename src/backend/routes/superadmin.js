@@ -14,7 +14,7 @@ router.use(requireSuperAdmin);
 router.get('/admins', async (req, res) => {
     try {
         const result = await db.query(`
-            SELECT a.id, a.name, a.email, u.login, u.created_at
+            SELECT a.id, a.name, u.login, u.created_at
             FROM admins a
             JOIN users u ON a.user_id = u.id
             WHERE u.role = 'admin'
@@ -30,9 +30,9 @@ router.get('/admins', async (req, res) => {
 router.post('/admins', async (req, res) => {
     console.log('POST /admins:', req.body);
     
-    const { login, password, name, email } = req.body;
+    const { login, password, name } = req.body;
 
-    if (!login || !password || !name || !email) {
+    if (!login || !password || !name) {
         return res.status(400).json({ message: 'Все поля обязательны' });
     }
 
@@ -61,20 +61,19 @@ router.post('/admins', async (req, res) => {
         const userId = userResult.rows[0].id;
         
         await client.query(
-            'INSERT INTO admins (user_id, name, email) VALUES ($1, $2, $3)',
-            [userId, name, email]
+            'INSERT INTO admins (user_id, name) VALUES ($1, $2)',
+            [userId, name]
         );
         
         await client.query('COMMIT');
         
-        // ЛОГИРОВАНИЕ
         await logActivity(
             req.user.id,
             req.user.login,
             req.user.role,
             'create',
             `Создан новый администратор: ${name}`,
-            `Логин: ${login}, Email: ${email}`
+            `Логин: ${login}`
         );
         
         res.status(201).json({ message: 'Администратор создан' });
@@ -84,6 +83,49 @@ router.post('/admins', async (req, res) => {
         res.status(500).json({ message: 'Ошибка создания администратора' });
     } finally {
         client.release();
+    }
+});
+
+// ============= РЕДАКТИРОВАНИЕ АДМИНИСТРАТОРА =============
+router.put('/admins/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, login, password } = req.body;
+    
+    try {
+        const adminResult = await db.query(
+            'SELECT user_id, name FROM admins WHERE id = $1',
+            [id]
+        );
+        
+        if (adminResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Администратор не найден' });
+        }
+        
+        const userId = adminResult.rows[0].user_id;
+        const oldName = adminResult.rows[0].name;
+        
+        await db.query('UPDATE admins SET name = $1 WHERE id = $2', [name, id]);
+        
+        if (password && password.trim() !== '') {
+            const passwordHash = await bcrypt.hash(password, 10);
+            await db.query('UPDATE users SET login = $1, password_hash = $2 WHERE id = $3', [login, passwordHash, userId]);
+        } else {
+            await db.query('UPDATE users SET login = $1 WHERE id = $2', [login, userId]);
+        }
+        
+        await logActivity(
+            req.user.id,
+            req.user.login,
+            req.user.role,
+            'edit',
+            `Обновлен администратор: ${oldName} → ${name}`,
+            `Логин: ${login}`
+        );
+        
+        res.json({ message: 'Администратор обновлён' });
+    } catch (err) {
+        console.error('PUT /admins error:', err);
+        res.status(500).json({ message: 'Ошибка обновления администратора' });
     }
 });
 
@@ -105,14 +147,13 @@ router.delete('/admins/:id', async (req, res) => {
         
         await db.query('DELETE FROM users WHERE id = $1', [userId]);
         
-        // ЛОГИРОВАНИЕ
         await logActivity(
             req.user.id,
             req.user.login,
             req.user.role,
             'delete',
             `Удален администратор: ${adminName}`,
-           // `ID: ${id}`
+            null
         );
         
         res.json({ message: 'Администратор удален' });
@@ -204,7 +245,6 @@ router.post('/teachers', async (req, res) => {
         
         await client.query('COMMIT');
         
-        // ЛОГИРОВАНИЕ
         await logActivity(
             req.user.id,
             req.user.login,
@@ -221,6 +261,53 @@ router.post('/teachers', async (req, res) => {
         res.status(500).json({ message: 'Ошибка создания учителя' });
     } finally {
         client.release();
+    }
+});
+
+// ============= РЕДАКТИРОВАНИЕ УЧИТЕЛЯ =============
+router.put('/teachers/:id', async (req, res) => {
+    const { id } = req.params;
+    const { lastName, firstName, middleName, login, password } = req.body;
+    
+    try {
+        const teacherResult = await db.query(
+            'SELECT user_id, last_name, first_name FROM teachers WHERE id = $1',
+            [id]
+        );
+        
+        if (teacherResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Учитель не найден' });
+        }
+        
+        const userId = teacherResult.rows[0].user_id;
+        const oldName = `${teacherResult.rows[0].last_name} ${teacherResult.rows[0].first_name}`;
+        const newName = `${lastName} ${firstName}`;
+        
+        await db.query(
+            'UPDATE teachers SET last_name = $1, first_name = $2, middle_name = $3 WHERE id = $4',
+            [lastName, firstName, middleName || null, id]
+        );
+        
+        if (password && password.trim() !== '') {
+            const passwordHash = await bcrypt.hash(password, 10);
+            await db.query('UPDATE users SET login = $1, password_hash = $2 WHERE id = $3', [login, passwordHash, userId]);
+        } else {
+            await db.query('UPDATE users SET login = $1 WHERE id = $2', [login, userId]);
+        }
+        
+        await logActivity(
+            req.user.id,
+            req.user.login,
+            req.user.role,
+            'edit',
+            `Обновлен учитель: ${oldName} → ${newName}`,
+            `Логин: ${login}`
+        );
+        
+        res.json({ message: 'Учитель обновлён' });
+    } catch (err) {
+        console.error('PUT /teachers error:', err);
+        res.status(500).json({ message: 'Ошибка обновления учителя' });
     }
 });
 
@@ -242,14 +329,13 @@ router.delete('/teachers/:id', async (req, res) => {
         
         await db.query('DELETE FROM users WHERE id = $1', [userId]);
         
-        // ЛОГИРОВАНИЕ
         await logActivity(
             req.user.id,
             req.user.login,
             req.user.role,
             'delete',
             `Удален учитель: ${teacherName}`,
-           // `ID: ${id}`
+            null
         );
         
         res.json({ message: 'Учитель удален' });
@@ -349,7 +435,6 @@ router.post('/classes', async (req, res) => {
         
         await client.query('COMMIT');
         
-        // ЛОГИРОВАНИЕ
         await logActivity(
             req.user.id,
             req.user.login,
@@ -383,7 +468,6 @@ router.put('/classes/:id', async (req, res) => {
     const { shift, teacherId } = req.body;
     
     try {
-        // Получаем информацию о классе для лога
         const classInfo = await db.query(
             'SELECT number, letter FROM classes WHERE id = $1',
             [id]
@@ -449,20 +533,52 @@ router.delete('/classes/:id', async (req, res) => {
         await db.query('UPDATE students SET class_id = NULL WHERE class_id = $1', [id]);
         await db.query('DELETE FROM users WHERE id = $1', [userId]);
         
-        // ЛОГИРОВАНИЕ
         await logActivity(
             req.user.id,
             req.user.login,
             req.user.role,
             'delete',
             `Удален класс: ${className}`,
-            `ID: ${id}`
+            null
         );
         
         res.json({ message: 'Класс удален' });
     } catch (err) {
         console.error('DELETE /classes error:', err);
         res.status(500).json({ message: 'Ошибка удаления класса' });
+    }
+});
+
+// ============= ОБНОВЛЕНИЕ ПРЕДМЕТОВ УЧИТЕЛЯ =============
+router.put('/teachers/:id/subjects', async (req, res) => {
+    const { id } = req.params;
+    const { subjectIds } = req.body;
+    
+    try {
+        await db.query('DELETE FROM teacher_subjects WHERE teacher_id = $1', [id]);
+        
+        if (subjectIds && subjectIds.length > 0) {
+            for (const subjectId of subjectIds) {
+                await db.query(
+                    'INSERT INTO teacher_subjects (teacher_id, subject_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+                    [id, subjectId]
+                );
+            }
+        }
+        
+        await logActivity(
+            req.user.id,
+            req.user.login,
+            req.user.role,
+            'edit',
+            `Обновлены предметы учителя ID: ${id}`,
+            `Предметов: ${subjectIds?.length || 0}`
+        );
+        
+        res.json({ message: 'Предметы обновлены' });
+    } catch (err) {
+        console.error('PUT /teachers/:id/subjects error:', err);
+        res.status(500).json({ message: 'Ошибка обновления предметов' });
     }
 });
 

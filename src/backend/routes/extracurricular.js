@@ -43,12 +43,14 @@ router.get('/teachers', authenticateToken, async (req, res) => {
     }
 });
 
+// ИСПРАВЛЕННЫЙ МАРШРУТ - имя учителя берется из teachers, игнорируем teacher_name
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const { teacher, day, search } = req.query;
         
         let query = `
-            SELECT ea.*, 
+            SELECT ea.id, ea.title, ea.days, ea.start_time, ea.end_time, 
+                   ea.room, ea.description, ea.color, ea.teacher_id,
                    t.first_name, t.last_name, t.middle_name
             FROM extracurricular_activities ea
             LEFT JOIN teachers t ON ea.teacher_id = t.id
@@ -58,7 +60,7 @@ router.get('/', authenticateToken, async (req, res) => {
         let paramIndex = 1;
         
         if (teacher) {
-            query += ` AND ea.teacher_name ILIKE $${paramIndex}`;
+            query += ` AND (t.first_name ILIKE $${paramIndex} OR t.last_name ILIKE $${paramIndex})`;
             params.push(`%${teacher}%`);
             paramIndex++;
         }
@@ -82,7 +84,9 @@ router.get('/', authenticateToken, async (req, res) => {
         const activities = result.rows.map(row => ({
             id: row.id,
             title: row.title,
-            teacher: row.teacher_name || `${row.last_name} ${row.first_name}`.trim(),
+            teacher: row.last_name && row.first_name 
+                ? `${row.last_name} ${row.first_name} ${row.middle_name || ''}`.trim()
+                : 'Не указан',
             teacherId: row.teacher_id,
             days: row.days,
             startTime: row.start_time,
@@ -102,6 +106,7 @@ router.get('/', authenticateToken, async (req, res) => {
 
 // ========== МАРШРУТЫ С ПАРАМЕТРАМИ (В КОНЦЕ) ==========
 
+// ИСПРАВЛЕННЫЙ МАРШРУТ - имя учителя берется из teachers
 router.get('/:id', authenticateToken, async (req, res) => {
     try {
         const id = parseInt(req.params.id);
@@ -110,7 +115,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
         }
         
         const result = await db.query(
-            `SELECT ea.*, t.first_name, t.last_name, t.middle_name
+            `SELECT ea.id, ea.title, ea.days, ea.start_time, ea.end_time, 
+                    ea.room, ea.description, ea.color, ea.teacher_id,
+                    t.first_name, t.last_name, t.middle_name
              FROM extracurricular_activities ea
              LEFT JOIN teachers t ON ea.teacher_id = t.id
              WHERE ea.id = $1`,
@@ -125,7 +132,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
         res.json({
             id: row.id,
             title: row.title,
-            teacher: row.teacher_name || `${row.last_name} ${row.first_name}`.trim(),
+            teacher: row.last_name && row.first_name 
+                ? `${row.last_name} ${row.first_name} ${row.middle_name || ''}`.trim()
+                : 'Не указан',
             teacherId: row.teacher_id,
             days: row.days,
             startTime: row.start_time,
@@ -141,7 +150,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Создать новое занятие - details = null
+// Создать новое занятие
 router.post('/', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
         return res.status(403).json({ message: 'Доступ запрещен' });
@@ -190,7 +199,7 @@ router.post('/', authenticateToken, async (req, res) => {
         res.json({
             id: row.id,
             title: row.title,
-            teacher: row.teacher_name,
+            teacher: teacherName,
             teacherId: row.teacher_id,
             days: row.days,
             startTime: row.start_time,
@@ -206,7 +215,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 });
 
-// Обновить занятие - details = null
+// Обновить занятие
 router.put('/:id', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
         return res.status(403).json({ message: 'Доступ запрещен' });
@@ -272,7 +281,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
         res.json({
             id: row.id,
             title: row.title,
-            teacher: row.teacher_name,
+            teacher: teacherName,
             teacherId: row.teacher_id,
             days: row.days,
             startTime: row.start_time,
@@ -288,7 +297,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Удалить занятие - details = null
+// Удалить занятие
 router.delete('/:id', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
         return res.status(403).json({ message: 'Доступ запрещен' });

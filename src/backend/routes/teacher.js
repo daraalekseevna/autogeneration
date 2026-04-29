@@ -58,7 +58,7 @@ router.get('/my-class', authenticateToken, async (req, res) => {
     }
 });
 
-// Получить расписание учителя (уроки) - БЕЗ s.color
+// Получить расписание учителя (уроки) - С ПОЛУЧЕНИЕМ ИМЕНИ УЧИТЕЛЯ
 router.get('/my-schedule', authenticateToken, async (req, res) => {
     try {
         console.log('=== /my-schedule called ===');
@@ -76,14 +76,16 @@ router.get('/my-schedule', authenticateToken, async (req, res) => {
         const teacherId = teacherResult.rows[0].id;
         console.log('Teacher ID:', teacherId);
         
-        // УБРАЛ s.color
+        // JOIN с teachers чтобы получить имя учителя
         const scheduleResult = await db.query(
             `SELECT ls.day_of_week, ls.lesson_number, ls.room,
                     s.name as subject_name,
-                    c.number as class_number, c.letter as class_letter
+                    c.number as class_number, c.letter as class_letter,
+                    t.last_name, t.first_name, t.middle_name
              FROM lesson_schedule ls
              JOIN subjects s ON ls.subject_id = s.id
              JOIN classes c ON ls.class_id = c.id
+             JOIN teachers t ON ls.teacher_id = t.id
              WHERE ls.teacher_id = $1
              ORDER BY ls.day_of_week, ls.lesson_number`,
             [teacherId]
@@ -116,7 +118,8 @@ router.get('/my-schedule', authenticateToken, async (req, res) => {
                     number: lesson.lesson_number,
                     subject: lesson.subject_name,
                     className: `${lesson.class_number}${lesson.class_letter}`,
-                    room: lesson.room || '—'
+                    room: lesson.room || '—',
+                    teacherName: `${lesson.last_name} ${lesson.first_name.charAt(0)}.${lesson.middle_name ? lesson.middle_name.charAt(0) + '.' : ''}`
                 });
             }
         });
@@ -133,7 +136,7 @@ router.get('/my-schedule', authenticateToken, async (req, res) => {
     }
 });
 
-// Получить дополнительные занятия учителя
+// Получить дополнительные занятия учителя - С JOIN для актуального имени
 router.get('/my-extracurricular', authenticateToken, async (req, res) => {
     try {
         console.log('=== /my-extracurricular called ===');
@@ -151,11 +154,14 @@ router.get('/my-extracurricular', authenticateToken, async (req, res) => {
         const teacherId = teacherResult.rows[0].id;
         console.log('Teacher ID:', teacherId);
         
+        // JOIN с teachers для получения актуального имени
         const activitiesResult = await db.query(
-            `SELECT id, title as name, days, start_time, end_time, room, description, color
-             FROM extracurricular_activities
-             WHERE teacher_id = $1
-             ORDER BY days, start_time`,
+            `SELECT ea.id, ea.title as name, ea.days, ea.start_time, ea.end_time, ea.room, ea.description, ea.color,
+                    t.last_name, t.first_name, t.middle_name
+             FROM extracurricular_activities ea
+             INNER JOIN teachers t ON ea.teacher_id = t.id
+             WHERE ea.teacher_id = $1
+             ORDER BY ea.days, ea.start_time`,
             [teacherId]
         );
         
@@ -196,7 +202,7 @@ router.get('/my-extracurricular', authenticateToken, async (req, res) => {
     }
 });
 
-// Получить расписание класса (для классного руководства) - БЕЗ s.color
+// Получить расписание класса (для классного руководства)
 router.get('/my-class/schedule', authenticateToken, async (req, res) => {
     try {
         console.log('=== /my-class/schedule called ===');
@@ -224,7 +230,6 @@ router.get('/my-class/schedule', authenticateToken, async (req, res) => {
         const classData = classResult.rows[0];
         console.log('Class found:', classData.number, classData.letter);
         
-        // УБРАЛ s.color
         const scheduleResult = await db.query(
             `SELECT ls.day_of_week, ls.lesson_number, ls.room, 
                     s.name as subject_name,

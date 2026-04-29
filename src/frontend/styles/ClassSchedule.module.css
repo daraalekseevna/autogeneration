@@ -1,5 +1,4 @@
 /* src/frontend/styles/ClassSchedule.module.css */
-/* Переменные темы в global-theme.css */
 
 /* Кнопка переключения темы */
 .themeToggle {
@@ -148,7 +147,7 @@
     border: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: auto;
 }
 
 .dayTableWrapper:hover {
@@ -175,13 +174,12 @@
     display: block;
 }
 
-/* УДАЛИТЬ или ИЗМЕНИТЬ эти строки: */
+/* Контейнер таблицы - БЕЗ СКРОЛЛА */
 .dayTableContainer {
     overflow-x: auto;
-    overflow-y: auto;  /* ← убрать */
+    overflow-y: visible;
     flex: 1;
-    max-height: 460px;  /* ← убрать */
-}м
+}
 
 .scheduleTable {
     width: 100%;
@@ -196,9 +194,6 @@
     border-bottom: 2px solid var(--border-color);
     color: var(--text-primary);
     font-weight: 600;
-    position: sticky;
-    top: 0;
-    z-index: 5;
     font-size: 0.7rem;
 }
 
@@ -322,33 +317,32 @@ body.dark-theme .lessonTimeCell {
     opacity: 0.5;
 }
 
-/* Адаптив */
+/* ========== ПОЛНАЯ АДАПТАЦИЯ ========== */
+
+/* Планшеты и ноутбуки (1024px - 1280px) */
+@media (max-width: 1280px) {
+    .topRow, .bottomRow {
+        gap: 14px;
+    }
+    
+    .dayShort {
+        font-size: 1rem;
+    }
+    
+    .dayFull {
+        font-size: 0.55rem;
+    }
+}
+
+/* Планшеты (768px - 1024px) */
 @media (max-width: 1024px) {
     .topRow, .bottomRow {
         grid-template-columns: repeat(2, 1fr);
         gap: 16px;
     }
-}
-
-@media (max-width: 768px) {
+    
     .container {
-        padding: 45px 16px 16px 16px;
-    }
-    
-    .scheduleHeader {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .classInfo {
-        flex-direction: column;
-        text-align: center;
-        width: 100%;
-    }
-    
-    .topRow, .bottomRow {
-        grid-template-columns: 1fr;
-        gap: 16px;
+        padding: 45px 20px 20px 20px;
     }
     
     .timeCol {
@@ -357,6 +351,27 @@ body.dark-theme .lessonTimeCell {
     
     .timeColFull {
         width: 65px;
+    }
+}
+
+/* Планшеты вертикальные и большие телефоны (576px - 768px) */
+@media (max-width: 768px) {
+    .container {
+        padding: 40px 16px 16px 16px;
+    }
+    
+    .scheduleHeader {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .classInfo {
+        width: 100%;
+    }
+    
+    .topRow, .bottomRow {
+        grid-template-columns: 1fr;
+        gap: 16px;
     }
     
     .themeToggle {
@@ -371,32 +386,18 @@ body.dark-theme .lessonTimeCell {
     }
     
     .dayTableContainer {
-        max-height: 420px;
+        overflow-x: auto;
+    }
+    
+    .scheduleTable {
+        min-width: 550px;
     }
     
     .extracurricularBtn {
         padding: 8px 16px;
         font-size: 13px;
         gap: 6px;
-        align-self: center;
-    }
-    
-    .extracurricularBtn svg {
-        font-size: 13px;
-    }
-}
-
-@media (max-width: 576px) {
-    .container {
-        padding: 40px 12px 12px 12px;
-    }
-    
-    .classInfo h1 {
-        font-size: 18px;
-    }
-    
-    .currentDate {
-        font-size: 12px;
+        align-self: flex-start;
     }
     
     .classIcon {
@@ -405,16 +406,37 @@ body.dark-theme .lessonTimeCell {
         font-size: 24px;
     }
     
-    .timeCol {
-        width: 36px;
+    .classInfo h1 {
+        font-size: 20px;
     }
     
-    .timeColFull {
-        width: 58px;
+    .currentDate {
+        font-size: 12px;
+    }
+}
+
+/* Маленькие телефоны (481px - 576px) */
+@media (max-width: 576px) {
+    .container {
+        padding: 35px 12px 12px 12px;
     }
     
-    .lessonTime {
-        font-size: 0.55rem;
+    .classInfo {
+        gap: 12px;
+    }
+    
+    .classIcon {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+    }
+    
+    .classInfo h1 {
+        font-size: 18px;
+    }
+    
+    .currentDate {
+        font-size: 11px;
     }
     
     .themeToggle {
@@ -425,6 +447,7 @@ body.dark-theme .lessonTimeCell {
     .themeBtn {
         padding: 5px 10px;
         font-size: 0.7rem;
+        gap: 4px;
     }
     
     .themeBtn span {
@@ -433,38 +456,18 @@ body.dark-theme .lessonTimeCell {
     
     .themeBtn {
         padding: 8px 10px;
-    }
-    
-    .lessonSubject {
-        font-size: 0.68rem;
-    }
-    
-    .lessonTeacher, .lessonRoom {
-        font-size: 0.58rem;
-    }
-    
-    .lessonNumber {
-        width: 22px;
-        height: 22px;
-        line-height: 22px;
-        font-size: 0.7rem;
-    }
-    
-    .dayTableContainer {
-        max-height: 380px;
+        width: 38px;
+        justify-content: center;
     }
     
     .extracurricularBtn {
-        padding: 8px 14px;
-        font-size: 12px;
+        padding: 6px 12px;
+        font-size: 11px;
+        gap: 4px;
     }
     
     .extracurricularBtn span {
         display: none;
-    }
-    
-    .extracurricularBtn {
-        padding: 8px 12px;
     }
     
     .extracurricularBtn svg:first-child {
@@ -473,5 +476,181 @@ body.dark-theme .lessonTimeCell {
     
     .extracurricularBtn svg:last-child {
         display: none;
+    }
+    
+    .dayShort {
+        font-size: 0.9rem;
+    }
+    
+    .dayFull {
+        font-size: 0.5rem;
+    }
+    
+    .lessonNumber {
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        font-size: 0.65rem;
+    }
+    
+    .lessonSubject {
+        font-size: 0.65rem;
+        gap: 4px;
+    }
+    
+    .lessonTeacher, .lessonRoom {
+        font-size: 0.55rem;
+        gap: 4px;
+    }
+    
+    .lessonSubject svg {
+        font-size: 0.6rem;
+    }
+    
+    .lessonTeacher svg, .lessonRoom svg {
+        font-size: 0.5rem;
+    }
+    
+    .lessonItem {
+        padding: 5px 6px;
+    }
+    
+    .lessonInfo {
+        gap: 2px;
+    }
+}
+
+/* Очень маленькие телефоны (до 480px) */
+@media (max-width: 480px) {
+    .container {
+        padding: 30px 10px 10px 10px;
+    }
+    
+    .classIcon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    
+    .classInfo h1 {
+        font-size: 16px;
+    }
+    
+    .currentDate {
+        font-size: 10px;
+    }
+    
+    .scheduleTable th {
+        font-size: 0.6rem;
+        padding: 6px 4px;
+    }
+    
+    .scheduleTable td {
+        padding: 5px 4px;
+    }
+    
+    .timeCol {
+        width: 35px;
+        min-width: 35px;
+    }
+    
+    .timeColFull {
+        width: 55px;
+        min-width: 55px;
+    }
+    
+    .lessonNumber {
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
+        font-size: 0.6rem;
+    }
+    
+    .lessonTime {
+        font-size: 0.5rem;
+    }
+    
+    .lessonTime svg {
+        font-size: 0.45rem;
+    }
+    
+    .lessonSubject {
+        font-size: 0.6rem;
+    }
+    
+    .lessonTeacher, .lessonRoom {
+        font-size: 0.5rem;
+    }
+    
+    .emptySlot {
+        min-height: 40px;
+        font-size: 0.6rem;
+    }
+}
+
+/* Для самых маленьких экранов (до 360px) */
+@media (max-width: 360px) {
+    .classInfo h1 {
+        font-size: 14px;
+    }
+    
+    .scheduleTable th {
+        font-size: 0.55rem;
+    }
+    
+    .timeCol, .timeColFull {
+        display: none;
+    }
+    
+    .lessonTime {
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 4px;
+    }
+}
+
+/* Адаптация для фона на мобильных */
+@media (max-width: 768px) {
+    .glassCircle {
+        display: none;
+    }
+    
+    .glassCircle:nth-child(1),
+    .glassCircle:nth-child(2),
+    .glassCircle:nth-child(3) {
+        display: block;
+        width: 200px;
+        height: 200px;
+        filter: blur(40px);
+    }
+}
+
+@media (max-width: 576px) {
+    .glassCircle:nth-child(1),
+    .glassCircle:nth-child(2),
+    .glassCircle:nth-child(3) {
+        width: 150px;
+        height: 150px;
+        filter: blur(30px);
+    }
+}
+
+/* Для печати */
+@media print {
+    .themeToggle,
+    .extracurricularBtn,
+    .animatedBg,
+    .glassCircle {
+        display: none !important;
+    }
+    
+    .dayTableWrapper {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+    
+    .container {
+        padding: 0;
     }
 }

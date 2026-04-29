@@ -81,7 +81,6 @@ const ExtracurricularCard = ({ activity }) => {
         backgroundColor: `${cardColor}10`
     };
 
-    // Форматирование времени (убираем секунды)
     const formatTime = (time) => {
         if (!time) return '';
         return time.length > 5 ? time.substring(0, 5) : time;
@@ -109,7 +108,6 @@ const ExtracurricularCard = ({ activity }) => {
 
 // ========== ТАБЛИЦА ДНЯ ==========
 const DayScheduleTable = ({ day, lessons, activities }) => {
-    // Фиксированные слоты времени для уроков (уже без секунд)
     const timeSlots = [
         { number: 1, time: '08:30' },
         { number: 2, time: '09:25' },
@@ -120,7 +118,6 @@ const DayScheduleTable = ({ day, lessons, activities }) => {
         { number: 7, time: '14:05' }
     ];
 
-    // Получаем уроки для этого дня по номеру урока
     const lessonsByNumber = {};
     lessons.forEach(lesson => {
         if (lesson.days && lesson.days.includes(day.name)) {
@@ -128,7 +125,6 @@ const DayScheduleTable = ({ day, lessons, activities }) => {
         }
     });
 
-    // Получаем дополнительные занятия для этого дня
     const dayActivities = (activities[day.name] || []);
 
     return (
@@ -174,7 +170,6 @@ const DayScheduleTable = ({ day, lessons, activities }) => {
                     </tbody>
                 </table>
                 
-                {/* Дополнительные занятия после таблицы уроков */}
                 {dayActivities.length > 0 && (
                     <div className={styles.extracurricularSection}>
                         <div className={styles.extracurricularTitle}>
@@ -212,8 +207,9 @@ const TeacherMySchedule = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            // Загружаем расписание уроков
-            const scheduleResponse = await axios.get(`${API_URL}/teacher/my-schedule`, getAuthHeaders());
+            const timestamp = Date.now();
+            
+            const scheduleResponse = await axios.get(`${API_URL}/teacher/my-schedule?_=${timestamp}`, getAuthHeaders());
             
             const scheduleData = scheduleResponse.data.schedule || {};
             const formattedLessons = [];
@@ -234,8 +230,7 @@ const TeacherMySchedule = () => {
             
             setLessons(formattedLessons);
             
-            // Загружаем дополнительные занятия
-            const activitiesResponse = await axios.get(`${API_URL}/teacher/my-extracurricular`, getAuthHeaders());
+            const activitiesResponse = await axios.get(`${API_URL}/teacher/my-extracurricular?_=${timestamp}`, getAuthHeaders());
             setActivities(activitiesResponse.data.activities || {});
             
         } catch (error) {
@@ -245,18 +240,17 @@ const TeacherMySchedule = () => {
         }
     };
 
-    // Разделяем дни на две строки
     const topRowDays = WEEK_DAYS.slice(0, 3);
     const bottomRowDays = WEEK_DAYS.slice(3, 6);
 
     if (loading) {
         return (
             <div className={styles.page}>
-                <div className="animated-bg">
-    {[...Array(10)].map((_, i) => (
-        <div key={i} className="glass-circle"></div>
-    ))}
-</div>
+                <div className="animatedBg">
+                    {[...Array(10)].map((_, i) => (
+                        <div key={i} className="glassCircle"></div>
+                    ))}
+                </div>
                 <div className={styles.topBar}>
                     <button className={styles.backBtn} onClick={() => navigate('/teacher')}>
                         <FaArrowLeft /> <span>Назад</span>
@@ -277,11 +271,11 @@ const TeacherMySchedule = () => {
 
     return (
         <div className={styles.page}>
-            <div className="animated-bg">
-    {[...Array(10)].map((_, i) => (
-        <div key={i} className="glass-circle"></div>
-    ))}
-</div>
+            <div className="animatedBg">
+                {[...Array(10)].map((_, i) => (
+                    <div key={i} className="glassCircle"></div>
+                ))}
+            </div>
             
             <div className={styles.topBar}>
                 <button className={styles.backBtn} onClick={() => navigate('/teacher')}>

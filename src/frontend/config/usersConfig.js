@@ -21,35 +21,35 @@ export const rolesConfig = {
         description: 'Полный доступ ко всем функциям системы',
         permissions: ['all'],
         dashboardRoute: '/superadmin',
-        icon: '👑'
+        icon: ''
     },
     admin: {
         name: 'Администратор',
         description: 'Управление расписанием и пользователями',
         permissions: ['manage_schedule', 'manage_users', 'view_reports'],
         dashboardRoute: '/',
-        icon: '⚙️'
+        icon: ''
     },
     teacher: {
         name: 'Учитель',
         description: 'Просмотр и управление своим расписанием',
         permissions: ['view_schedule', 'manage_own_classes', 'view_students'],
         dashboardRoute: '/teacher',
-        icon: '👩‍🏫'
+        icon: ''
     },
     class: {
         name: 'Класс',
         description: 'Просмотр расписания класса',
         permissions: ['view_schedule', 'view_announcements'],
         dashboardRoute: '/class',  // <-- ИСПРАВЛЕНО: было '/class/schedule', стало '/class'
-        icon: '👨‍🎓'
+        icon: ''
     },
     student: {
         name: 'Ученик',
         description: 'Просмотр расписания и оценок',
         permissions: ['view_schedule', 'view_grades'],
         dashboardRoute: '/student',
-        icon: '📚'
+        icon: ''
     }
 };
 

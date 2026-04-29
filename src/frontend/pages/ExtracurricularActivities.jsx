@@ -36,8 +36,7 @@ import styles from '../styles/ExtracurricularActivities.module.css';
 const ThemeToggle = () => {
     const [isDark, setIsDark] = useState(() => {
         const saved = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        return saved === 'dark' || (saved === null && prefersDark);
+        return saved === 'dark';
     });
 
     useEffect(() => {
@@ -554,6 +553,7 @@ const ExtracurricularActivities = () => {
             setTeachersList(teachers);
         } catch (error) {
             console.error('Error loading teachers:', error);
+            setTeachersList([]);
         }
     };
 
@@ -675,11 +675,11 @@ const ExtracurricularActivities = () => {
     if (loading) {
         return (
             <div className={styles.page}>
-                <div className="animated-bg">
-                     {[...Array(10)].map((_, i) => (
-               <div key={i} className="glass-circle"></div>
-                      ))}
-            </div>
+                <div className="animatedBg">
+                    {[...Array(10)].map((_, i) => (
+                        <div key={i} className="glassCircle"></div>
+                    ))}
+                </div>
                 <div className={styles.topBar}>
                     <button className={styles.backBtn} onClick={handleBack}>
                         <FaArrowLeft />
@@ -701,11 +701,11 @@ const ExtracurricularActivities = () => {
 
     return (
         <div className={styles.page}>
-           <div className="animated-bg">
-    {[...Array(10)].map((_, i) => (
-        <div key={i} className="glass-circle"></div>
-    ))}
-</div>
+            <div className="animatedBg">
+                {[...Array(10)].map((_, i) => (
+                    <div key={i} className="glassCircle"></div>
+                ))}
+            </div>
             
             <div className={styles.topBar}>
                 <button className={styles.backBtn} onClick={handleBack}>

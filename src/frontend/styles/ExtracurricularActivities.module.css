@@ -102,7 +102,7 @@
     color: white;
 }
 
-/*  КОНТЕЙНЕР */
+/* ===== КОНТЕЙНЕР ===== */
 .container {
     flex: 1;
     max-width: 1400px;
@@ -157,7 +157,7 @@
 .btnClear,
 .btnDanger {
     height: 40px;
-    min-width: 115px;
+    min-width: 40px;
     padding: 0 16px;
     border: none;
     border-radius: 8px;
@@ -171,12 +171,6 @@
     transition: all 0.2s;
     white-space: nowrap;
     box-sizing: border-box;
-}
-
-.btnPrimary,
-.btnFilter {
-    width: 40px;
-    padding: 0;
 }
 
 .btnPrimary {
@@ -283,56 +277,6 @@
 .iconBtn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-}
-
-.iconBtn.disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-/* ===== ГРУППЫ КНОПОК ===== */
-.exportImportGroup {
-    display: flex;
-    gap: 4px;
-    background: var(--bg-card);
-    border-radius: 8px;
-    padding: 2px;
-    border: 1px solid var(--border-color);
-}
-
-/* ===== БАННЕР АДМИНИСТРАТОРА ===== */
-.adminBanner {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
-    margin-bottom: 24px;
-    background: linear-gradient(135deg, #7389e99d 0%, #a06fd183 100%);
-    border-radius: 12px;
-    color: rgb(255, 255, 255);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.adminBannerIcon {
-    font-size: 24px;
-}
-
-.adminBannerContent {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.adminBannerContent strong {
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.adminBannerContent span {
-    font-size: 12px;
-    opacity: 0.9;
 }
 
 /* ===== ФИЛЬТРЫ ===== */
@@ -483,7 +427,7 @@
     }
 }
 
-/* ===== ДНИ В РЯДУ - 3x2 СЕТКА ===== */
+/* ===== ДНИ В РЯДУ - АДАПТИВНАЯ СЕТКА ===== */
 .daysRow {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -494,23 +438,14 @@
     background: transparent;
 }
 
-@media (min-width: 1920px) {
-    .container {
-        max-width: 1600px;
-    }
-    .daysRow {
-        gap: 24px;
-    }
-}
-
-/* ===== КОЛОНКА ДНЯ ===== */
+/* ===== КОЛОНКА ДНЯ - БЕЗ СКРОЛЛА ===== */
 .dayColumn {
     background: var(--bg-card);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-radius: 16px;
     border: 1px solid var(--border-color);
-    overflow: hidden;
+    overflow: visible;
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
@@ -527,7 +462,7 @@ body.dark-theme .dayColumn {
     box-shadow: var(--shadow-hover);
 }
 
-/* ШАПКА ДНЯ - ОДИНАКОВАЯ В ОБЕИХ ТЕМАХ */
+/* ШАПКА ДНЯ */
 .dayHeader {
     padding: 14px 16px;
     background: #21435A;
@@ -564,28 +499,13 @@ body.dark-theme .dayColumn {
     font-weight: 500;
 }
 
+/* КОНТЕНТ ДНЯ - БЕЗ СКРОЛЛА */
 .dayContent {
     padding: 12px;
-    min-height: auto; /* Автоматическая высота */
-    max-height: none; /* Убираем ограничение высоты */
-    overflow-y: visible; /* Убираем скролл */
-}
-.dayContent::-webkit-scrollbar {
-    width: 6px;
-}
-
-.dayContent::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-}
-
-.dayContent::-webkit-scrollbar-thumb {
-    background: #21435A;
-    border-radius: 3px;
-}
-
-.dayContent::-webkit-scrollbar-thumb:hover {
-    background: #2c5475;
+    min-height: auto;
+    max-height: none;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
 }
 
 /* ===== ПУСТОЙ ДЕНЬ ===== */
@@ -724,65 +644,6 @@ body.dark-theme .activityCard {
     flex-shrink: 0;
 }
 
-/* ===== ПОДТВЕРЖДЕНИЕ УДАЛЕНИЯ ===== */
-.deleteConfirmation {
-    text-align: center;
-    padding: 8px;
-}
-
-.deleteIcon {
-    font-size: 24px;
-    color: #f44336;
-    margin-bottom: 8px;
-}
-
-.deleteConfirmation p {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-}
-
-.deleteWarning {
-    font-size: 10px !important;
-    margin-bottom: 12px !important;
-}
-
-.deleteActions {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-}
-
-.btnConfirm,
-.btnCancel {
-    padding: 4px 12px;
-    border: none;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btnConfirm {
-    background: #f44336;
-    color: white;
-}
-
-.btnConfirm:hover {
-    background: #d32f2f;
-}
-
-.btnCancel {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-}
-
-.btnCancel:hover {
-    background: var(--bg-card-hover);
-}
-
 /* ===== МОДАЛЬНОЕ ОКНО ===== */
 .modalOverlay {
     position: fixed;
@@ -862,20 +723,6 @@ body.dark-theme .activityCard {
     flex: 1;
 }
 
-.form::-webkit-scrollbar {
-    width: 4px;
-}
-
-.form::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-}
-
-.form::-webkit-scrollbar-thumb {
-    background: #21435A;
-    border-radius: 2px;
-}
-
 .formGroup {
     margin-bottom: 16px;
 }
@@ -895,7 +742,6 @@ body.dark-theme .activityCard {
     color: var(--text-muted);
 }
 
-/* ===== ПОЛЯ ВВОДА ===== */
 .formGroup input,
 .formGroup select,
 .formGroup textarea {
@@ -931,20 +777,6 @@ body.dark-theme .activityCard {
     background-position: right 12px center;
     background-size: 12px;
     padding-right: 32px;
-}
-
-.formGroup select option {
-    padding: 6px 10px;
-    font-size: 12px;
-    line-height: 1.3;
-    background: var(--bg-input);
-    color: var(--text-primary);
-}
-
-.formGroup select:hover,
-.formGroup input:hover,
-.formGroup textarea:hover {
-    border-color: var(--primary);
 }
 
 .formGroup input:focus,
@@ -1203,7 +1035,7 @@ body.dark-theme .activityCard {
     to { transform: rotate(360deg); }
 }
 
-/* ===== СТАТИСТИКА КОМПАКТНАЯ ===== */
+/* ===== СТАТИСТИКА ===== */
 .statsCompact {
     display: flex;
     gap: 12px;
@@ -1213,26 +1045,309 @@ body.dark-theme .activityCard {
     background: transparent;
 }
 
-/* ===== СКРОЛЛБАР ===== */
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+/* ========== ПОЛНАЯ АДАПТАЦИЯ ========== */
+
+/* Большие экраны (1920px+) */
+@media (min-width: 1920px) {
+    .container {
+        max-width: 1600px;
+    }
+    .daysRow {
+        gap: 24px;
+    }
 }
 
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
+/* Планшеты и ноутбуки (1024px - 1280px) */
+@media (max-width: 1280px) {
+    .daysRow {
+        gap: 16px;
+    }
+    
+    .container {
+        padding: 55px 20px 20px 20px;
+    }
 }
 
-::-webkit-scrollbar-thumb {
-    background: #21435A;
-    border-radius: 3px;
+/* Планшеты (768px - 1024px) */
+@media (max-width: 1024px) {
+    .daysRow {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+    
+    .container {
+        padding: 50px 16px 16px 16px;
+    }
+    
+    .filtersPanel {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .filterGroup {
+        min-width: auto;
+    }
+    
+    .headerCompact {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .headerActions {
+        width: 100%;
+        justify-content: flex-end;
+    }
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: #2c5475;
+/* Планшеты вертикальные и большие телефоны (576px - 768px) */
+@media (max-width: 768px) {
+    .topBar {
+        top: 12px;
+        left: 12px;
+        right: 12px;
+    }
+    
+    .backBtn, .themeBtn {
+        height: 40px;
+        padding: 0 14px;
+        font-size: 13px;
+    }
+    
+    .container {
+        padding: 45px 14px 14px 14px;
+    }
+    
+    .daysRow {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    
+    .dayHeader {
+        padding: 12px 14px;
+    }
+    
+    .dayContent {
+        padding: 10px;
+        overflow-y: visible !important;
+        max-height: none !important;
+    }
+    
+    .activityTitle {
+        font-size: 12px;
+    }
+    
+    .activityInfo {
+        font-size: 10px;
+    }
+    
+    .modalContent {
+        max-width: 95%;
+        margin: 16px;
+    }
+    
+    .formRow {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .daysGrid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .colorGrid {
+        grid-template-columns: repeat(6, 1fr);
+    }
 }
 
-/* ===== СТИЛИ ДЛЯ ПЕЧАТИ ===== */
+/* Телефоны (480px - 576px) */
+@media (max-width: 576px) {
+    .topBar {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+    }
+    
+    .backBtn span, .themeBtn span {
+        display: none;
+    }
+    
+    .backBtn, .themeBtn {
+        width: 44px;
+        padding: 0;
+        justify-content: center;
+    }
+    
+    .backBtn svg, .themeBtn svg {
+        margin: 0;
+    }
+    
+    .container {
+        padding: 40px 12px 12px 12px;
+    }
+    
+    .headerCompact h1 {
+        font-size: 18px;
+    }
+    
+    .btnPrimary, .btnFilter, .iconBtn {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+    }
+    
+    .btnPrimary span, .btnFilter span {
+        display: none;
+    }
+    
+    .btnPrimary svg, .btnFilter svg {
+        margin: 0;
+    }
+    
+    .filtersPanel {
+        padding: 12px;
+    }
+    
+    .filterInput, .filterSelect {
+        height: 36px;
+        font-size: 13px;
+    }
+    
+    .notification {
+        min-width: auto;
+        max-width: 90%;
+        right: 5%;
+        left: 5%;
+        top: 10px;
+    }
+    
+    .dayShort {
+        font-size: 14px;
+    }
+    
+    .dayFull {
+        font-size: 10px;
+    }
+    
+    .dayCount {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
+    
+    .activityCard {
+        padding: 8px 10px;
+    }
+    
+    .activityTitle {
+        font-size: 11px;
+        padding-right: 40px;
+    }
+    
+    .cardActions {
+        opacity: 1;
+        top: 4px;
+        right: 4px;
+    }
+    
+    .editBtn, .deleteBtn {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .modalContent {
+        max-width: 100%;
+        border-radius: 16px;
+    }
+    
+    .modalHeader {
+        padding: 12px 16px;
+    }
+    
+    .modalHeader h2 {
+        font-size: 16px;
+    }
+    
+    .form {
+        padding: 16px;
+    }
+    
+    .formGroup label {
+        font-size: 12px;
+    }
+    
+    .formGroup input, .formGroup select {
+        height: 36px;
+        font-size: 13px;
+    }
+    
+    .emptyState {
+        padding: 40px 16px;
+    }
+    
+    .emptyIcon {
+        font-size: 36px;
+    }
+    
+    .emptyState h3 {
+        font-size: 16px;
+    }
+    
+    .emptyState p {
+        font-size: 12px;
+    }
+}
+
+/* Очень маленькие телефоны (до 360px) */
+@media (max-width: 380px) {
+    .container {
+        padding: 35px 10px 10px 10px;
+    }
+    
+    .headerCompact h1 {
+        font-size: 16px;
+    }
+    
+    .daysGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+    
+    .dayBtn {
+        height: 34px;
+        font-size: 12px;
+    }
+    
+    .colorGrid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .activityInfo > div {
+        white-space: normal;
+        flex-wrap: wrap;
+    }
+    
+    .statsCompact {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
+
+/* Адаптация для фона */
+@media (max-width: 768px) {
+    .glassCircle {
+        display: none;
+    }
+    
+    .glassCircle:nth-child(1),
+    .glassCircle:nth-child(2),
+    .glassCircle:nth-child(3) {
+        display: block;
+        width: 200px;
+        height: 200px;
+        filter: blur(40px);
+    }
+}
+
+/* Стили для печати */
 @media print {
     .topBar,
     .adminBanner,
@@ -1251,28 +1366,21 @@ body.dark-theme .activityCard {
     
     .page {
         background: white !important;
-        padding: 0 !important;
-        margin: 0 !important;
     }
     
     .container {
-        max-width: 100% !important;
         padding: 20px !important;
-        margin: 0 !important;
     }
     
     .daysRow {
-        display: grid;
         grid-template-columns: repeat(3, 1fr) !important;
         gap: 10px !important;
     }
     
     .dayColumn {
-        break-inside: avoid;
-        page-break-inside: avoid;
-        border: 1px solid #e2e8f0 !important;
-        box-shadow: none !important;
         background: white !important;
+        border: 1px solid #ccc !important;
+        overflow: visible !important;
     }
     
     .dayHeader {
@@ -1284,12 +1392,27 @@ body.dark-theme .activityCard {
     .activityCard {
         break-inside: avoid;
         page-break-inside: avoid;
-        box-shadow: none !important;
-        border: 1px solid #eef2f6 !important;
-        background: white !important;
+        border: 1px solid #eee !important;
     }
     
     .cardActions {
         display: none !important;
     }
+}
+
+/* ПЕРЕОПРЕДЕЛЕНИЕ СКРОЛЛА - ГЛАВНОЕ */
+.page .dayContent,
+.dayContent {
+    overflow-y: visible !important;
+    max-height: none !important;
+}
+
+.page .dayColumn,
+.dayColumn {
+    overflow: visible !important;
+}
+
+.page .dayTableContainer {
+    overflow: visible !important;
+    max-height: none !important;
 }
