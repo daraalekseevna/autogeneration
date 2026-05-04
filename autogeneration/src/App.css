@@ -1,9 +1,0 @@
-/* Убираем мерцающий курсор на всех элементах */
-* {
-    caret-color: transparent;
-}
-
-/* Но оставляем курсор для полей ввода (иначе неудобно печатать) */
-input, textarea, [contenteditable="true"] {
-    caret-color: auto;
-}
