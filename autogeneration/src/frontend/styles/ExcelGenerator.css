@@ -1,0 +1,1037 @@
+/* ExcelGenerator.css - Стили для страницы генератора Excel */
+/* Переменные темы в global-theme.css */
+
+.excel-gen-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    position: relative;
+    overflow-x: hidden;
+    font-family: var(--font-family);
+}
+
+/* ========== ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ ========== */
+.theme-toggle {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    z-index: 100;
+}
+
+.theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.theme-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+/* --- КНОПКА НАЗАД --- */
+.excel-gen-back-btn {
+    position: fixed;
+    top: 100px;
+    left: 24px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 40px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: var(--shadow);
+}
+
+.excel-gen-back-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateX(-3px);
+    border-color: transparent;
+    box-shadow: var(--shadow-hover);
+}
+
+/* --- ОСНОВНОЙ КОНТЕНТ --- */
+.excel-gen-main-content {
+    flex: 1;
+    padding: 100px 24px 48px;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+/* --- ЗАГОЛОВОК --- */
+.excel-gen-page-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.excel-gen-page-title h1 {
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.excel-gen-page-title h1 svg {
+    font-size: 2rem;
+    color: var(--primary);
+}
+
+.excel-gen-page-subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+.excel-gen-page-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* --- КНОПКИ --- */
+.excel-gen-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 18px;
+    border-radius: 40px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+}
+
+.excel-gen-btn:hover:not(:disabled) {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-1px);
+    border-color: transparent;
+    box-shadow: var(--shadow);
+}
+
+.excel-gen-btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+}
+
+.excel-gen-btn-primary:hover:not(:disabled) {
+    background: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.excel-gen-btn-large {
+    padding: 12px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.excel-gen-btn-outline {
+    background: transparent;
+    border: 1px solid var(--border-color);
+}
+
+.excel-gen-btn-outline:hover:not(:disabled) {
+    background: var(--primary);
+    border-color: transparent;
+}
+
+.excel-gen-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* --- СЕКЦИЯ ЗАГРУЗКИ --- */
+.excel-gen-upload-section {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.excel-gen-upload-section:hover {
+    background: var(--bg-card-hover);
+    box-shadow: var(--shadow-hover);
+}
+
+.excel-gen-upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    background: var(--bg-secondary);
+}
+
+.excel-gen-upload-area:hover {
+    border-color: var(--primary);
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+}
+
+.excel-gen-upload-area.has-file {
+    border-color: var(--primary);
+    border-style: solid;
+    background: var(--bg-card);
+}
+
+.excel-gen-upload-icon {
+    font-size: 48px;
+    color: var(--primary);
+    margin-bottom: 16px;
+    opacity: 0.7;
+}
+
+.excel-gen-upload-area h3 {
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.excel-gen-upload-area p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.excel-gen-upload-hint {
+    font-size: 0.8rem !important;
+    margin-bottom: 16px !important;
+}
+
+.excel-gen-file-input {
+    display: none;
+}
+
+.excel-gen-file-preview {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.excel-gen-file-icon {
+    font-size: 40px;
+    color: var(--primary);
+}
+
+.excel-gen-file-info {
+    flex: 1;
+    text-align: left;
+}
+
+.excel-gen-file-info h4 {
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+    color: var(--text-primary);
+    word-break: break-all;
+}
+
+.excel-gen-file-info p {
+    font-size: 0.8rem;
+    margin: 0;
+    color: var(--text-muted);
+}
+
+.excel-gen-btn-remove {
+    background: rgba(244, 67, 54, 0.1);
+    border: none;
+    color: #f44336;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.excel-gen-btn-remove:hover {
+    background: #f44336;
+    color: white;
+    transform: scale(1.05);
+}
+
+.excel-gen-file-details {
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+}
+
+.excel-gen-details-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.excel-gen-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.excel-gen-detail-item svg {
+    font-size: 1rem;
+    color: var(--primary);
+    opacity: 0.7;
+}
+
+.excel-gen-detail-item strong {
+    font-weight: 700;
+    margin-left: 4px;
+    color: var(--primary);
+}
+
+/* --- СЕКЦИЯ НАСТРОЕК --- */
+.excel-gen-settings-section {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.excel-gen-settings-section:hover {
+    background: var(--bg-card-hover);
+    box-shadow: var(--shadow-hover);
+}
+
+.excel-gen-settings-title {
+    font-size: 1.25rem;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.excel-gen-settings-title svg {
+    color: var(--primary);
+}
+
+.excel-gen-settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.excel-gen-settings-group {
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+.excel-gen-settings-group h4 {
+    font-size: 1rem;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.excel-gen-settings-group h4 svg {
+    font-size: 1rem;
+    color: var(--primary);
+    opacity: 0.7;
+}
+
+/* --- СЕТКИ НАСТРОЕК --- */
+.excel-gen-settings-grid-2cols {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.excel-gen-settings-grid-3cols {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.excel-gen-setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.excel-gen-setting-item label {
+    font-weight: 500;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.excel-gen-setting-item input,
+.excel-gen-setting-item select {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: inherit;
+}
+
+.excel-gen-setting-item input:focus,
+.excel-gen-setting-item select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+/* --- ДНИ НЕДЕЛИ --- */
+.excel-gen-days-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.excel-gen-day-item {
+    position: relative;
+}
+
+.excel-gen-day-item input {
+    position: absolute;
+    opacity: 0;
+}
+
+.excel-gen-day-item label {
+    cursor: pointer;
+    padding: 8px 18px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 40px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.excel-gen-day-item input:checked + label {
+    background: var(--primary);
+    color: white;
+    border-color: transparent;
+    box-shadow: var(--shadow);
+}
+
+.excel-gen-day-item label:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+/* --- ЧЕКБОКСЫ --- */
+.excel-gen-checkbox {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.excel-gen-checkbox input {
+    position: absolute;
+    opacity: 0;
+}
+
+.excel-gen-checkbox label {
+    cursor: pointer;
+    padding-left: 28px;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    position: relative;
+    display: inline-block;
+}
+
+.excel-gen-checkbox label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-color);
+    border-radius: 5px;
+    background: var(--bg-input);
+    transition: all 0.2s ease;
+}
+
+.excel-gen-checkbox label::after {
+    content: '✓';
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%) scale(0);
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    transition: transform 0.2s ease;
+}
+
+.excel-gen-checkbox input:checked + label::before {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.excel-gen-checkbox input:checked + label::after {
+    transform: translateY(-50%) scale(1);
+}
+
+/* --- СЕТКА КЛАССОВ --- */
+.excel-gen-classes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.excel-gen-class-checkbox {
+    position: relative;
+}
+
+.excel-gen-class-checkbox input {
+    position: absolute;
+    opacity: 0;
+}
+
+.excel-gen-class-checkbox label {
+    cursor: pointer;
+    display: block;
+    padding: 8px 6px;
+    text-align: center;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.excel-gen-class-checkbox input:checked + label {
+    background: var(--primary);
+    color: white;
+    border-color: transparent;
+    transform: translateY(-1px);
+}
+
+/* --- НАСТРОЙКА ПЕРЕМЕН (СПИСОК) --- */
+.excel-gen-breaks-list {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 12px;
+}
+
+.excel-gen-break-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-card);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+}
+
+.excel-gen-break-item:hover {
+    background: var(--bg-card-hover);
+    transform: translateX(4px);
+}
+
+.excel-gen-break-number {
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--primary-soft);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.85rem;
+}
+
+.excel-gen-break-info {
+    flex: 1;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.excel-gen-break-info select,
+.excel-gen-break-info input {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    background: var(--bg-input);
+    color: var(--text-primary);
+}
+
+.excel-gen-break-remove {
+    background: rgba(244, 67, 54, 0.1);
+    border: none;
+    color: #f44336;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.excel-gen-break-remove:hover {
+    background: #f44336;
+    color: white;
+}
+
+.excel-gen-add-break-btn {
+    margin-top: 12px;
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border: 1px dashed var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.excel-gen-add-break-btn:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.excel-gen-break-note {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 12px;
+    font-style: italic;
+}
+
+.excel-gen-setting-description {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    font-style: italic;
+}
+
+.excel-gen-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 20px 0;
+}
+
+/* --- ПРОГРЕСС --- */
+.excel-gen-progress-section {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+    margin-bottom: 24px;
+    border: 1px solid var(--border-color);
+}
+
+.excel-gen-progress-section h3 {
+    font-size: 1.2rem;
+    margin-bottom: 24px;
+    color: var(--text-primary);
+}
+
+.excel-gen-progress-container {
+    max-width: 400px;
+    margin: 0 auto 24px;
+}
+
+.excel-gen-progress-bar {
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.excel-gen-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+.excel-gen-progress-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-top: 8px;
+}
+
+.excel-gen-progress-steps {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+}
+
+.excel-gen-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.excel-gen-step-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.excel-gen-step.completed .excel-gen-step-icon,
+.excel-gen-step.active .excel-gen-step-icon {
+    background: var(--primary);
+    color: white;
+    border-color: transparent;
+    transform: scale(1.05);
+}
+
+.excel-gen-step-text {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-align: center;
+}
+
+/* --- РЕЗУЛЬТАТЫ --- */
+.excel-gen-results-section {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+    margin-bottom: 24px;
+    animation: excel-gen-slideIn 0.4s ease;
+    border: 1px solid var(--border-color);
+}
+
+@keyframes excel-gen-slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.excel-gen-success-icon {
+    font-size: 48px;
+    color: #4caf50;
+    margin-bottom: 16px;
+}
+
+.excel-gen-results-header h3 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.excel-gen-results-header p {
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+.excel-gen-results-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.excel-gen-stat-item {
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.excel-gen-stat-item:hover {
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+}
+
+.excel-gen-stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.excel-gen-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.excel-gen-results-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* --- СЕКЦИЯ ГЕНЕРАЦИИ --- */
+.excel-gen-generate-section {
+    text-align: center;
+    padding: 16px;
+}
+
+.excel-gen-generate-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 12px;
+}
+
+/* --- АДАПТАЦИЯ --- */
+@media (max-width: 768px) {
+    .excel-gen-main-content {
+        padding: 80px 16px 32px;
+    }
+    
+    .theme-toggle {
+        top: 85px;
+        right: 10px;
+    }
+    
+    .theme-btn {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
+    
+    .excel-gen-back-btn {
+        top: 80px;
+        left: 16px;
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .excel-gen-back-btn span {
+        display: none;
+    }
+    
+    .excel-gen-page-title h1 {
+        font-size: 1.5rem;
+    }
+    
+    .excel-gen-page-title h1 svg {
+        font-size: 1.5rem;
+    }
+    
+    .excel-gen-page-subtitle {
+        font-size: 0.9rem;
+    }
+    
+    .excel-gen-page-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .excel-gen-page-actions .excel-gen-btn {
+        width: 100%;
+        max-width: 280px;
+    }
+    
+    .excel-gen-upload-section,
+    .excel-gen-settings-section {
+        padding: 20px;
+    }
+    
+    .excel-gen-details-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .excel-gen-settings-grid-2cols,
+    .excel-gen-settings-grid-3cols {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .excel-gen-classes-grid {
+        grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+    }
+    
+    .excel-gen-progress-steps {
+        gap: 16px;
+    }
+    
+    .excel-gen-step-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+    
+    .excel-gen-results-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .excel-gen-stat-value {
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .excel-gen-main-content {
+        padding: 70px 12px 24px;
+    }
+    
+    .theme-toggle {
+        top: 80px;
+        right: 8px;
+    }
+    
+    .theme-btn {
+        padding: 5px 10px;
+        font-size: 0.7rem;
+    }
+    
+    .theme-btn svg {
+        font-size: 0.8rem;
+    }
+    
+    .excel-gen-page-title h1 {
+        font-size: 1.3rem;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .excel-gen-upload-area {
+        padding: 24px 16px;
+    }
+    
+    .excel-gen-details-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .excel-gen-classes-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .excel-gen-progress-steps {
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .excel-gen-step {
+        flex-direction: row;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .excel-gen-results-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .excel-gen-stat-value {
+        font-size: 1.2rem;
+    }
+    
+    .excel-gen-btn-large {
+        width: 100%;
+    }
+    
+    .excel-gen-break-info {
+        flex-direction: column;
+        gap: 8px;
+    } 
+    
+    .excel-gen-break-item {
+        flex-wrap: wrap;
+    }
+}

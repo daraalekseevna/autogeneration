@@ -1,0 +1,527 @@
+/* src/frontend/styles/TeacherMySchedule.module.css */
+/* Только специфичные стили для расписания учителя */
+/* Переменные темы в global-theme.css */
+
+/* ========== БАЗОВЫЕ СТИЛИ ========== */
+.page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* ========== ВЕРХНЯЯ ПАНЕЛЬ ========== */
+.topBar {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.topBar > * {
+    pointer-events: auto;
+}
+
+.backBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 18px;
+    height: 42px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
+}
+
+.backBtn:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateX(-4px);
+}
+
+.themeBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 18px;
+    height: 42px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    font-weight: 500;
+}
+
+.themeBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+    background: var(--primary);
+    color: white;
+}
+
+/* ========== ОСНОВНОЙ КОНТЕЙНЕР ========== */
+.container {
+    flex: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 70px 24px 24px 24px;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.scheduleHeader {
+    margin-bottom: 20px;
+}
+
+.scheduleHeader h1 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.3rem;
+    color: var(--text-primary);
+}
+
+/* ========== СЕТКА ДНЕЙ ========== */
+.scheduleGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.topRow, .bottomRow {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+/* ========== ТАБЛИЦА ДНЯ ========== */
+.dayTableWrapper {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all 0.3s;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.dayTableWrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.dayTableHeader {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    padding: 10px 14px;
+    text-align: center;
+}
+
+.dayShort {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    display: block;
+}
+
+.dayFull {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.8);
+    display: block;
+}
+
+.dayTableContainer {
+    overflow-x: auto;
+    overflow-y: visible;
+    flex: 1;
+}
+
+.scheduleTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+}
+
+.scheduleTable th {
+    background: var(--bg-table-header);
+    padding: 8px 6px;
+    text-align: center;
+    border-bottom: 2px solid var(--border-color);
+    color: var(--text-primary);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    font-size: 0.7rem;
+}
+
+.timeCol {
+    width: 44px;
+    min-width: 44px;
+    text-align: center;
+}
+
+.timeColFull {
+    width: 72px;
+    min-width: 72px;
+    text-align: center;
+}
+
+.contentCol {
+    text-align: left;
+    width: auto;
+}
+
+.scheduleTable td {
+    border-bottom: 1px solid var(--border-color);
+    padding: 7px 6px;
+    vertical-align: top;
+}
+
+.lessonNumCell {
+    text-align: center;
+    vertical-align: middle;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+body.dark-theme .lessonNumCell,
+body.dark-theme .lessonTimeCell {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.lessonNumber {
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    display: inline-block;
+    background: var(--primary-soft);
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    border-radius: 50%;
+}
+
+.lessonTimeCell {
+    text-align: center;
+    vertical-align: middle;
+    background: rgba(0, 0, 0, 0.02);
+    width: 65px;
+    min-width: 65px;
+}
+
+.lessonTime {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    line-height: 1.2;
+}
+
+.lessonTime svg {
+    font-size: 0.5rem;
+    opacity: 0.6;
+}
+
+.lessonContentCell {
+    background: transparent;
+    padding: 5px 8px;
+}
+
+/* ========== КАРТОЧКИ УРОКОВ ========== */
+.lessonCard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border-left: 3px solid;
+    transition: all 0.2s ease;
+    gap: 12px;
+}
+
+.lessonCard:hover {
+    transform: translateX(3px);
+    box-shadow: var(--shadow);
+}
+
+.lessonCardSubject {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+}
+
+.lessonCardSubject svg {
+    font-size: 0.7rem;
+}
+
+.lessonCardRoom {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* ========== ДОПОЛНИТЕЛЬНЫЕ ЗАНЯТИЯ ========== */
+.extracurricularSection {
+    margin-top: 12px;
+    padding: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.extracurricularTitle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--warning);
+    margin-bottom: 10px;
+}
+
+.extracurricularCard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    border-left: 3px solid;
+    transition: all 0.2s ease;
+    gap: 12px;
+}
+
+.extracurricularCard:hover {
+    transform: translateX(3px);
+    box-shadow: var(--shadow);
+}
+
+.extracurricularCardTime {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    min-width: 85px;
+    white-space: nowrap;
+}
+
+.extracurricularCardTime svg {
+    font-size: 0.55rem;
+}
+
+.extracurricularCardInfo {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.extracurricularCardHeader {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.extracurricularStar {
+    font-size: 0.7rem;
+}
+
+.extracurricularCardName {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.extracurricularCardRoom {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.emptySlot {
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    opacity: 0.5;
+}
+
+/* ========== ЗАГРУЗКА ========== */
+.loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px;
+    gap: 16px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loadingText {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ========== АДАПТАЦИЯ ========== */
+@media (max-width: 1024px) {
+    .topRow, .bottomRow {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 65px 16px 16px 16px;
+    }
+    
+    .topRow, .bottomRow {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .timeCol {
+        width: 40px;
+    }
+    
+    .timeColFull {
+        width: 65px;
+    }
+    
+    .topBar {
+        top: 12px;
+        left: 12px;
+        right: 12px;
+    }
+    
+    .backBtn, .themeBtn {
+        height: 38px;
+        padding: 0 14px;
+        font-size: 13px;
+    }
+    
+    .lessonCard {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .extracurricularCard {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .extracurricularCardInfo {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .dayTableContainer {
+        max-height: 420px;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding: 60px 12px 12px 12px;
+    }
+    
+    .scheduleHeader h1 {
+        font-size: 1.1rem;
+    }
+    
+    .timeCol {
+        width: 36px;
+    }
+    
+    .timeColFull {
+        width: 58px;
+    }
+    
+    .lessonTime {
+        font-size: 0.55rem;
+    }
+    
+    .topBar {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+    }
+    
+    .backBtn span, .themeBtn span {
+        display: none;
+    }
+    
+    .backBtn, .themeBtn {
+        width: 38px;
+        padding: 0;
+        justify-content: center;
+    }
+    
+    .lessonNumber {
+        width: 22px;
+        height: 22px;
+        line-height: 22px;
+        font-size: 0.7rem;
+    }
+    
+    .lessonCardSubject {
+        font-size: 0.75rem;
+    }
+    
+    .lessonCardRoom {
+        font-size: 0.65rem;
+    }
+    
+    .extracurricularCardName {
+        font-size: 0.75rem;
+    }
+}

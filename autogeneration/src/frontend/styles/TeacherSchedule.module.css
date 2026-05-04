@@ -1,0 +1,444 @@
+/* src/frontend/styles/TeacherSchedule.module.css */
+
+/* Скрываем псевдоэлемент "Главное меню" */
+.teacher-action-cards::before {
+    display: none;
+}
+
+/* Контейнер карточек */
+.cardsContainer {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 2rem;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Карточка */
+.card {
+    flex: 1 1 320px;
+    min-width: 280px;
+    max-width: 350px;
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 1.8rem;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.card:hover {
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* Заголовок карточки */
+.card h2 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+/* Текст карточки */
+.card p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    flex: 1;
+}
+
+/* Кнопка */
+.card button {
+    min-width: 180px;
+}
+
+/* Кнопка темы */
+.theme-toggle {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    z-index: 100;
+}
+
+.theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.theme-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+/* ========== РАСПИСАНИЕ КАК В TEACHERCLASSMANAGEMENT ========== */
+.scheduleSection {
+    background: transparent;
+    border-radius: 20px;
+    padding: 0;
+    margin-top: 20px;
+}
+
+.scheduleSection h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.daysRow {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.dayColumn {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.dayHeader {
+    padding: 12px 16px;
+    background: #21435A;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dayName {
+    font-weight: 600;
+    font-size: 14px;
+    color: white;
+}
+
+.dayCount {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    color: white;
+}
+
+.dayContent {
+    padding: 12px;
+    min-height: auto; /* Автоматическая высота */
+    max-height: none; /* Убираем ограничение высоты */
+    overflow-y: visible; /* Убираем скролл */
+}
+
+.lessonCard {
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border-left: 3px solid;
+}
+
+.lessonCard:last-child {
+    margin-bottom: 0;
+}
+
+.lessonTime {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.lessonSubject {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.typeBadge {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.typeBadge.lesson {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+}
+
+.typeBadge.extracurricular {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+.lessonDetails {
+    display: flex;
+    gap: 10px;
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+.lessonDetails div {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.emptyDay {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.subjectColor {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    margin-right: 4px;
+}
+
+.topBar {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.topBar > * {
+    pointer-events: auto;
+}
+
+.backBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 18px;
+    height: 44px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
+}
+
+.backBtn:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateX(-4px);
+}
+
+.container {
+    flex: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 24px 24px 24px;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px;
+    gap: 16px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Адаптив */
+@media (max-width: 768px) {
+    .container {
+        padding: 80px 16px 16px 16px;
+    }
+    
+    .daysRow {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .cardsContainer {
+        gap: 1rem;
+        padding: 0 1rem;
+    }
+    
+    .card {
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
+    
+    .theme-toggle {
+        top: 85px;
+        right: 10px;
+    }
+    
+    .theme-btn {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
+    
+    .topBar {
+        top: 12px;
+        left: 12px;
+        right: 12px;
+    }
+    
+    .backBtn {
+        height: 40px;
+        padding: 0 16px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding: 75px 12px 12px 12px;
+    }
+    
+    .daysRow {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .card {
+        padding: 1.25rem;
+    }
+    
+    .card h2 {
+        gap: 8px;
+        font-size: 1rem;
+    }
+    
+    .card p {
+        font-size: 0.8rem;
+    }
+    
+    .dayHeader {
+        padding: 10px 12px;
+    }
+    
+    .dayName {
+        font-size: 13px;
+    }
+    
+    .theme-toggle {
+        top: 80px;
+        right: 8px;
+    }
+    
+    .theme-btn {
+        padding: 5px 10px;
+        font-size: 0.7rem;
+    }
+    
+    .theme-btn svg {
+        font-size: 0.8rem;
+    }
+    
+    .theme-btn span {
+        display: none;
+    }
+    
+    .theme-btn {
+        padding: 8px 10px;
+    }
+    
+    .topBar {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+    }
+    
+    .backBtn span {
+        display: none;
+    }
+    
+    .backBtn {
+        width: 40px;
+        padding: 0;
+    }
+}
+/* Кнопка ПЕРЕКЛЮЧЕНИЯ ТЕМЫ */
+.themeBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 18px;
+    height: 44px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    font-weight: 500;
+}
+
+.themeBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+    background: var(--primary);
+    color: white;
+}
+
+.themeBtn svg {
+    font-size: 16px;
+}

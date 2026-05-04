@@ -1,0 +1,656 @@
+/* src/frontend/styles/ClassSchedule.module.css */
+
+/* Кнопка переключения темы */
+.themeToggle {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    z-index: 100;
+}
+
+.themeBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    font-weight: 500;
+}
+
+.themeBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+    background: var(--primary);
+    color: white;
+}
+
+/* Контейнер */
+.container {
+    flex: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 50px 24px 24px 24px;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Информация о классе */
+.scheduleHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.classInfo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: transparent;
+}
+
+.classIcon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+}
+
+.classInfo h1 {
+    font-size: 24px;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.currentDate {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* Кнопка дополнительных занятий */
+.extracurricularBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--primary);
+    border: none;
+    border-radius: 30px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.extracurricularBtn:hover {
+    background: var(--primary-light);
+    transform: translateY(-2px);
+}
+
+.extracurricularBtn:active {
+    transform: scale(0.98);
+}
+
+.extracurricularBtn svg {
+    font-size: 14px;
+}
+
+.extracurricularBtn svg:last-child {
+    transition: transform 0.2s ease;
+}
+
+.extracurricularBtn:hover svg:last-child {
+    transform: translateX(3px);
+}
+
+/* Сетка дней */
+.scheduleGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.topRow, .bottomRow {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+/* Таблица дня */
+.dayTableWrapper {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all 0.3s;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    height: auto;
+}
+
+.dayTableWrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.dayTableHeader {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    padding: 10px 14px;
+    text-align: center;
+}
+
+.dayShort {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    display: block;
+}
+
+.dayFull {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.8);
+    display: block;
+}
+
+/* Контейнер таблицы - БЕЗ СКРОЛЛА */
+.dayTableContainer {
+    overflow-x: auto;
+    overflow-y: visible;
+    flex: 1;
+}
+
+.scheduleTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+}
+
+.scheduleTable th {
+    background: var(--bg-table-header);
+    padding: 8px 6px;
+    text-align: center;
+    border-bottom: 2px solid var(--border-color);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.7rem;
+}
+
+.timeCol {
+    width: 44px;
+    min-width: 44px;
+    text-align: center;
+}
+
+.timeColFull {
+    width: 72px;
+    min-width: 72px;
+    text-align: center;
+}
+
+.contentCol {
+    text-align: left;
+    width: auto;
+}
+
+.scheduleTable td {
+    border-bottom: 1px solid var(--border-color);
+    padding: 7px 6px;
+    vertical-align: top;
+}
+
+.lessonNumCell {
+    text-align: center;
+    vertical-align: middle;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+body.dark-theme .lessonNumCell,
+body.dark-theme .lessonTimeCell {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.lessonNumber {
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    display: inline-block;
+    background: var(--primary-soft);
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    border-radius: 50%;
+}
+
+.lessonTimeCell {
+    text-align: center;
+    vertical-align: middle;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.lessonTime {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    line-height: 1.2;
+}
+
+.lessonTime svg {
+    font-size: 0.55rem;
+    opacity: 0.6;
+}
+
+.lessonContentCell {
+    background: transparent;
+    padding: 5px 8px;
+}
+
+/* Карточка урока */
+.lessonItem {
+    background: var(--bg-card-solid);
+    border-radius: 7px;
+    padding: 7px 8px;
+    border-left: 3px solid;
+    transition: all 0.2s;
+}
+
+.lessonInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.lessonSubject {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 0.72rem;
+    color: var(--text-primary);
+}
+
+.lessonTeacher, .lessonRoom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.62rem;
+    color: var(--text-muted);
+}
+
+.lessonTeacher svg, .lessonRoom svg {
+    font-size: 0.58rem;
+    opacity: 0.7;
+}
+
+.emptySlot {
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    opacity: 0.5;
+}
+
+/* ========== ПОЛНАЯ АДАПТАЦИЯ ========== */
+
+/* Планшеты и ноутбуки (1024px - 1280px) */
+@media (max-width: 1280px) {
+    .topRow, .bottomRow {
+        gap: 14px;
+    }
+    
+    .dayShort {
+        font-size: 1rem;
+    }
+    
+    .dayFull {
+        font-size: 0.55rem;
+    }
+}
+
+/* Планшеты (768px - 1024px) */
+@media (max-width: 1024px) {
+    .topRow, .bottomRow {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+    
+    .container {
+        padding: 45px 20px 20px 20px;
+    }
+    
+    .timeCol {
+        width: 40px;
+    }
+    
+    .timeColFull {
+        width: 65px;
+    }
+}
+
+/* Планшеты вертикальные и большие телефоны (576px - 768px) */
+@media (max-width: 768px) {
+    .container {
+        padding: 40px 16px 16px 16px;
+    }
+    
+    .scheduleHeader {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .classInfo {
+        width: 100%;
+    }
+    
+    .topRow, .bottomRow {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .themeToggle {
+        top: 85px;
+        right: 10px;
+    }
+    
+    .themeBtn {
+        height: 38px;
+        padding: 0 14px;
+        font-size: 13px;
+    }
+    
+    .dayTableContainer {
+        overflow-x: auto;
+    }
+    
+    .scheduleTable {
+        min-width: 550px;
+    }
+    
+    .extracurricularBtn {
+        padding: 8px 16px;
+        font-size: 13px;
+        gap: 6px;
+        align-self: flex-start;
+    }
+    
+    .classIcon {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+    }
+    
+    .classInfo h1 {
+        font-size: 20px;
+    }
+    
+    .currentDate {
+        font-size: 12px;
+    }
+}
+
+/* Маленькие телефоны (481px - 576px) */
+@media (max-width: 576px) {
+    .container {
+        padding: 35px 12px 12px 12px;
+    }
+    
+    .classInfo {
+        gap: 12px;
+    }
+    
+    .classIcon {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+    }
+    
+    .classInfo h1 {
+        font-size: 18px;
+    }
+    
+    .currentDate {
+        font-size: 11px;
+    }
+    
+    .themeToggle {
+        top: 80px;
+        right: 8px;
+    }
+    
+    .themeBtn {
+        padding: 5px 10px;
+        font-size: 0.7rem;
+        gap: 4px;
+    }
+    
+    .themeBtn span {
+        display: none;
+    }
+    
+    .themeBtn {
+        padding: 8px 10px;
+        width: 38px;
+        justify-content: center;
+    }
+    
+    .extracurricularBtn {
+        padding: 6px 12px;
+        font-size: 11px;
+        gap: 4px;
+    }
+    
+    .extracurricularBtn span {
+        display: none;
+    }
+    
+    .extracurricularBtn svg:first-child {
+        margin: 0;
+    }
+    
+    .extracurricularBtn svg:last-child {
+        display: none;
+    }
+    
+    .dayShort {
+        font-size: 0.9rem;
+    }
+    
+    .dayFull {
+        font-size: 0.5rem;
+    }
+    
+    .lessonNumber {
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        font-size: 0.65rem;
+    }
+    
+    .lessonSubject {
+        font-size: 0.65rem;
+        gap: 4px;
+    }
+    
+    .lessonTeacher, .lessonRoom {
+        font-size: 0.55rem;
+        gap: 4px;
+    }
+    
+    .lessonSubject svg {
+        font-size: 0.6rem;
+    }
+    
+    .lessonTeacher svg, .lessonRoom svg {
+        font-size: 0.5rem;
+    }
+    
+    .lessonItem {
+        padding: 5px 6px;
+    }
+    
+    .lessonInfo {
+        gap: 2px;
+    }
+}
+
+/* Очень маленькие телефоны (до 480px) */
+@media (max-width: 480px) {
+    .container {
+        padding: 30px 10px 10px 10px;
+    }
+    
+    .classIcon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    
+    .classInfo h1 {
+        font-size: 16px;
+    }
+    
+    .currentDate {
+        font-size: 10px;
+    }
+    
+    .scheduleTable th {
+        font-size: 0.6rem;
+        padding: 6px 4px;
+    }
+    
+    .scheduleTable td {
+        padding: 5px 4px;
+    }
+    
+    .timeCol {
+        width: 35px;
+        min-width: 35px;
+    }
+    
+    .timeColFull {
+        width: 55px;
+        min-width: 55px;
+    }
+    
+    .lessonNumber {
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
+        font-size: 0.6rem;
+    }
+    
+    .lessonTime {
+        font-size: 0.5rem;
+    }
+    
+    .lessonTime svg {
+        font-size: 0.45rem;
+    }
+    
+    .lessonSubject {
+        font-size: 0.6rem;
+    }
+    
+    .lessonTeacher, .lessonRoom {
+        font-size: 0.5rem;
+    }
+    
+    .emptySlot {
+        min-height: 40px;
+        font-size: 0.6rem;
+    }
+}
+
+/* Для самых маленьких экранов (до 360px) */
+@media (max-width: 360px) {
+    .classInfo h1 {
+        font-size: 14px;
+    }
+    
+    .scheduleTable th {
+        font-size: 0.55rem;
+    }
+    
+    .timeCol, .timeColFull {
+        display: none;
+    }
+    
+    .lessonTime {
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 4px;
+    }
+}
+
+/* Адаптация для фона на мобильных */
+@media (max-width: 768px) {
+    .glassCircle {
+        display: none;
+    }
+    
+    .glassCircle:nth-child(1),
+    .glassCircle:nth-child(2),
+    .glassCircle:nth-child(3) {
+        display: block;
+        width: 200px;
+        height: 200px;
+        filter: blur(40px);
+    }
+}
+
+@media (max-width: 576px) {
+    .glassCircle:nth-child(1),
+    .glassCircle:nth-child(2),
+    .glassCircle:nth-child(3) {
+        width: 150px;
+        height: 150px;
+        filter: blur(30px);
+    }
+}
+
+/* Для печати */
+@media print {
+    .themeToggle,
+    .extracurricularBtn,
+    .animatedBg,
+    .glassCircle {
+        display: none !important;
+    }
+    
+    .dayTableWrapper {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+    
+    .container {
+        padding: 0;
+    }
+}
