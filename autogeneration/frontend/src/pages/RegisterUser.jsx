@@ -72,11 +72,11 @@ const RegisterUser = () => {
             <ThemeToggle />
             <BackButton fallbackPath="/superadmin" />
             
-            <div className="animated-bg">
+            {/* <div className="animated-bg">
                 {[...Array(10)].map((_, i) => (
                     <div key={i} className="glass-circle"></div>
                 ))}
-            </div>
+            </div> */}
             
             <h2>Регистрация нового пользователя</h2>
             {error && <div className="error-message">{error}</div>}

@@ -912,13 +912,13 @@ const AdminScheduleEditor = () => {
     <div className="admin-schedule-editor">
       <ThemeToggle />
       <BackButton fallbackPath="/" />
-      
+{/*       
       <div className="animated-bg">
         {[...Array(10)].map((_, i) => (
           <div key={i} className="glass-circle"></div>
         ))}
       </div>
-      
+       */}
       <Header />
       
       <div className="container">

@@ -416,12 +416,12 @@ const MainContent = () => {
         <div className="main-content-page">
             <ThemeToggle />
             
-            <div className="animated-bg">
+            {/* <div className="animated-bg">
                 {[...Array(10)].map((_, i) => (
                     <div key={i} className="glass-circle"></div>
                 ))}
             </div>
-            
+             */}
             <Header />
             
             <main className="main-content-container">

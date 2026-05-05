@@ -389,139 +389,151 @@ router.delete('/classes/:id', async (req, res) => {
     }
 });
 
-// ============= КАБИНЕТЫ =============
+// ============= КАБИНЕТЫ С ПРИОРИТЕТАМИ =============
 
-// Получить все кабинеты
+// Получить все кабинеты с приоритетными предметами
 router.get('/rooms', async (req, res) => {
     try {
         const result = await db.query(`
             SELECT 
-                id, 
-                number, 
-                name, 
-                building, 
-                capacity, 
-                has_computers, 
-                has_projector, 
-                has_smartboard, 
-                is_laboratory, 
-                is_gym, 
-                is_music, 
-                is_art, 
-                priority,
-                created_at,
-                updated_at
-            FROM rooms
-            ORDER BY priority DESC, number
+                r.id,
+                r.number,
+                r.name,
+                r.priority,
+                r.created_at,
+                COALESCE(
+                    json_agg(
+                        json_build_object(
+                            'id', lp.id,
+                            'lesson_id', lp.lesson_id,
+                            'lesson_name', l.name
+                        )
+                    ) FILTER (WHERE lp.lesson_id IS NOT NULL),
+                    '[]'::json
+                ) as lesson_priorities
+            FROM rooms r
+            LEFT JOIN room_lesson_priorities lp ON r.id = lp.room_id
+            LEFT JOIN lessons l ON lp.lesson_id = l.id
+            GROUP BY r.id
+            ORDER BY r.number
         `);
         
-        const rooms = (result.rows || []).map(room => ({
-            ...room,
-            lesson_priorities: []
-        }));
-        
-        res.json(rooms);
+        res.json(result.rows || []);
     } catch (err) {
         console.error('GET /rooms error:', err);
-        res.json([]);
+        res.status(500).json({ message: 'Ошибка загрузки кабинетов: ' + err.message });
     }
 });
 
 // Добавить кабинет
 router.post('/rooms', async (req, res) => {
-    const { 
-        number, 
-        name, 
-        building = null, 
-        capacity = 30, 
-        hasComputers = false, 
-        hasProjector = false, 
-        hasSmartboard = false, 
-        isLaboratory = false, 
-        isGym = false, 
-        isMusic = false, 
-        isArt = false, 
-        priority = 0 
-    } = req.body;
+    const { number, name, priority, lessonPriorities = [] } = req.body;
 
     if (!number) {
         return res.status(400).json({ message: 'Номер кабинета обязателен' });
     }
 
+    const client = await db.getClient();
+    
     try {
-        const result = await db.query(`
-            INSERT INTO rooms (
-                number, name, building, capacity, 
-                has_computers, has_projector, has_smartboard,
-                is_laboratory, is_gym, is_music, is_art, 
-                priority
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-            RETURNING id
-        `, [
-            number, name, building, capacity, 
-            hasComputers, hasProjector, hasSmartboard,
-            isLaboratory, isGym, isMusic, isArt, 
-            priority
-        ]);
+        await client.query('BEGIN');
         
-        res.status(201).json({ message: 'Кабинет добавлен', roomId: result.rows[0].id });
+        const existing = await client.query('SELECT id FROM rooms WHERE number = $1', [String(number)]);
+        if (existing.rows.length > 0) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ message: 'Кабинет с таким номером уже существует' });
+        }
+        
+        const result = await client.query(`
+            INSERT INTO rooms (number, name, priority)
+            VALUES ($1, $2, $3)
+            RETURNING id, number, name, priority
+        `, [String(number), name || null, parseInt(priority) || 0]);
+        
+        const roomId = result.rows[0].id;
+        
+        if (lessonPriorities && lessonPriorities.length > 0) {
+            for (const lessonId of lessonPriorities) {
+                const cleanLessonId = parseInt(lessonId);
+                if (!isNaN(cleanLessonId)) {
+                    await client.query(
+                        `INSERT INTO room_lesson_priorities (room_id, lesson_id) 
+                         VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+                        [roomId, cleanLessonId]
+                    );
+                }
+            }
+        }
+        
+        await client.query('COMMIT');
+        
+        res.status(201).json({ message: 'Кабинет добавлен', roomId: roomId });
     } catch (err) {
+        await client.query('ROLLBACK');
         console.error('POST /rooms error:', err);
         res.status(500).json({ message: 'Ошибка добавления кабинета: ' + err.message });
+    } finally {
+        client.release();
     }
 });
 
 // Обновить кабинет
 router.put('/rooms/:id', async (req, res) => {
     const { id } = req.params;
-    const { 
-        number, 
-        name, 
-        building, 
-        capacity, 
-        hasComputers, 
-        hasProjector, 
-        hasSmartboard,
-        isLaboratory, 
-        isGym, 
-        isMusic, 
-        isArt, 
-        priority 
-    } = req.body;
+    const { number, name, priority, lessonPriorities = [] } = req.body;
 
+    const client = await db.getClient();
+    
     try {
-        const result = await db.query(`
-            UPDATE rooms SET 
-                number = $1, 
-                name = $2, 
-                building = $3, 
-                capacity = $4,
-                has_computers = $5, 
-                has_projector = $6, 
-                has_smartboard = $7,
-                is_laboratory = $8, 
-                is_gym = $9, 
-                is_music = $10, 
-                is_art = $11,
-                priority = $12,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = $13
-            RETURNING number
-        `, [
-            number, name, building, capacity, 
-            hasComputers, hasProjector, hasSmartboard,
-            isLaboratory, isGym, isMusic, isArt, 
-            priority, id
-        ]);
+        await client.query('BEGIN');
         
-        if (result.rows.length === 0) {
+        const existing = await client.query('SELECT id FROM rooms WHERE id = $1', [id]);
+        if (existing.rows.length === 0) {
+            await client.query('ROLLBACK');
             return res.status(404).json({ message: 'Кабинет не найден' });
         }
         
+        const duplicateNumber = await client.query(
+            'SELECT id FROM rooms WHERE number = $1 AND id != $2',
+            [String(number), id]
+        );
+        if (duplicateNumber.rows.length > 0) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ message: 'Кабинет с таким номером уже существует' });
+        }
+        
+        await client.query(`
+            UPDATE rooms SET 
+                number = $1, 
+                name = $2, 
+                priority = $3
+            WHERE id = $4
+        `, [String(number), name || null, parseInt(priority) || 0, id]);
+        
+        await client.query('DELETE FROM room_lesson_priorities WHERE room_id = $1', [id]);
+        
+        if (lessonPriorities && lessonPriorities.length > 0) {
+            for (const lessonId of lessonPriorities) {
+                const cleanLessonId = parseInt(lessonId);
+                if (!isNaN(cleanLessonId)) {
+                    await client.query(
+                        `INSERT INTO room_lesson_priorities (room_id, lesson_id) 
+                         VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+                        [id, cleanLessonId]
+                    );
+                }
+            }
+        }
+        
+        await client.query('COMMIT');
+        
         res.json({ message: 'Кабинет обновлен' });
     } catch (err) {
+        await client.query('ROLLBACK');
         console.error('PUT /rooms error:', err);
-        res.status(500).json({ message: 'Ошибка обновления кабинета' });
+        res.status(500).json({ message: 'Ошибка обновления кабинета: ' + err.message });
+    } finally {
+        client.release();
     }
 });
 
@@ -529,19 +541,30 @@ router.put('/rooms/:id', async (req, res) => {
 router.delete('/rooms/:id', async (req, res) => {
     const { id } = req.params;
     
+    const client = await db.getClient();
+    
     try {
-        const room = await db.query('SELECT number FROM rooms WHERE id = $1', [id]);
+        await client.query('BEGIN');
+        
+        const room = await client.query('SELECT number FROM rooms WHERE id = $1', [id]);
         
         if (room.rows.length === 0) {
+            await client.query('ROLLBACK');
             return res.status(404).json({ message: 'Кабинет не найден' });
         }
         
-        await db.query('DELETE FROM rooms WHERE id = $1', [id]);
+        await client.query('DELETE FROM room_lesson_priorities WHERE room_id = $1', [id]);
+        await client.query('DELETE FROM rooms WHERE id = $1', [id]);
+        
+        await client.query('COMMIT');
         
         res.json({ message: 'Кабинет удален' });
     } catch (err) {
+        await client.query('ROLLBACK');
         console.error('DELETE /rooms error:', err);
         res.status(500).json({ message: 'Ошибка удаления кабинета' });
+    } finally {
+        client.release();
     }
 });
 
@@ -577,18 +600,18 @@ router.post('/lessons', async (req, res) => {
         }
         
         const result = await db.query(
-            `INSERT INTO lessons (name, description) VALUES ($1, $2) RETURNING id`,
+            `INSERT INTO lessons (name, description) VALUES ($1, $2) RETURNING id, name, description, created_at`,
             [name, description || null]
         );
         
-        res.status(201).json({ message: 'Урок добавлен', id: result.rows[0].id });
+        res.status(201).json(result.rows[0]);
     } catch (err) {
         console.error('POST /lessons error:', err);
         res.status(500).json({ message: 'Ошибка добавления урока' });
     }
 });
 
-// Обновить урок
+// Обновить урок (ИСПРАВЛЕНО - убран updated_at)
 router.put('/lessons/:id', async (req, res) => {
     const { id } = req.params;
     const { name, description } = req.body;
@@ -600,8 +623,7 @@ router.put('/lessons/:id', async (req, res) => {
         }
         
         await db.query(
-            `UPDATE lessons SET name = $1, description = $2, updated_at = CURRENT_TIMESTAMP
-             WHERE id = $3`,
+            `UPDATE lessons SET name = $1, description = $2 WHERE id = $3`,
             [name, description || null, id]
         );
         
@@ -622,6 +644,7 @@ router.delete('/lessons/:id', async (req, res) => {
             return res.status(404).json({ message: 'Урок не найден' });
         }
         
+        await db.query('DELETE FROM room_lesson_priorities WHERE lesson_id = $1', [id]);
         await db.query('DELETE FROM lesson_assignments WHERE lesson_id = $1', [id]);
         await db.query('DELETE FROM teacher_lessons WHERE lesson_id = $1', [id]);
         await db.query('DELETE FROM lessons WHERE id = $1', [id]);
@@ -630,6 +653,70 @@ router.delete('/lessons/:id', async (req, res) => {
     } catch (err) {
         console.error('DELETE /lessons error:', err);
         res.status(500).json({ message: 'Ошибка удаления урока' });
+    }
+});
+
+// Массовое удаление уроков
+router.delete('/lessons/bulk', async (req, res) => {
+    const { ids } = req.body;
+    
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: 'Не указаны ID уроков для удаления' });
+    }
+    
+    const client = await db.getClient();
+    
+    try {
+        await client.query('BEGIN');
+        
+        for (const id of ids) {
+            await client.query('DELETE FROM room_lesson_priorities WHERE lesson_id = $1', [id]);
+            await client.query('DELETE FROM lesson_assignments WHERE lesson_id = $1', [id]);
+            await client.query('DELETE FROM teacher_lessons WHERE lesson_id = $1', [id]);
+            await client.query('DELETE FROM lessons WHERE id = $1', [id]);
+        }
+        
+        await client.query('COMMIT');
+        
+        res.json({ message: `Удалено ${ids.length} уроков`, count: ids.length });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('DELETE /lessons/bulk error:', err);
+        res.status(500).json({ message: err.message });
+    } finally {
+        client.release();
+    }
+});
+
+// Экспорт уроков в Excel
+router.get('/lessons/export', async (req, res) => {
+    try {
+        const result = await db.query('SELECT id, name, description, created_at FROM lessons ORDER BY name');
+        
+        const wsData = [
+            ['ID', 'Название урока', 'Описание', 'Дата создания'],
+            ...result.rows.map(lesson => [
+                lesson.id,
+                lesson.name,
+                lesson.description || '',
+                lesson.created_at ? new Date(lesson.created_at).toLocaleString('ru-RU') : ''
+            ])
+        ];
+        
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        ws['!cols'] = [{wch:8}, {wch:30}, {wch:40}, {wch:20}];
+        
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Уроки');
+        
+        const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+        
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename=lessons_export.xlsx');
+        res.send(buffer);
+    } catch (err) {
+        console.error('GET /lessons/export error:', err);
+        res.status(500).json({ message: err.message });
     }
 });
 
@@ -702,7 +789,7 @@ router.get('/lesson-assignments', async (req, res) => {
             FROM lesson_assignments la
             JOIN lessons l ON la.lesson_id = l.id
             JOIN teachers t ON la.teacher_id = t.id
-            JOIN rooms r ON la.room_id = r.id
+            LEFT JOIN rooms r ON la.room_id = r.id
             ORDER BY la.created_at DESC
         `);
         res.json(result.rows || []);
@@ -716,15 +803,15 @@ router.get('/lesson-assignments', async (req, res) => {
 router.post('/lesson-assignments', async (req, res) => {
     const { lesson_id, teacher_id, room_id } = req.body;
     
-    if (!lesson_id || !teacher_id || !room_id) {
-        return res.status(400).json({ message: 'Урок, учитель и кабинет обязательны' });
+    if (!lesson_id || !teacher_id) {
+        return res.status(400).json({ message: 'Урок и учитель обязательны' });
     }
     
     try {
         const existing = await db.query(
             `SELECT id FROM lesson_assignments 
-             WHERE lesson_id = $1 AND teacher_id = $2 AND room_id = $3`,
-            [lesson_id, teacher_id, room_id]
+             WHERE lesson_id = $1 AND teacher_id = $2 AND (room_id = $3 OR ($3 IS NULL AND room_id IS NULL))`,
+            [lesson_id, teacher_id, room_id || null]
         );
         
         if (existing.rows.length > 0) {
@@ -734,7 +821,7 @@ router.post('/lesson-assignments', async (req, res) => {
         await db.query(
             `INSERT INTO lesson_assignments (lesson_id, teacher_id, room_id) 
              VALUES ($1, $2, $3)`,
-            [lesson_id, teacher_id, room_id]
+            [lesson_id, teacher_id, room_id || null]
         );
         
         res.status(201).json({ message: 'Урок успешно назначен' });
@@ -754,6 +841,131 @@ router.delete('/lesson-assignments/:id', async (req, res) => {
     } catch (err) {
         console.error('DELETE /lesson-assignments error:', err);
         res.status(500).json({ message: 'Ошибка удаления назначения' });
+    }
+});
+
+// ============= МАССОВЫЕ ОПЕРАЦИИ =============
+
+// Получить статистику по урокам
+router.get('/lessons/stats', async (req, res) => {
+    try {
+        const totalResult = await db.query('SELECT COUNT(*) as total FROM lessons');
+        const withDescResult = await db.query('SELECT COUNT(*) as count FROM lessons WHERE description IS NOT NULL AND description != \'\'');
+        
+        res.json({
+            total: parseInt(totalResult.rows[0]?.total || 0),
+            withDescription: parseInt(withDescResult.rows[0]?.count || 0)
+        });
+    } catch (err) {
+        console.error('GET /lessons/stats error:', err);
+        res.json({ total: 0, withDescription: 0 });
+    }
+});
+
+// ============= НАЧАТЬ НОВЫЙ УЧЕБНЫЙ ГОД =============
+
+router.post('/start-new-school-year', async (req, res) => {
+    const client = await db.getClient();
+    
+    try {
+        await client.query('BEGIN');
+        
+        const classesResult = await client.query(`
+            SELECT id, number, letter, teacher_id, shift 
+            FROM classes 
+            ORDER BY number, letter
+        `);
+        
+        const existingClasses = classesResult.rows;
+        
+        const classesToUpgrade = [];
+        const classesToRelease = [];
+        
+        existingClasses.forEach(cls => {
+            if (cls.number === 11) {
+                classesToRelease.push(cls);
+            } else if (cls.number >= 1 && cls.number <= 10) {
+                classesToUpgrade.push(cls);
+            }
+        });
+        
+        for (const cls of classesToRelease) {
+            await client.query(
+                'UPDATE classes SET teacher_id = NULL WHERE id = $1',
+                [cls.id]
+            );
+        }
+        
+        const sortedClasses = [...classesToUpgrade].sort((a, b) => b.number - a.number);
+        
+        for (const cls of sortedClasses) {
+            const newNumber = cls.number + 1;
+            await client.query(
+                'UPDATE classes SET number = $1 WHERE id = $2',
+                [newNumber, cls.id]
+            );
+        }
+        
+        const firstClassesResult = await client.query(`
+            SELECT DISTINCT letter 
+            FROM classes 
+            WHERE number = 1
+        `);
+        
+        const existingLetters = firstClassesResult.rows.map(r => r.letter);
+        const defaultLetters = ['А', 'Б', 'В', 'Г'];
+        
+        for (const letter of defaultLetters) {
+            const exists = existingLetters.includes(letter);
+            
+            if (!exists) {
+                const login = `class_1${letter.toLowerCase()}_${Date.now()}`;
+                const password = `class${letter}123`;
+                const passwordHash = await bcrypt.hash(password, 10);
+                
+                const userResult = await client.query(
+                    'INSERT INTO users (login, password_hash, role) VALUES ($1, $2, $3) RETURNING id',
+                    [login, passwordHash, 'class']
+                );
+                
+                const userId = userResult.rows[0].id;
+                
+                await client.query(`
+                    INSERT INTO classes (number, letter, shift, teacher_id, user_id)
+                    VALUES ($1, $2, $3, $4, $5)
+                `, [1, letter, 1, null, userId]);
+            }
+        }
+        
+        await client.query(`
+            INSERT INTO activity_log (user_id, action, details, created_at)
+            VALUES ($1, $2, $3, NOW())
+        `, [req.user.id, 'start_new_school_year', JSON.stringify({
+            upgradedClasses: classesToUpgrade.length,
+            releasedClasses: classesToRelease.length,
+            timestamp: new Date().toISOString()
+        })]);
+        
+        await client.query('COMMIT');
+        
+        res.json({ 
+            success: true, 
+            message: 'Новый учебный год начат',
+            details: {
+                upgraded: classesToUpgrade.length,
+                released: classesToRelease.length,
+                newFirstClasses: defaultLetters.filter(l => !existingLetters.includes(l)).length
+            }
+        });
+        
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('POST /start-new-school-year error:', err);
+        res.status(500).json({ 
+            message: 'Ошибка при начале нового учебного года: ' + err.message 
+        });
+    } finally {
+        client.release();
     }
 });
 

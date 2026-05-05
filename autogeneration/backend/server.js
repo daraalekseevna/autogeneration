@@ -8,6 +8,7 @@ const teacherRoutes = require('./routes/teacher');
 const extracurricularRoutes = require('./routes/extracurricular');
 const scheduleRoutes = require('./routes/schedule');
 const activityRoutes = require('./routes/activity');
+const newSchoolYearRoutes = require('./routes/newSchoolYear');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -18,6 +19,7 @@ app.use(express.json());
 // Регистрируем маршруты
 app.use('/api/auth', authRoutes);
 app.use('/api/superadmin', superadminRoutes);
+app.use('/api/superadmin', newSchoolYearRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/extracurricular', extracurricularRoutes);
 app.use('/api/schedule', scheduleRoutes);

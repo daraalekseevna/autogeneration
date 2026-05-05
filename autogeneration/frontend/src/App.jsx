@@ -14,13 +14,19 @@ import TeacherClassManagement from './pages/TeacherClassManagement';
 import ClassSchedule from './pages/ClassSchedule';
 import AdminScheduleEditor from './pages/AdminScheduleEditor';
 import AdminFullScheduleEditor from './pages/AdminFullScheduleEditor';
-
 import './App.css';
 
 function App() {
     return (
         <Router>
             <div className="app">
+                {/* АНИМИРОВАННЫЙ ФОН - ТОЛЬКО ЗДЕСЬ, ОДИН РАЗ */}
+                <div className="animated-bg">
+                    {[...Array(10)].map((_, i) => (
+                        <div key={i} className="glass-circle"></div>
+                    ))}
+                </div>
+                
                 <main className="main-wrapper">
                     <Routes>
                         <Route path="/login" element={<Login />} />

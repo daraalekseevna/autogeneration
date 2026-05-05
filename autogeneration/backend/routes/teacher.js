@@ -58,7 +58,7 @@ router.get('/my-class', authenticateToken, async (req, res) => {
     }
 });
 
-// Получить расписание учителя (уроки) - С ПОЛУЧЕНИЕМ ИМЕНИ УЧИТЕЛЯ
+// Получить расписание учителя (уроки) - ИСПРАВЛЕНО (используем lessons вместо subjects)
 router.get('/my-schedule', authenticateToken, async (req, res) => {
     try {
         console.log('=== /my-schedule called ===');
@@ -76,14 +76,14 @@ router.get('/my-schedule', authenticateToken, async (req, res) => {
         const teacherId = teacherResult.rows[0].id;
         console.log('Teacher ID:', teacherId);
         
-        // JOIN с teachers чтобы получить имя учителя
+        // ИСПРАВЛЕНО: используем lessons вместо subjects
         const scheduleResult = await db.query(
             `SELECT ls.day_of_week, ls.lesson_number, ls.room,
-                    s.name as subject_name,
+                    l.name as subject_name,
                     c.number as class_number, c.letter as class_letter,
                     t.last_name, t.first_name, t.middle_name
              FROM lesson_schedule ls
-             JOIN subjects s ON ls.subject_id = s.id
+             JOIN lessons l ON ls.subject_id = l.id
              JOIN classes c ON ls.class_id = c.id
              JOIN teachers t ON ls.teacher_id = t.id
              WHERE ls.teacher_id = $1
@@ -92,6 +92,11 @@ router.get('/my-schedule', authenticateToken, async (req, res) => {
         );
         
         console.log('Schedule results count:', scheduleResult.rows.length);
+        
+        // Выводим для отладки
+        scheduleResult.rows.forEach(row => {
+            console.log(`Урок: день=${row.day_of_week}, урок=${row.lesson_number}, предмет=${row.subject_name}, класс=${row.class_number}${row.class_letter}`);
+        });
         
         const daysMap = {
             1: 'Понедельник',
@@ -128,6 +133,7 @@ router.get('/my-schedule', authenticateToken, async (req, res) => {
             schedule[day].sort((a, b) => a.number - b.number);
         });
         
+        console.log('Schedule prepared for response');
         res.json({ schedule });
         
     } catch (err) {
@@ -136,7 +142,7 @@ router.get('/my-schedule', authenticateToken, async (req, res) => {
     }
 });
 
-// Получить дополнительные занятия учителя - С JOIN для актуального имени
+// Получить дополнительные занятия учителя
 router.get('/my-extracurricular', authenticateToken, async (req, res) => {
     try {
         console.log('=== /my-extracurricular called ===');
@@ -154,7 +160,6 @@ router.get('/my-extracurricular', authenticateToken, async (req, res) => {
         const teacherId = teacherResult.rows[0].id;
         console.log('Teacher ID:', teacherId);
         
-        // JOIN с teachers для получения актуального имени
         const activitiesResult = await db.query(
             `SELECT ea.id, ea.title as name, ea.days, ea.start_time, ea.end_time, ea.room, ea.description, ea.color,
                     t.last_name, t.first_name, t.middle_name
@@ -202,7 +207,7 @@ router.get('/my-extracurricular', authenticateToken, async (req, res) => {
     }
 });
 
-// Получить расписание класса (для классного руководства)
+// Получить расписание класса (для классного руководства) - ИСПРАВЛЕНО
 router.get('/my-class/schedule', authenticateToken, async (req, res) => {
     try {
         console.log('=== /my-class/schedule called ===');
@@ -230,12 +235,13 @@ router.get('/my-class/schedule', authenticateToken, async (req, res) => {
         const classData = classResult.rows[0];
         console.log('Class found:', classData.number, classData.letter);
         
+        // ИСПРАВЛЕНО: используем lessons вместо subjects
         const scheduleResult = await db.query(
             `SELECT ls.day_of_week, ls.lesson_number, ls.room, 
-                    s.name as subject_name,
+                    l.name as subject_name,
                     t.last_name, t.first_name, t.middle_name
              FROM lesson_schedule ls
-             JOIN subjects s ON ls.subject_id = s.id
+             JOIN lessons l ON ls.subject_id = l.id
              JOIN teachers t ON ls.teacher_id = t.id
              WHERE ls.class_id = $1
              ORDER BY ls.day_of_week, ls.lesson_number`,
@@ -336,4 +342,31 @@ router.get('/my-class/students', authenticateToken, async (req, res) => {
     }
 });
 
-module.exports = router;
+// НОВЫЙ ЭНДПОИНТ: получить ФИО учителя
+router.get('/my-info', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query(
+            `SELECT t.id, t.last_name, t.first_name, t.middle_name,
+                    CONCAT(t.last_name, ' ', t.first_name, ' ', COALESCE(t.middle_name, '')) as full_name
+             FROM teachers t
+             WHERE t.user_id = $1`,
+            [req.user.id]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Учитель не найден' });
+        }
+        
+        res.json({
+            id: result.rows[0].id,
+            lastName: result.rows[0].last_name,
+            firstName: result.rows[0].first_name,
+            middleName: result.rows[0].middle_name,
+            fullName: result.rows[0].full_name
+        });
+    } catch (err) {
+        console.error('Error getting teacher info:', err);
+        res.status(500).json({ message: 'Ошибка сервера' });
+    }
+});
+

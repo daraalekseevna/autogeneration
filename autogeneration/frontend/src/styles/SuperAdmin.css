@@ -1,1995 +1,1168 @@
-/* SuperAdmin.css - полностью исправленная версия с единой цветовой гаммой #21435A */
+/* SuperAdmin.css - ПОЛНАЯ ВЕРСИЯ, ИЗОЛИРОВАННАЯ */
+/* Все стили обернуты в .superadmin-container */
 
-/* Переменные темы в global-theme.css */
+/* ========== ИЗОЛИРОВАННЫЙ КОНТЕЙНЕР ========== */
 .superadmin-container {
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 1.5rem;
+    padding: 0 2rem;
+    animation: superadminFadeIn 0.4s ease;
 }
 
-/* Кнопка переключения темы */
-.theme-toggle-superadmin {
-    position: fixed;
-    top: 100px;
-    right: 20px;
-    z-index: 100;
+@keyframes superadminFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.theme-btn-superadmin {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 30px;
-    color: var(--text-primary);
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-}
-
-.theme-btn-superadmin:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-    border-color: var(--primary);
-}
-
-/* Заголовок */
-.superadmin-header {
+/* ========== ЗАГОЛОВОК ========== */
+.superadmin-container .superadmin-header {
     margin-bottom: 2rem;
+    text-align: center;
 }
 
-.superadmin-title {
+.superadmin-container .superadmin-title {
     color: var(--text-primary);
     margin-bottom: 0.5rem;
     font-size: 2rem;
     font-weight: 700;
+    letter-spacing: -0.5px;
 }
 
-.superadmin-subtitle {
+.superadmin-container .superadmin-subtitle {
     color: var(--text-muted);
-    font-size: 1rem;
+    font-size: 0.95rem;
 }
 
-/* Статистика */
-.stats-grid {
+/* ========== СТАТИСТИКА ========== */
+.superadmin-container .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(6, 1fr);
     gap: 1rem;
     margin-bottom: 2rem;
 }
 
-.stat-card {
-    background: var(--bg-card);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 1.2rem;
-    text-align: center;
-    border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-}
-
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(33, 67, 90, 0.2);
-    border-color: #21435A;
-}
-
-.stat-number {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #21435A;
-    line-height: 1;
-}
-
-body.dark-theme .stat-number {
-    color: #60a5fa;
-}
-
-.stat-label {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin-top: 0.5rem;
-}
-
-/* Табы */
-.tabs-container {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 1rem;
-}
-
-.tab-button {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    background: var(--bg-card);
-    color: var(--text-primary);
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 0.95rem;
-    transition: all 0.2s ease;
-    border: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.tab-button:hover {
-    background: rgba(33, 67, 90, 0.1);
-    transform: translateY(-2px);
-    border-color: #21435A;
-}
-
-.tab-button.active {
-    background: #21435A;
-    color: white;
-    border-color: #21435A;
-}
-
-body.dark-theme .tab-button.active {
-    background: #3b6e9e;
-    border-color: #3b6e9e;
-}
-
-/* Контент */
-.content-grid {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 2rem;
-}
-
-@media (max-width: 1024px) {
-    .content-grid {
-        grid-template-columns: 1fr;
+@media (max-width: 1200px) {
+    .superadmin-container .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
-/* Формы */
-.form-container,
-.table-container {
-    background: var(--bg-card);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    padding: 1.5rem;
-    border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-    margin-bottom: 1.5rem;
-}
-
-.table-container:hover {
-    box-shadow: var(--shadow);
-    border-color: #21435A;
-}
-
-.form-title,
-.table-title {
-    color: var(--text-primary);
-    margin-bottom: 1.5rem;
-    font-size: 1.2rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--text-primary);
-    font-weight: 500;
-    font-size: 0.85rem;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-@media (max-width: 576px) {
-    .form-row {
-        grid-template-columns: 1fr;
-        gap: 0.5rem;
+@media (max-width: 768px) {
+    .superadmin-container .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
-.form-input,
-.form-select {
-    width: 100%;
-    padding: 0.7rem 0.9rem;
-    border: 1px solid var(--border-solid);
-    border-radius: 10px;
-    font-size: 0.9rem;
-    background: var(--bg-input);
-    color: var(--text-primary);
-    font-family: inherit;
-    transition: all 0.3s ease;
-}
-
-body.dark-theme .form-input,
-body.dark-theme .form-select {
-    border-color: var(--border-color);
-    background: var(--bg-input);
-}
-
-.form-input:focus,
-.form-select:focus {
-    outline: none;
-    border-color: #21435A;
-    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.2);
-}
-
-body.dark-theme .form-input:focus,
-body.dark-theme .form-select:focus {
-    border-color: #60a5fa;
-    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
-}
-
-/* Кнопка отправки */
-.submit-button {
-    width: 100%;
-    padding: 0.75rem;
-    border: none;
-    background: #21435A;
-    color: white;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 0.9rem;
-    margin-top: 0.5rem;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.submit-button:hover {
-    background: #2c5a7a;
-    transform: translateY(-2px);
-}
-
-body.dark-theme .submit-button {
-    background: #3b6e9e;
-}
-
-body.dark-theme .submit-button:hover {
-    background: #21435A;
-}
-
-/* Таблицы */
-.table-responsive {
-    overflow-x: auto;
-}
-
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.data-table th {
-    padding: 1rem 0.75rem;
-    text-align: left;
-    color: var(--text-primary);
-    font-weight: 600;
-    border-bottom: 2px solid rgba(33, 67, 90, 0.3);
-    font-size: 0.85rem;
-}
-
-.data-table td {
-    padding: 1rem 0.75rem;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-}
-
-.data-table tr:hover {
-    background: rgba(33, 67, 90, 0.05);
-}
-
-/* Ячейка с кнопками действий */
-.action-cell {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-/* Кнопки действий */
-.action-button {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 500;
-    transition: all 0.2s;
-}
-
-.action-button:hover {
-    transform: translateY(-2px);
-    opacity: 0.9;
-}
-
-/* Стили для разных типов кнопок */
-.edit-button {
-    background: #f59e0b;
-    color: white;
-}
-
-.edit-button:hover {
-    background: #d97706;
-}
-
-.delete-button {
-    background: #dc2626;
-    color: white;
-}
-
-.delete-button:hover {
-    background: #b91c1c;
-}
-
-.view-button {
-    background: #3b82f6;
-    color: white;
-}
-
-.view-button:hover {
-    background: #2563eb;
-}
-
-.shift-button {
-    background: #21435A;
-    color: white;
-}
-
-.shift-button:hover {
-    background: #2c5a7a;
-}
-
-.assign-button {
-    background: #8b5cf6;
-    color: white;
-}
-
-.assign-button:hover {
-    background: #7c3aed;
-}
-
-/* Элементы управления */
-.shift-badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: white;
-}
-
-.shift-1 {
-    background: #10b981;
-}
-
-.shift-2 {
-    background: #3b82f6;
-}
-
-/* Статистика смен */
-.shift-stats {
-    margin-top: 1.5rem;
-    padding: 1rem;
-    background: rgba(33, 67, 90, 0.08);
-    border-radius: 12px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-.shift-stat {
-    text-align: center;
-}
-
-.shift-stat-number {
-    font-size: 1.5rem;
-    font-weight: bold;
-}
-
-.shift-stat-1 {
-    color: #10b981;
-}
-
-.shift-stat-2 {
-    color: #3b82f6;
-}
-
-/* Предупреждение */
-.warning-box {
-    margin-top: 1rem;
-    padding: 0.75rem 1rem;
-    background: rgba(245, 158, 11, 0.1);
-    border-left: 4px solid #f59e0b;
-    border-radius: 8px;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-}
-
-.warning-box strong {
-    color: #f59e0b;
-}
-
-/* Уведомление */
-.notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #21435A;
-    color: white;
-    padding: 15px 25px;
-    border-radius: 10px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-    font-size: 0.85rem;
-}
-
-body.dark-theme .notification {
-    background: #3b6e9e;
-}
-
-/* Загрузка */
-.loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    gap: 1rem;
-    background: var(--bg-primary);
-}
-
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--border-color);
-    border-top-color: #21435A;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-/* ========== СТИЛИ ДЛЯ ВЫБОРА ПРЕДМЕТОВ ========== */
-
-/* Кнопка выбора предметов */
-.subject-selector-button {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 12px;
-    background: #21435A;
-    border: 1px solid rgba(33, 67, 90, 0.5);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.subject-selector-button:hover {
-    background: #2c5a7a;
-    transform: translateY(-1px);
-}
-
-.subject-selector-content {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.subject-selector-icon {
-    color: white;
-}
-
-.subject-selector-text {
-    color: white;
-    font-weight: 500;
-}
-
-.subject-selector-arrow {
-    color: white;
-    font-size: 12px;
-}
-
-body.dark-theme .subject-selector-button {
-    background: #3b6e9e;
-}
-
-body.dark-theme .subject-selector-button:hover {
-    background: #4a8abf;
-}
-
-/* Предпросмотр выбранных предметов */
-.subject-preview {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 8px;
-}
-
-.subject-preview-tag {
-    display: inline-block;
-    padding: 4px 10px;
-    background: rgba(33, 67, 90, 0.15);
-    border: 1px solid #21435A;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    color: #21435A;
-    font-weight: 500;
-}
-
-body.dark-theme .subject-preview-tag {
-    background: rgba(59, 110, 158, 0.2);
-    color: #60a5fa;
-    border-color: #60a5fa;
-}
-
-/* Теги предметов в таблице учителей */
-.subjects-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
-}
-
-.subject-tag {
-    display: inline-block;
-    padding: 4px 10px;
-    background: #21435A;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: white;
-    margin: 2px;
-    transition: all 0.2s;
-}
-
-.subject-tag:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(33, 67, 90, 0.3);
-}
-
-.no-subjects {
-    color: var(--text-secondary);
-    font-size: 12px;
-}
-
-.edit-subjects-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    background: transparent;
-    border: 1px solid #21435A;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 500;
-    cursor: pointer;
-    color: #21435A;
-    transition: all 0.2s;
-}
-
-.edit-subjects-btn:hover {
-    background: #21435A;
-    color: white;
-}
-
-body.dark-theme .edit-subjects-btn {
-    border-color: #60a5fa;
-    color: #60a5fa;
-}
-
-body.dark-theme .edit-subjects-btn:hover {
-    background: #60a5fa;
-    color: #1f2937;
-}
-
-/* ========== МОДАЛЬНОЕ ОКНО ДЛЯ ПРЕДМЕТОВ ========== */
-.subject-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.subject-modal-content {
-    background: var(--bg-card-solid);
-    border-radius: 16px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 80vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: var(--shadow-lg);
-}
-
-.subject-modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.subject-modal-header h3 {
-    margin: 0;
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #21435A;
-}
-
-body.dark-theme .subject-modal-header h3 {
-    color: #60a5fa;
-}
-
-.subject-modal-close {
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    color: var(--text-muted);
-    transition: color 0.2s;
-}
-
-.subject-modal-close:hover {
-    color: #21435A;
-}
-
-.subject-modal-search {
-    padding: 16px 20px;
-    position: relative;
-}
-
-.subject-modal-search .search-icon {
-    position: absolute;
-    left: 32px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-}
-
-.subject-modal-search input {
-    width: 100%;
-    padding: 10px 12px 10px 36px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 14px;
-    background: var(--bg-input);
-    color: var(--text-primary);
-}
-
-.subject-modal-search input:focus {
-    outline: none;
-    border-color: #21435A;
-    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.2);
-}
-
-.subject-modal-select-all {
-    padding: 8px 20px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.select-all-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    color: var(--text-primary);
-}
-
-.select-all-label input {
-    accent-color: #21435A;
-}
-
-.subject-modal-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 8px 0;
-    max-height: 300px;
-}
-
-.subject-modal-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-.subject-modal-list::-webkit-scrollbar-track {
-    background: var(--border-light);
-    border-radius: 3px;
-}
-
-.subject-modal-list::-webkit-scrollbar-thumb {
-    background: #21435A;
-    border-radius: 3px;
-}
-
-.subject-modal-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.subject-modal-item:hover {
-    background: rgba(33, 67, 90, 0.08);
-}
-
-.subject-modal-item input {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: #21435A;
-}
-
-.subject-modal-item-name {
-    font-size: 14px;
-    color: var(--text-primary);
-}
-
-.subject-modal-empty {
-    text-align: center;
-    padding: 40px;
-    color: var(--text-muted);
-}
-
-.subject-modal-footer {
-    padding: 16px 20px;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.subject-modal-selected-count {
-    font-size: 13px;
-    color: #21435A;
-    font-weight: 500;
-}
-
-body.dark-theme .subject-modal-selected-count {
-    color: #60a5fa;
-}
-
-.subject-modal-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.subject-modal-cancel {
-    padding: 8px 16px;
-    background: transparent;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: var(--text-secondary);
-}
-
-.subject-modal-cancel:hover {
-    background: rgba(33, 67, 90, 0.08);
-    border-color: #21435A;
-}
-
-.subject-modal-save {
-    padding: 8px 20px;
-    background: #21435A;
-    border: none;
-    border-radius: 8px;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
-}
-
-.subject-modal-save:hover {
-    background: #2c5a7a;
-    transform: translateY(-1px);
-}
-
-/* ========== СТИЛИ ДЛЯ КАБИНЕТОВ ========== */
-.rooms-container-table .table-container {
+.superadmin-container .stat-card {
     background: var(--bg-card);
-    border-radius: 16px;
-    padding: 1.5rem;
-    border: 1px solid var(--border-color);
-}
-
-.rooms-header {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 1.5rem;
-}
-
-.add-room-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    background: #21435A;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-}
-
-.add-room-btn:hover {
-    background: #2c5a7a;
-    transform: translateY(-2px);
-}
-
-/* ========== СТИЛИ ДЛЯ УРОКОВ ========== */
-.lessons-actions {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 25px;
-    flex-wrap: wrap;
-}
-
-.lessons-actions .add-room-btn {
-    background: #21435A;
-}
-
-.lessons-actions .add-room-btn:hover {
-    background: #2c5a7a;
-}
-
-/* Приоритетные предметы в кабинетах */
-.priority-subjects-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.priority-subject-tag {
-    display: inline-block;
-    padding: 2px 8px;
-    background: rgba(33, 67, 90, 0.15);
-    border-radius: 12px;
-    font-size: 0.7rem;
-    color: var(--text-primary);
-}
-
-/* ========== МОДАЛЬНОЕ ОКНО ДЛЯ КАБИНЕТА ========== */
-.room-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.room-modal-content {
-    background: var(--bg-card-solid);
+    backdrop-filter: blur(10px);
     border-radius: 20px;
-    width: 90%;
-    max-width: 600px;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: var(--shadow-lg);
-    animation: modalSlideIn 0.3s ease;
-}
-
-.room-modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-    background: #21435A;
-    border-radius: 20px 20px 0 0;
-}
-
-.room-modal-header h3 {
-    margin: 0;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: white;
-}
-
-.room-modal-close {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: white;
-    transition: all 0.2s;
-}
-
-.room-modal-close:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: rotate(90deg);
-}
-
-.room-modal-body {
-    padding: 1.5rem;
-    overflow-y: auto;
-    flex: 1;
-}
-
-.room-modal-footer {
-    padding: 1rem 1.5rem;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-}
-
-.room-modal-footer .btn-cancel {
-    padding: 8px 20px;
-    background: transparent;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: var(--text-secondary);
-}
-
-.room-modal-footer .btn-cancel:hover {
-    background: rgba(33, 67, 90, 0.08);
-    border-color: #21435A;
-}
-
-.room-modal-footer .btn-save {
-    padding: 8px 24px;
-    background: #21435A;
-    border: none;
-    border-radius: 8px;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
-}
-
-.room-modal-footer .btn-save:hover {
-    background: #2c5a7a;
-    transform: translateY(-2px);
-}
-
-/* Поиск приоритетных предметов */
-.subject-priorities-search {
-    position: relative;
-    margin-bottom: 1rem;
-}
-
-.subject-priorities-search svg {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    font-size: 0.8rem;
-}
-
-.subject-priorities-search input {
-    width: 100%;
-    padding: 8px 12px 8px 32px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--bg-input);
-    color: var(--text-primary);
-    font-size: 0.8rem;
-}
-
-.subject-priorities-search input:focus {
-    outline: none;
-    border-color: #21435A;
-}
-
-/* Список приоритетных предметов */
-.subject-priorities-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 0.5rem;
-    max-height: 200px;
-    overflow-y: auto;
-    padding: 0.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--bg-secondary);
-}
-
-.subject-priority-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: 0.75rem;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: all 0.2s;
-    color: var(--text-primary);
-}
-
-.subject-priority-item:hover {
-    background: rgba(33, 67, 90, 0.08);
-}
-
-.subject-priority-item input {
-    width: 14px;
-    height: 14px;
-    cursor: pointer;
-    accent-color: #21435A;
-}
-
-.subject-priority-item span {
-    flex: 1;
-}
-
-/* ========== СТИЛИ ДЛЯ ЗАГРУЗКИ УРОКОВ ИЗ EXCEL ========== */
-.upload-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    animation: fadeIn 0.2s ease;
-}
-
-.upload-modal-content {
-    background: var(--bg-card-solid, #ffffff);
-    border-radius: 16px;
-    width: 90%;
-    max-width: 750px;
-    max-height: 85vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.2);
-    animation: slideUp 0.3s ease;
-}
-
-body.dark-theme .upload-modal-content {
-    background: #1f2937;
-    border: 1px solid #374151;
-}
-
-.upload-modal-header {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 20px 25px;
-    border-bottom: 1px solid var(--border-color, #e5e7eb);
-    background: #21435A;
-    border-radius: 16px 16px 0 0;
-    color: white;
-    position: relative;
-}
-
-.upload-header-icon {
-    background: rgba(255, 255, 255, 0.15);
-    padding: 10px;
-    border-radius: 12px;
-    font-size: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.upload-modal-header h3 {
-    margin: 0;
-    font-size: 1.3rem;
-    font-weight: 600;
-    flex: 1;
-}
-
-.upload-modal-close {
-    background: rgba(255, 255, 255, 0.15);
-    border: none;
-    color: white;
-    cursor: pointer;
-    padding: 8px 12px;
-    border-radius: 8px;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.upload-modal-close:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: scale(1.05);
-}
-
-.upload-modal-body {
-    padding: 24px;
-}
-
-/* Инструкция */
-.upload-instructions-card {
-    background: rgba(33, 67, 90, 0.05);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 24px;
-    border: 1px solid rgba(33, 67, 90, 0.15);
-}
-
-body.dark-theme .upload-instructions-card {
-    background: rgba(51, 65, 85, 0.5);
-    border-color: #334155;
-}
-
-.instructions-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-    color: #21435A;
-    margin-bottom: 12px;
-    font-size: 0.95rem;
-}
-
-body.dark-theme .instructions-header {
-    color: #60a5fa;
-}
-
-.instructions-icon {
-    font-size: 18px;
-}
-
-.instructions-list {
-    margin: 0 0 20px 0;
-    padding-left: 20px;
-    color: var(--text-secondary, #374151);
-    line-height: 1.6;
-    font-size: 0.9rem;
-}
-
-body.dark-theme .instructions-list {
-    color: #9ca3af;
-}
-
-.instructions-list li {
-    margin-bottom: 6px;
-}
-
-.download-template-btn {
-    background: #21435A;
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
-}
-
-.download-template-btn:hover {
-    background: #2c5a7a;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(33, 67, 90, 0.3);
-}
-
-/* Dropzone */
-.upload-dropzone {
-    background: var(--bg-input, #fafbfc);
-    border: 2px dashed var(--border-color, #cbd5e1);
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 24px;
-    transition: all 0.2s;
-    cursor: pointer;
-}
-
-body.dark-theme .upload-dropzone {
-    background: #2d3748;
-    border-color: #4b5563;
-}
-
-.upload-dropzone.drag-active {
-    border-color: #21435A;
-    background: rgba(33, 67, 90, 0.05);
-    transform: scale(1.01);
-}
-
-.upload-dropzone.file-selected {
-    border-color: #10b981;
-    background: rgba(16, 185, 129, 0.05);
-    border-style: solid;
-}
-
-.upload-dropzone-label {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    cursor: pointer;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.dropzone-icon {
-    font-size: 48px;
-    color: #21435A;
-    opacity: 0.6;
-}
-
-body.dark-theme .dropzone-icon {
-    color: #60a5fa;
-}
-
-.file-selected .dropzone-icon {
-    color: #10b981;
-    opacity: 1;
-}
-
-.dropzone-text {
+    padding: 1.25rem;
     text-align: center;
-}
-
-.dropzone-title {
-    display: block;
-    font-weight: 500;
-    color: var(--text-primary, #1f2937);
-    margin-bottom: 4px;
-}
-
-.dropzone-subtitle {
-    display: block;
-    font-size: 0.8rem;
-    color: var(--text-secondary, #6b7280);
-}
-
-.dropzone-file-name {
-    display: block;
-    font-weight: 500;
-    color: #059669;
-    margin-bottom: 4px;
-}
-
-.dropzone-file-size {
-    display: block;
-    font-size: 0.8rem;
-    color: var(--text-muted, #6b7280);
-}
-
-.remove-file-btn {
-    background: rgba(220, 38, 38, 0.1);
-    border: none;
-    color: #dc2626;
-    padding: 8px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.remove-file-btn:hover {
-    background: rgba(220, 38, 38, 0.2);
-    transform: scale(1.05);
-}
-
-/* Прогресс */
-.upload-progress-container {
-    margin-bottom: 20px;
-}
-
-.progress-bar {
-    background: var(--border-color, #e5e7eb);
-    border-radius: 20px;
-    height: 6px;
-    overflow: hidden;
-}
-
-body.dark-theme .progress-bar {
-    background: #374151;
-}
-
-.progress-fill {
-    background: #21435A;
-    height: 100%;
-    border-radius: 20px;
-    transition: width 0.3s ease;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
 }
 
-body.dark-theme .progress-fill {
-    background: #60a5fa;
-}
-
-.progress-fill::after {
+.superadmin-container .stat-card::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    animation: shimmer 1.5s infinite;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
 }
 
-.progress-text {
+.superadmin-container .stat-card:hover::before {
+    transform: scaleX(1);
+}
+
+.superadmin-container .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.superadmin-container .stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1.2;
+}
+
+.superadmin-container .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+/* ========== ТАБЫ ========== */
+.superadmin-container .tabs-container {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+.superadmin-container .tab-button {
+    padding: 0.7rem 1.4rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    position: relative;
+}
+
+.superadmin-container .tab-button::after {
+    content: '';
+    position: absolute;
+    bottom: -0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: var(--primary);
+    transition: width 0.25s ease;
+}
+
+.superadmin-container .tab-button:hover {
+    color: var(--primary);
+    background: rgba(33, 67, 90, 0.08);
+}
+
+.superadmin-container .tab-button.active {
+    color: var(--primary);
+    background: rgba(33, 67, 90, 0.1);
+}
+
+.superadmin-container .tab-button.active::after {
+    width: 80%;
+}
+
+/* ========== КОНТЕНТ ========== */
+.superadmin-container .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+    .superadmin-container .content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========== КАРТОЧКИ ФОРМ И ТАБЛИЦ ========== */
+.superadmin-container .form-container,
+.superadmin-container .table-container {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.superadmin-container .form-container:hover,
+.superadmin-container .table-container:hover {
+    box-shadow: var(--shadow-md);
+    border-color: rgba(33, 67, 90, 0.2);
+}
+
+.superadmin-container .form-title,
+.superadmin-container .table-title {
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.superadmin-container .form-title svg,
+.superadmin-container .table-title svg {
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+
+/* ========== ФОРМЫ ========== */
+.superadmin-container .form-group {
+    margin-bottom: 1rem;
+}
+
+.superadmin-container .form-group label {
     display: block;
-    text-align: center;
-    margin-top: 6px;
+    margin-bottom: 0.4rem;
     font-size: 0.8rem;
-    color: #21435A;
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.3px;
 }
 
-body.dark-theme .progress-text {
-    color: #60a5fa;
+.superadmin-container .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
 }
 
-/* Статус */
-.upload-status {
-    padding: 12px 16px;
+@media (max-width: 576px) {
+    .superadmin-container .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.superadmin-container .form-input,
+.superadmin-container .form-group input,
+.superadmin-container .form-group select,
+.superadmin-container .form-group textarea {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border: 1.5px solid var(--border-solid);
+    border-radius: 12px;
+    font-size: 0.85rem;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+
+.superadmin-container .form-group input:focus,
+.superadmin-container .form-group select:focus,
+.superadmin-container .form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.15);
+}
+
+.superadmin-container .form-group input:disabled,
+.superadmin-container .form-group select:disabled,
+.superadmin-container .form-group textarea:disabled {
+    background: var(--bg-secondary);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* ========== КНОПКИ ========== */
+.superadmin-container .submit-button {
+    width: 100%;
+    padding: 0.8rem;
+    border: none;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    border-radius: 14px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.superadmin-container .submit-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.superadmin-container .submit-button:hover::before {
+    left: 100%;
+}
+
+.superadmin-container .submit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(33, 67, 90, 0.3);
+}
+
+.superadmin-container .submit-button:active {
+    transform: translateY(0);
+}
+
+/* ========== ТАБЛИЦЫ ========== */
+.superadmin-container .table-responsive {
+    overflow-x: auto;
+    border-radius: 12px;
+}
+
+.superadmin-container .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 500px;
+}
+
+.superadmin-container .data-table th {
+    padding: 1rem 0.8rem;
+    text-align: left;
+    color: var(--text-primary);
+    font-weight: 700;
+    border-bottom: 2px solid var(--primary);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--bg-secondary);
+}
+
+.superadmin-container .data-table td {
+    padding: 0.9rem 0.8rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    vertical-align: middle;
+}
+
+.superadmin-container .data-table tr {
+    transition: all 0.2s ease;
+}
+
+.superadmin-container .data-table tr:hover {
+    background: rgba(33, 67, 90, 0.04);
+}
+
+/* ========== КНОПКИ ДЕЙСТВИЙ ========== */
+.superadmin-container .action-cell {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.superadmin-container .action-button {
+    padding: 0.45rem 0.9rem;
+    border: none;
     border-radius: 10px;
-    margin-bottom: 20px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.superadmin-container .action-button:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+}
+
+.superadmin-container .edit-button {
+    background: var(--warning);
+    color: white;
+}
+
+.superadmin-container .delete-button {
+    background: var(--danger);
+    color: white;
+}
+
+.superadmin-container .view-button {
+    background: var(--info);
+    color: white;
+}
+
+.superadmin-container .shift-button {
+    background: var(--primary);
+    color: white;
+}
+
+/* ========== БЭЙДЖИ ========== */
+.superadmin-container .primary-school-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--warning), #d97706);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 30px;
+    font-size: 9px;
+    font-weight: 700;
+    margin-left: 8px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.superadmin-container .subjects-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.superadmin-container .subject-tag {
+    display: inline-block;
+    padding: 5px 12px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border-radius: 30px;
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+    letter-spacing: 0.3px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.superadmin-container .edit-subjects-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: transparent;
+    border: 1.5px solid var(--primary);
+    border-radius: 30px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--primary);
+    transition: all 0.2s ease;
+}
+
+.superadmin-container .edit-subjects-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.superadmin-container .no-subjects {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-style: italic;
+}
+
+.superadmin-container .shift-badge {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: white;
+}
+
+.superadmin-container .shift-1 {
+    background: linear-gradient(135deg, var(--success), #059669);
+}
+
+.superadmin-container .shift-2 {
+    background: linear-gradient(135deg, var(--info), #2563eb);
+}
+
+/* ========== СТАТИСТИКА СМЕН ========== */
+.superadmin-container .shift-stats {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(33, 67, 90, 0.06);
+    border-radius: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.superadmin-container .shift-stat {
+    text-align: center;
+}
+
+.superadmin-container .shift-stat-number {
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.superadmin-container .shift-stat-1 {
+    color: var(--success);
+}
+
+.superadmin-container .shift-stat-2 {
+    color: var(--info);
+}
+
+/* ========== ПРЕДУПРЕЖДЕНИЕ ========== */
+.superadmin-container .warning-box {
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+    border-left: 4px solid var(--warning);
+    border-radius: 12px;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
     display: flex;
     align-items: center;
     gap: 10px;
-    animation: slideDown 0.3s ease;
-    font-size: 0.9rem;
 }
 
-.upload-status.success {
-    background: rgba(16, 185, 129, 0.1);
-    color: #059669;
-    border: 1px solid rgba(16, 185, 129, 0.3);
+.superadmin-container .warning-box svg {
+    color: var(--warning);
+    font-size: 1rem;
+    flex-shrink: 0;
 }
 
-.upload-status.error {
-    background: rgba(220, 38, 38, 0.1);
-    color: #dc2626;
-    border: 1px solid rgba(220, 38, 38, 0.3);
+.superadmin-container .warning-box strong {
+    color: var(--warning);
 }
 
-/* Предпросмотр */
-.upload-preview {
-    margin-top: 20px;
-    border-top: 1px solid var(--border-color, #e5e7eb);
-    padding-top: 20px;
-}
-
-.preview-header {
-    margin-bottom: 12px;
-}
-
-.preview-title {
-    font-weight: 600;
-    color: var(--text-primary, #1f2937);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
-    font-size: 0.9rem;
-}
-
-.preview-note {
-    font-size: 0.8rem;
-    color: var(--text-secondary, #6b7280);
-}
-
-.preview-table-wrapper {
-    max-height: 250px;
-    overflow-y: auto;
-    border: 1px solid var(--border-color, #e5e7eb);
-    border-radius: 10px;
-}
-
-.preview-table {
-    width: 100%;
-    border-collapse: collapse;
+/* ========== УВЕДОМЛЕНИЕ ========== */
+.superadmin-container .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    padding: 14px 24px;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    z-index: 1000;
+    animation: superadminSlideIn 0.3s ease;
     font-size: 0.85rem;
-}
-
-.preview-table th {
-    background: rgba(33, 67, 90, 0.08);
-    padding: 10px 12px;
-    text-align: left;
     font-weight: 600;
-    color: #21435A;
-    border-bottom: 1px solid var(--border-color, #e5e7eb);
-    position: sticky;
-    top: 0;
-}
-
-body.dark-theme .preview-table th {
-    background: #2d3748;
-    color: #f9fafb;
-    border-bottom-color: #4b5563;
-}
-
-.preview-table td {
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--border-color, #f3f4f6);
-    color: var(--text-primary, #374151);
-}
-
-body.dark-theme .preview-table td {
-    border-bottom-color: #4b5563;
-    color: #d1d5db;
-}
-
-.preview-more {
-    text-align: center;
-    padding: 8px;
-    color: var(--text-secondary, #6b7280);
-    font-size: 0.8rem;
-    background: rgba(33, 67, 90, 0.05);
-}
-
-/* Существующие уроки */
-.existing-lessons-card {
-    background: rgba(33, 67, 90, 0.08);
-    border-radius: 10px;
-    padding: 15px;
-    margin-top: 20px;
-    border: 1px solid rgba(33, 67, 90, 0.15);
-}
-
-.existing-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-weight: 500;
-    color: #21435A;
-    margin-bottom: 10px;
-    font-size: 0.9rem;
+    gap: 10px;
 }
 
-body.dark-theme .existing-header {
-    color: #60a5fa;
+@keyframes superadminSlideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
 }
 
-.existing-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+/* ========== ПУСТЫЕ СТРОКИ ========== */
+.superadmin-container .empty-row {
+    text-align: center !important;
+    padding: 2rem !important;
+    color: var(--text-muted);
 }
 
-.existing-lesson-tag {
-    background: rgba(33, 67, 90, 0.12);
-    padding: 4px 10px;
+.superadmin-container .empty-row svg {
+    font-size: 2rem;
+    margin-bottom: 0.8rem;
+    opacity: 0.5;
+}
+
+.superadmin-container .empty-row p {
+    margin: 0.5rem 0;
+}
+
+.superadmin-container .empty-row button {
+    margin-top: 10px;
+    padding: 8px 18px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.superadmin-container .empty-row button:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+}
+
+/* ========== КАБИНЕТЫ ========== */
+.superadmin-container .rooms-container-table .table-container {
+    background: var(--bg-card);
     border-radius: 20px;
-    font-size: 0.75rem;
-    color: #21435A;
+    padding: 1.5rem;
 }
 
-body.dark-theme .existing-lesson-tag {
-    background: rgba(59, 110, 158, 0.3);
-    color: #60a5fa;
-}
-
-.existing-more {
-    background: var(--border-color, #e5e7eb);
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    color: var(--text-secondary, #4b5563);
-}
-
-/* Футер модального окна */
-.upload-modal-footer {
+.superadmin-container .rooms-header {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
-    padding: 16px 24px;
-    border-top: 1px solid var(--border-color, #e5e7eb);
-    background: var(--bg-secondary, #fafbfc);
-    border-radius: 0 0 16px 16px;
+    margin-bottom: 1.5rem;
 }
 
-body.dark-theme .upload-modal-footer {
-    background: #1f2937;
-    border-top-color: #374151;
-}
-
-.btn-cancel {
-    background: var(--button-secondary-bg, #f3f4f6);
-    border: 1px solid var(--border-color, #e5e7eb);
-    padding: 8px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s;
-    color: var(--text-primary, #4b5563);
-    font-size: 0.9rem;
-}
-
-body.dark-theme .btn-cancel {
-    background: #374151;
-    border-color: #4b5563;
-    color: #d1d5db;
-}
-
-.btn-cancel:hover {
-    background: var(--button-secondary-hover, #e5e7eb);
-}
-
-.btn-upload {
-    background: #21435A;
-    border: none;
-    padding: 8px 24px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
-    color: white;
-    display: flex;
+.superadmin-container .add-room-btn {
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-    transition: all 0.2s;
-    font-size: 0.9rem;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    border: none;
+    border-radius: 40px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
 }
 
-.btn-upload:hover:not(.disabled) {
-    background: #2c5a7a;
-    transform: translateY(-1px);
+.superadmin-container .add-room-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(33, 67, 90, 0.3);
+}
+
+/* ========== УРОКИ ========== */
+.superadmin-container .lessons-container {
+    width: 100%;
+}
+
+.superadmin-container .lessons-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.superadmin-container .lessons-actions .add-room-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.2rem;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.superadmin-container .lessons-actions .add-room-btn:hover {
+    transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(33, 67, 90, 0.3);
 }
 
-.btn-upload.disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+.superadmin-container .lessons-actions .upload-btn {
+    background: linear-gradient(135deg, #10b981, #059669);
 }
 
-.spinner {
-    animation: spin 1s linear infinite;
+.superadmin-container .lessons-actions .upload-btn:hover {
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-/* ========== МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ ========== */
-.confirm-modal-overlay {
+/* ========== ПРИОРИТЕТНЫЕ ПРЕДМЕТЫ ========== */
+.superadmin-container .priority-subjects-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.superadmin-container .priority-subject-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    background: rgba(33, 67, 90, 0.12);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--primary);
+}
+
+.superadmin-container .no-priority {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.7rem;
+}
+
+/* ========== КНОПКА ВЫБОРА ПРЕДМЕТОВ ========== */
+.superadmin-container .subject-selector-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.7rem 1rem;
+    background: var(--primary);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.superadmin-container .subject-selector-button:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+}
+
+.superadmin-container .subject-selector-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+}
+
+.superadmin-container .subject-selector-content span {
+    font-weight: 500;
+}
+
+.superadmin-container .subject-selector-arrow {
+    color: white;
+    font-size: 0.8rem;
+}
+
+.superadmin-container .subject-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.superadmin-container .subject-preview-tag {
+    display: inline-block;
+    padding: 5px 12px;
+    background: rgba(33, 67, 90, 0.12);
+    border: 1px solid var(--primary);
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--primary);
+}
+
+/* ========== МОДАЛЬНЫЕ ОКНА ========== */
+.superadmin-container .subject-modal-overlay,
+.superadmin-container .confirm-modal-overlay,
+.superadmin-container .room-modal-overlay,
+.superadmin-container .upload-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1100;
 }
 
-.confirm-modal-content {
+.superadmin-container .subject-modal-content,
+.superadmin-container .confirm-modal-content,
+.superadmin-container .room-modal-content,
+.superadmin-container .upload-modal-content {
     background: var(--bg-card-solid);
-    border-radius: 20px;
+    border-radius: 24px;
     width: 90%;
-    max-width: 420px;
-    box-shadow: var(--shadow-lg);
-    animation: modalSlideIn 0.3s ease;
+    max-width: 550px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
     overflow: hidden;
 }
 
-.confirm-modal-header {
+.superadmin-container .subject-modal-header,
+.superadmin-container .confirm-modal-header,
+.superadmin-container .room-modal-header,
+.superadmin-container .upload-modal-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 1.25rem 1.5rem;
-    background: #dc2626;
+    justify-content: space-between;
+    background: var(--primary);
+    color: white;
 }
 
-.confirm-icon {
-    width: 40px;
-    height: 40px;
+.superadmin-container .subject-modal-header h3,
+.superadmin-container .confirm-modal-header h3,
+.superadmin-container .room-modal-header h3,
+.superadmin-container .upload-modal-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+}
+
+.superadmin-container .subject-modal-close,
+.superadmin-container .confirm-modal-close,
+.superadmin-container .room-modal-close,
+.superadmin-container .upload-modal-close {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.superadmin-container .subject-modal-close:hover,
+.superadmin-container .confirm-modal-close:hover,
+.superadmin-container .room-modal-close:hover,
+.superadmin-container .upload-modal-close:hover {
+    background: rgba(255,255,255,0.3);
+    transform: rotate(90deg);
+}
+
+/* Модальное окно подтверждения */
+.superadmin-container .confirm-modal-header {
+    background: var(--danger);
+}
+
+.superadmin-container .confirm-icon {
+    width: 36px;
+    height: 36px;
     background: rgba(255, 255, 255, 0.2);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
-    color: white;
 }
 
-.confirm-modal-header h3 {
-    margin: 0;
-    font-size: 1.2rem;
-    color: white;
-    font-weight: 600;
-}
-
-.confirm-modal-body {
+.superadmin-container .confirm-modal-body {
     padding: 1.5rem;
     text-align: center;
 }
 
-.confirm-modal-body p {
-    margin: 0 0 0.5rem 0;
-    color: var(--text-primary);
-    font-size: 0.95rem;
-}
-
-.confirm-item-name {
-    font-size: 1.1rem;
+.superadmin-container .confirm-item-name {
+    font-size: 1rem;
     font-weight: bold;
-    color: #dc2626;
-    margin: 0.5rem 0;
+    color: var(--danger);
+    margin: 0.8rem 0;
     padding: 0.5rem;
     background: rgba(220, 38, 38, 0.1);
-    border-radius: 8px;
+    border-radius: 10px;
 }
 
-.confirm-warning {
-    font-size: 0.8rem;
+.superadmin-container .confirm-warning {
+    font-size: 0.75rem;
     color: var(--text-muted);
-    margin-top: 1rem;
 }
 
-.confirm-modal-footer {
+.superadmin-container .confirm-modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
-    padding: 1rem 1.5rem;
-    border-top: 1px solid var(--border-color);
 }
 
-.confirm-btn-cancel {
+.superadmin-container .confirm-btn-cancel {
     padding: 8px 20px;
     background: transparent;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s;
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-weight: 500;
 }
 
-.confirm-btn-cancel:hover {
+.superadmin-container .confirm-btn-cancel:hover {
     background: rgba(33, 67, 90, 0.08);
-    border-color: #21435A;
+    border-color: var(--primary);
 }
 
-.confirm-btn-delete {
+.superadmin-container .confirm-btn-delete {
     padding: 8px 20px;
-    background: #dc2626;
+    background: var(--danger);
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
     transition: all 0.2s;
     color: white;
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-weight: 600;
 }
 
-.confirm-btn-delete:hover {
+.superadmin-container .confirm-btn-delete:hover {
     background: #b91c1c;
     transform: translateY(-2px);
 }
 
-/* Пустые строки таблиц */
-.empty-row {
-    text-align: center !important;
-    padding: 3rem !important;
+/* Модальное окно кабинета */
+.superadmin-container .room-modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
 }
 
-.empty-row svg {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    opacity: 0.5;
+.superadmin-container .room-modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
 }
 
-.empty-row p {
-    margin: 0.5rem 0;
+.superadmin-container .btn-cancel {
+    padding: 8px 20px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-secondary);
+    font-weight: 500;
 }
 
-.empty-row button {
-    margin-top: 10px;
-    padding: 8px 16px;
-    background: #21435A;
-    color: white;
+.superadmin-container .btn-cancel:hover {
+    background: rgba(33, 67, 90, 0.08);
+    border-color: var(--primary);
+}
+
+.superadmin-container .btn-save {
+    padding: 8px 22px;
+    background: linear-gradient(135deg, var(--success), #059669);
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    font-weight: 600;
+}
+
+.superadmin-container .btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.superadmin-container .btn-upload {
+    padding: 8px 22px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border: none;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    font-weight: 600;
+}
+
+.superadmin-container .btn-upload:hover:not(.disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(33, 67, 90, 0.3);
+}
+
+.superadmin-container .btn-upload.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Модальное окно выбора предметов */
+.superadmin-container .subject-modal-search {
+    padding: 1rem 1.5rem;
+    position: relative;
+}
+
+.superadmin-container .subject-modal-search .search-icon {
+    position: absolute;
+    left: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.superadmin-container .subject-modal-search input {
+    width: 100%;
+    padding: 0.7rem 0.7rem 0.7rem 2.2rem;
+    border: 1.5px solid var(--border-solid);
+    border-radius: 12px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+}
+
+.superadmin-container .subject-modal-select-all {
+    padding: 0.5rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.superadmin-container .select-all-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.superadmin-container .subject-modal-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+    max-height: 300px;
+}
+
+.superadmin-container .subject-modal-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.7rem 1.5rem;
     cursor: pointer;
     transition: all 0.2s;
 }
 
-.empty-row button:hover {
-    background: #2c5a7a;
-    transform: translateY(-2px);
+.superadmin-container .subject-modal-item:hover {
+    background: rgba(33, 67, 90, 0.06);
 }
 
-/* Назначения уроков */
-.existing-assignments {
-    margin-top: 1rem;
-    padding-top: 1rem;
+.superadmin-container .subject-modal-item input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+.superadmin-container .subject-modal-footer {
+    padding: 1rem 1.5rem;
     border-top: 1px solid var(--border-color);
-}
-
-.assignments-list {
-    max-height: 200px;
-    overflow-y: auto;
-    margin-top: 8px;
-}
-
-.assignment-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
-    background: rgba(33, 67, 90, 0.08);
-    border-radius: 8px;
-    margin-bottom: 6px;
-    font-size: 0.85rem;
+    justify-content: space-between;
 }
 
-.assignment-lesson {
-    font-weight: bold;
-    color: #21435A;
+.superadmin-container .subject-modal-selected-count {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--primary);
 }
 
-.assignment-arrow {
-    color: var(--text-muted);
+.superadmin-container .subject-modal-actions {
+    display: flex;
+    gap: 12px;
 }
 
-/* Детали урока */
-.lesson-detail {
-    margin-bottom: 1rem;
-    padding: 0.5rem;
-    background: rgba(33, 67, 90, 0.08);
-    border-radius: 8px;
-}
-
-.lesson-detail strong {
-    display: block;
-    margin-bottom: 0.25rem;
-    color: #21435A;
-}
-
-.lesson-detail p {
-    margin: 0;
+.superadmin-container .subject-modal-cancel {
+    padding: 8px 18px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
     color: var(--text-secondary);
 }
 
-/* Поиск в модальных окнах */
-.search-input {
+.superadmin-container .subject-modal-cancel:hover {
+    background: rgba(33, 67, 90, 0.08);
+    border-color: var(--primary);
+}
+
+.superadmin-container .subject-modal-save {
+    padding: 8px 20px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border: none;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
-    background: var(--bg-input);
+    gap: 8px;
+    transition: all 0.2s;
+    font-weight: 600;
 }
 
-.search-input svg {
-    color: var(--text-muted);
-    margin-right: 8px;
+.superadmin-container .subject-modal-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(33, 67, 90, 0.3);
 }
 
-.search-input input {
+/* ========== МАСТЕР НОВОГО УЧЕБНОГО ГОДА ========== */
+.superadmin-container .new-year-button-container {
+    display: flex;
+    justify-content: center;
+    margin: 0.5rem 0 2rem;
+}
+
+.superadmin-container .new-year-btn {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, #3b6e9e 100%);
+    background-size: 200% auto;
+    color: white;
     border: none;
-    outline: none;
+    padding: 14px 32px;
+    border-radius: 60px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(33, 67, 90, 0.35);
+    position: relative;
+    overflow: hidden;
+}
+
+.superadmin-container .new-year-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
     width: 100%;
-    background: transparent;
-    color: var(--text-primary);
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
 }
 
-/* Анимации */
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.superadmin-container .new-year-btn:hover::before {
+    left: 100%;
 }
 
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+.superadmin-container .new-year-btn:hover {
+    transform: translateY(-3px);
+    background-position: right center;
+    box-shadow: 0 12px 30px rgba(33, 67, 90, 0.45);
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-}
-
-/* Адаптивность */
+/* ========== АДАПТАЦИЯ ========== */
 @media (max-width: 768px) {
-    .theme-toggle-superadmin {
-        top: 85px;
-        right: 10px;
-    }
-    
-    .theme-btn-superadmin {
-        padding: 6px 12px;
-        font-size: 0.75rem;
-    }
-    
     .superadmin-container {
         padding: 0 1rem;
     }
     
-    .superadmin-title {
+    .superadmin-container .superadmin-title {
         font-size: 1.5rem;
     }
     
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.75rem;
-    }
-    
-    .stat-number {
-        font-size: 1.5rem;
-    }
-    
-    .tabs-container {
-        gap: 0.5rem;
-    }
-    
-    .tab-button {
+    .superadmin-container .tab-button {
         padding: 0.5rem 1rem;
-        font-size: 0.85rem;
-    }
-    
-    .data-table th,
-    .data-table td {
-        padding: 0.75rem 0.5rem;
         font-size: 0.8rem;
     }
     
-    .action-button {
-        padding: 0.4rem 0.8rem;
+    .superadmin-container .data-table th,
+    .superadmin-container .data-table td {
+        padding: 0.6rem 0.4rem;
         font-size: 0.7rem;
     }
     
-    .lessons-actions {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .lessons-actions .add-room-btn {
-        width: 100%;
-        justify-content: center;
-        padding: 12px 20px;
-    }
-    
-    .action-cell {
-        flex-direction: column;
-        gap: 5px;
-    }
-    
-    .action-button {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .upload-modal-content {
-        width: 95%;
-        max-height: 90vh;
-    }
-    
-    .upload-modal-header {
-        padding: 16px;
-    }
-    
-    .upload-modal-body {
-        padding: 16px;
-    }
-    
-    .upload-dropzone-label {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .upload-modal-footer {
-        padding: 12px 16px;
-    }
-    
-    .preview-table {
-        font-size: 0.75rem;
-    }
-    
-    .preview-table th,
-    .preview-table td {
-        padding: 6px 8px;
+    .superadmin-container .action-button {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.65rem;
     }
 }
 
 @media (max-width: 576px) {
-    .stats-grid {
+    .superadmin-container .stats-grid {
         grid-template-columns: 1fr;
     }
     
-    .form-row {
+    .superadmin-container .subject-priorities-list {
         grid-template-columns: 1fr;
-        gap: 0.5rem;
     }
 }

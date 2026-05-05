@@ -1,4 +1,4 @@
-// ScheduleViewer.jsx - исправленная версия (меняем API для классов)
+// ScheduleViewer.jsx - полная версия с поддержкой приоритетных кабинетов и быстрым drag-and-drop
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { 
   FaEdit, FaTrash, FaPlus, FaSearch, FaFileExcel, FaPrint, FaGripVertical, FaTimes,
@@ -6,7 +6,7 @@ import {
   FaExclamationTriangle, FaCheckCircle, FaBell, FaHandPaper,
   FaGraduationCap, FaChalkboardTeacher, FaDoorOpen, FaChevronDown,
   FaChevronUp, FaInfoCircle, FaRegBell, FaRegBellSlash, FaExchangeAlt,
-  FaSchool, FaBuilding
+  FaSchool, FaBuilding, FaSpinner
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -18,7 +18,7 @@ import BackButton from '../components/BackButton';
 import '../styles/global-theme.css';
 import '../styles/ScheduleViewer.css';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Константы
 const DAYS = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
@@ -45,18 +45,21 @@ const SECOND_SHIFT_SCHEDULE = [
   { number: 6, start: '18:20', end: '19:00' }
 ];
 
-const SUBJECTS = ['Математика', 'Русский язык', 'Литература', 'Английский язык', 'Физкультура', 'История', 'Биология', 'Химия', 'Физика', 'География', 'Информатика', 'Обществознание', 'Музыка', 'ИЗО', 'ОБЖ', 'Технология'];
-const TEACHERS = ['Иванова И.И.', 'Петрова С.И.', 'Сидорова О.В.', 'Смирнова Е.А.', 'Федоров П.К.', 'Николаева М.В.', 'Кузнецов А.А.', 'Морозова Е.В.', 'Волков Д.С.', 'Андреева Н.В.', 'Козлов Д.А.'];
-
-const SUBJECT_COLORS = {
-  'Математика': '#4CAF50', 'Русский язык': '#2196F3', 'Литература': '#9C27B0',
-  'Английский язык': '#FF9800', 'Физкультура': '#F44336', 'История': '#795548',
-  'Биология': '#8BC34A', 'Химия': '#009688', 'Физика': '#FF5722',
-  'География': '#3F51B5', 'Информатика': '#E91E63', 'Обществознание': '#607D8B',
-  'Музыка': '#FF6B6B', 'ИЗО': '#FFB74D', 'ОБЖ': '#66BB6A', 'Технология': '#5C6BC0'
+// Функция для получения цвета урока
+const getSubjectColor = (lesson) => {
+    if (!lesson) return '#9E9E9E';
+    if (lesson?.color) return lesson.color;
+    if (lesson?.subjectColor) return lesson.subjectColor;
+    if (lesson?.subject) {
+        let hash = 0;
+        for (let i = 0; i < lesson.subject.length; i++) {
+            hash = lesson.subject.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const hue = Math.abs(hash % 360);
+        return `hsl(${hue}, 70%, 60%)`;
+    }
+    return '#9E9E9E';
 };
-
-const getSubjectColor = (subject) => SUBJECT_COLORS[subject] || '#9E9E9E';
 
 // Функция проверки конфликтов
 const checkConflicts = (schedules, newLesson, targetClass, targetDay, targetLessonNumber) => {
@@ -287,7 +290,7 @@ const ConflictsPanel = ({ conflicts, onFixConflict, onNavigateToConflict }) => {
   );
 };
 
-const LessonCard = ({ lesson, onDragStart, onDragEnd, onEdit, onDelete, isDraggable, conflicts = [] }) => {
+const LessonCard = ({ lesson, onDragStart, onDragEnd, onEdit, onDelete, isDraggable, conflicts = [], lessonNumber, className, day, isMoving }) => {
   const [isHovered, setIsHovered] = useState(false);
   
   if (!lesson) return null;
@@ -298,7 +301,7 @@ const LessonCard = ({ lesson, onDragStart, onDragEnd, onEdit, onDelete, isDragga
     return (
       <div
         className={`lesson-card view-mode ${hasConflicts ? 'has-conflicts' : ''}`}
-        style={{ borderLeftColor: lesson.color || getSubjectColor(lesson.subject) }}
+        style={{ borderLeftColor: getSubjectColor(lesson) }}
         title={hasConflicts ? conflicts.map(c => c.message).join('\n') : ''}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -317,15 +320,25 @@ const LessonCard = ({ lesson, onDragStart, onDragEnd, onEdit, onDelete, isDragga
   
   return (
     <div
-      className={`lesson-card edit-mode draggable ${hasConflicts ? 'has-conflicts' : ''}`}
-      draggable={true}
+      className={`lesson-card edit-mode draggable ${hasConflicts ? 'has-conflicts' : ''} ${isMoving ? 'moving' : ''}`}
+      draggable={!isMoving}
       onDragStart={(e) => {
-        e.dataTransfer.setData('text/plain', JSON.stringify(lesson));
+        if (isMoving) {
+          e.preventDefault();
+          return false;
+        }
+        const dragData = {
+          lesson,
+          sourceLessonNumber: lessonNumber,
+          sourceClass: className,
+          sourceDay: day
+        };
+        e.dataTransfer.setData('text/plain', JSON.stringify(dragData));
         e.dataTransfer.effectAllowed = 'move';
-        onDragStart && onDragStart(e, lesson);
+        onDragStart && onDragStart(e, dragData);
       }}
       onDragEnd={onDragEnd}
-      style={{ borderLeftColor: lesson.color || getSubjectColor(lesson.subject) }}
+      style={{ borderLeftColor: getSubjectColor(lesson) }}
       title={hasConflicts ? conflicts.map(c => c.message).join('\n') : ''}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -353,6 +366,7 @@ const LessonCard = ({ lesson, onDragStart, onDragEnd, onEdit, onDelete, isDragga
   );
 };
 
+// Модальное окно редактирования с поддержкой приоритетных кабинетов
 const EditModal = ({ lesson, onSave, onClose, schedules, currentClass, currentDay, currentLessonNumber, showToast }) => {
   const [formData, setFormData] = useState({
     subject: lesson?.subject || '',
@@ -364,7 +378,88 @@ const EditModal = ({ lesson, onSave, onClose, schedules, currentClass, currentDa
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableRooms, setAvailableRooms] = useState([]);
   const [availableTeachers, setAvailableTeachers] = useState([]);
-
+  const [rooms, setRooms] = useState([]);
+  const [lessons, setLessons] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [loadingRooms, setLoadingRooms] = useState(false);
+  const [recommendedRooms, setRecommendedRooms] = useState([]);
+  
+  const token = localStorage.getItem('token');
+  
+  useEffect(() => {
+    const loadData = async () => {
+      setLoadingRooms(true);
+      try {
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        const [roomsRes, lessonsRes, teachersRes] = await Promise.all([
+          axios.get(`${API_URL}/schedule/rooms`, config),
+          axios.get(`${API_URL}/schedule/lessons`, config),
+          axios.get(`${API_URL}/schedule/teachers`, config)
+        ]);
+        
+        const roomsData = Array.isArray(roomsRes.data) ? roomsRes.data : [];
+        const lessonsData = Array.isArray(lessonsRes.data) ? lessonsRes.data : [];
+        const teachersData = Array.isArray(teachersRes.data) ? teachersRes.data : [];
+        
+        setRooms(roomsData);
+        setLessons(lessonsData);
+        setTeachers(teachersData);
+      } catch (err) {
+        console.error('Error loading data:', err);
+      } finally {
+        setLoadingRooms(false);
+      }
+    };
+    
+    loadData();
+  }, [token]);
+  
+  useEffect(() => {
+    if (!rooms.length) return;
+    
+    const busyRooms = new Set();
+    const busyTeachers = new Set();
+    
+    for (const className of Object.keys(schedules)) {
+      const lessonAtTime = schedules[className]?.[currentDay]?.[currentLessonNumber];
+      if (lessonAtTime) {
+        if (lessonAtTime.room && lessonAtTime.room !== formData.room) {
+          busyRooms.add(lessonAtTime.room);
+        }
+        if (lessonAtTime.teacher && lessonAtTime.teacher !== formData.teacher) {
+          busyTeachers.add(lessonAtTime.teacher);
+        }
+      }
+    }
+    
+    if (formData.subject) {
+      const selectedLesson = lessons.find(l => l.name === formData.subject);
+      if (selectedLesson) {
+        const prioritized = rooms.filter(room => 
+          room.lesson_priorities?.some(lp => 
+            lp.lesson_id === selectedLesson.id || lp.lesson_name === formData.subject
+          )
+        );
+        setRecommendedRooms(prioritized);
+        
+        const availablePrioritized = prioritized.filter(r => !busyRooms.has(r.number));
+        const availableOther = rooms.filter(r => 
+          !busyRooms.has(r.number) && !prioritized.includes(r)
+        );
+        setAvailableRooms([...availablePrioritized, ...availableOther]);
+      } else {
+        setAvailableRooms(rooms.filter(r => !busyRooms.has(r.number)));
+        setRecommendedRooms([]);
+      }
+    } else {
+      setAvailableRooms(rooms.filter(r => !busyRooms.has(r.number)));
+      setRecommendedRooms([]);
+    }
+    
+    setAvailableTeachers(teachers.filter(t => !busyTeachers.has(t.name)));
+    
+  }, [formData.subject, formData.room, formData.teacher, rooms, teachers, schedules, currentDay, currentLessonNumber, lessons]);
+  
   useEffect(() => {
     if (formData.subject && formData.teacher && formData.room) {
       const newConflicts = checkConflicts(
@@ -375,27 +470,15 @@ const EditModal = ({ lesson, onSave, onClose, schedules, currentClass, currentDa
         currentLessonNumber
       );
       setConflicts(newConflicts);
-      
-      const busyRooms = new Set();
-      const busyTeachers = new Set();
-      for (const className of Object.keys(schedules)) {
-        const lesson = schedules[className]?.[currentDay]?.[currentLessonNumber];
-        if (lesson && lesson !== formData) {
-          if (lesson.room) busyRooms.add(lesson.room);
-          if (lesson.teacher) busyTeachers.add(lesson.teacher);
-        }
-      }
-      const allRooms = ['101', '102', '103', '104', '105', '106', '107', '108', '109', '110', '201', '202', '203', '204', '205', '206', '207', '208', '209', '210'];
-      const allTeachers = [...TEACHERS];
-      setAvailableRooms(allRooms.filter(r => !busyRooms.has(r)));
-      setAvailableTeachers(allTeachers.filter(t => !busyTeachers.has(t)));
+    } else {
+      setConflicts([]);
     }
   }, [formData, schedules, currentClass, currentDay, currentLessonNumber]);
-
+  
   const handleFieldChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-
+  
   const handleSubmit = () => {
     if (!formData.subject || !formData.teacher || !formData.room) {
       showToast('Заполните все поля', 'error');
@@ -405,7 +488,7 @@ const EditModal = ({ lesson, onSave, onClose, schedules, currentClass, currentDa
     setIsSubmitting(true);
     
     if (conflicts.length > 0) {
-      showToast(`Невозможно сохранить`, 'error');
+      showToast(`Невозможно сохранить: ${conflicts[0].message}`, 'error');
       setIsSubmitting(false);
       return;
     }
@@ -415,15 +498,15 @@ const EditModal = ({ lesson, onSave, onClose, schedules, currentClass, currentDa
     setIsSubmitting(false);
     onClose();
   };
-
+  
   const handleQuickFix = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-
+  
   const handleModalClick = (e) => {
     e.stopPropagation();
   };
-
+  
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content edit-modal" onClick={handleModalClick}>
@@ -454,7 +537,9 @@ const EditModal = ({ lesson, onSave, onClose, schedules, currentClass, currentDa
               onChange={(e) => handleFieldChange('subject', e.target.value)}
             >
               <option value="">Выберите предмет</option>
-              {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+              {lessons.map(l => (
+                <option key={l.id} value={l.name}>{l.name}</option>
+              ))}
             </select>
           </div>
           
@@ -465,15 +550,17 @@ const EditModal = ({ lesson, onSave, onClose, schedules, currentClass, currentDa
               onChange={(e) => handleFieldChange('teacher', e.target.value)}
             >
               <option value="">Выберите учителя</option>
-              {TEACHERS.map(t => <option key={t} value={t}>{t}</option>)}
+              {availableTeachers.map(teacher => (
+                <option key={teacher.id} value={teacher.name}>{teacher.name}</option>
+              ))}
             </select>
             {conflicts.some(c => c.type === 'teacher') && availableTeachers.length > 0 && (
               <div className="quick-fix-suggestions">
                 <span className="suggestion-label">Свободные учителя:</span>
                 <div className="suggestion-buttons">
                   {availableTeachers.slice(0, 3).map(t => (
-                    <button key={t} className="suggestion-btn" onClick={() => handleQuickFix('teacher', t)}>
-                      {t}
+                    <button key={t.name} className="suggestion-btn" onClick={() => handleQuickFix('teacher', t.name)}>
+                      {t.name}
                     </button>
                   ))}
                 </div>
@@ -483,22 +570,46 @@ const EditModal = ({ lesson, onSave, onClose, schedules, currentClass, currentDa
           
           <div className="form-group">
             <label><FaDoorOpen /> Кабинет</label>
-            <input 
-              type="text" 
-              value={formData.room} 
-              onChange={(e) => handleFieldChange('room', e.target.value)} 
-              placeholder="Например: 201"
-            />
-            {conflicts.some(c => c.type === 'room') && availableRooms.length > 0 && (
-              <div className="quick-fix-suggestions">
-                <span className="suggestion-label">Свободные кабинеты:</span>
-                <div className="suggestion-buttons">
-                  {availableRooms.slice(0, 3).map(r => (
-                    <button key={r} className="suggestion-btn" onClick={() => handleQuickFix('room', r)}>
-                      {r}
-                    </button>
+            {loadingRooms ? (
+              <div className="loading-spinner-small">
+                <FaSpinner className="spinner" /> Загрузка кабинетов...
+              </div>
+            ) : (
+              <select 
+                value={formData.room} 
+                onChange={(e) => handleFieldChange('room', e.target.value)}
+                className={recommendedRooms.length > 0 ? 'has-recommendations' : ''}
+              >
+                <option value="">Выберите кабинет</option>
+                {recommendedRooms.length > 0 && (
+                  <optgroup label="⭐ Рекомендуемые (приоритетные)">
+                    {recommendedRooms.map(room => (
+                      <option key={room.id} value={room.number}>
+                        {room.number} {room.name ? `- ${room.name}` : ''} 
+                        ({room.lesson_priorities?.map(lp => lp.lesson_name).join(', ')})
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                <optgroup label="Другие кабинеты">
+                  {availableRooms.filter(r => !recommendedRooms.includes(r)).map(room => (
+                    <option key={room.id} value={room.number}>
+                      {room.number} {room.name ? `- ${room.name}` : ''}
+                    </option>
                   ))}
-                </div>
+                </optgroup>
+              </select>
+            )}
+            {recommendedRooms.length === 0 && formData.subject && !loadingRooms && rooms.length > 0 && (
+              <div className="info-message">
+                <FaInfoCircle />
+                <span>Для предмета "{formData.subject}" нет приоритетных кабинетов. Вы можете выбрать любой кабинет из списка.</span>
+              </div>
+            )}
+            {recommendedRooms.length === 1 && formData.subject && !loadingRooms && (
+              <div className="success-message">
+                <FaCheckCircle />
+                <span>Для предмета "{formData.subject}" рекомендован кабинет {recommendedRooms[0].number}</span>
               </div>
             )}
           </div>
@@ -530,7 +641,11 @@ const EditModal = ({ lesson, onSave, onClose, schedules, currentClass, currentDa
         
         <div className="modal-footer">
           <button className="btn-cancel" onClick={onClose}>Отмена</button>
-          <button className="btn-save" onClick={handleSubmit} disabled={isSubmitting || conflicts.length > 0}>
+          <button 
+            className="btn-save" 
+            onClick={handleSubmit} 
+            disabled={isSubmitting || conflicts.length > 0 || loadingRooms}
+          >
             {isSubmitting ? 'Сохранение...' : (lesson ? 'Сохранить' : 'Добавить')}
           </button>
         </div>
@@ -581,22 +696,16 @@ const QuickFixModal = ({ conflict, onSave, onClose }) => {
           
           <div className="form-group">
             <label><FaChalkboardTeacher /> Предмет</label>
-            <select 
-              value={formData.subject} 
-              onChange={(e) => handleFieldChange('subject', e.target.value)}
-            >
-              {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <input type="text" value={formData.subject} disabled />
           </div>
           
           <div className="form-group">
             <label><FaUserGraduate /> Учитель</label>
-            <select 
+            <input 
+              type="text" 
               value={formData.teacher} 
-              onChange={(e) => handleFieldChange('teacher', e.target.value)}
-            >
-              {TEACHERS.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
+              onChange={(e) => handleFieldChange('teacher', e.target.value)} 
+            />
           </div>
           
           <div className="form-group">
@@ -630,12 +739,12 @@ const ScheduleViewer = () => {
   const [showConflictsPanel, setShowConflictsPanel] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [quickFixConflict, setQuickFixConflict] = useState(null);
+  const [isMoving, setIsMoving] = useState(false);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [schedules, setSchedules] = useState({});
   const [loading, setLoading] = useState(true);
   const [editingCell, setEditingCell] = useState(null);
-  const [draggedLesson, setDraggedLesson] = useState(null);
   const [dragOverCell, setDragOverCell] = useState(null);
   const [classGroup, setClassGroup] = useState('all');
   const [isEditMode, setIsEditMode] = useState(false);
@@ -649,21 +758,18 @@ const ScheduleViewer = () => {
     if (!notificationsEnabled && type !== 'error') return;
     const id = Date.now();
     setToasts(prev => [...prev, { id, message, type, conflict, onFix }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 5000);
   }, [notificationsEnabled]);
 
-  // ЗАГРУЗКА КЛАССОВ - ИСПОЛЬЗУЕМ ПРАВИЛЬНЫЙ API /schedule/viewer/classes
   const loadClassesFromDB = useCallback(async () => {
     setLoadingClasses(true);
     try {
       const token = localStorage.getItem('token');
-      console.log('Загружаем классы с токеном:', token);
-      
-      // ИСПРАВЛЕНО: используем /schedule/viewer/classes вместо /superadmin/classes
       const response = await axios.get(`${API_URL}/schedule/viewer/classes`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      console.log('Ответ от API /schedule/viewer/classes:', response.data);
       
       let classes = [];
       if (Array.isArray(response.data)) {
@@ -674,15 +780,10 @@ const ScheduleViewer = () => {
         classes = response.data.classes;
       }
       
-      console.log('Обработанные классы:', classes);
       setAllClasses(classes);
       return classes;
     } catch (error) {
-      console.error('Error loading classes from DB:', error);
-      console.error('Статус ошибки:', error.response?.status);
-      console.error('Сообщение ошибки:', error.response?.data?.message);
-      
-      // Если API не работает, показываем сообщение
+      console.error('Error loading classes:', error);
       setAllClasses([]);
       return [];
     } finally {
@@ -690,14 +791,12 @@ const ScheduleViewer = () => {
     }
   }, []);
 
-  // Загрузка расписания из БД
   const loadSchedulesFromDB = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API_URL}/schedule/all`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      console.log('Расписание загружено:', response.data);
       setSchedules(response.data.schedules || {});
       return response.data.schedules;
     } catch (error) {
@@ -706,29 +805,21 @@ const ScheduleViewer = () => {
     }
   }, []);
 
-  // Загрузка всех данных
   useEffect(() => {
     const loadAllData = async () => {
       setLoading(true);
-      const classes = await loadClassesFromDB();
-      
+      await loadClassesFromDB();
       await loadSchedulesFromDB();
-      
-      if (classes.length === 0) {
-        console.warn('Классы не найдены! Проверьте, есть ли классы в базе данных');
-      }
-      
       setLoading(false);
     };
     
     loadAllData();
-  }, []);
+  }, [loadClassesFromDB, loadSchedulesFromDB]);
 
   useEffect(() => {
     localStorage.setItem('notifications_enabled', JSON.stringify(notificationsEnabled));
   }, [notificationsEnabled]);
 
-  // Обновление карты конфликтов
   useEffect(() => {
     const newConflictsMap = {};
     const newGlobalConflicts = [];
@@ -769,10 +860,7 @@ const ScheduleViewer = () => {
     }
   }, [schedules, isEditMode, notificationsEnabled, showToast]);
 
-  // Фильтрация классов по выбранной группе
   const filteredClasses = useMemo(() => {
-    console.log('Фильтрация классов. allClasses:', allClasses, 'classGroup:', classGroup);
-    
     let filtered = [...allClasses];
     
     if (classGroup === '1-4-first') {
@@ -794,14 +882,12 @@ const ScheduleViewer = () => {
       filtered = [...allClasses];
     }
     
-    // Поиск
     if (searchTerm) {
       filtered = filtered.filter(c => 
         c.name && c.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
-    // Сортировка
     filtered.sort((a, b) => {
       const numA = parseInt(a.number) || parseInt(a.name);
       const numB = parseInt(b.number) || parseInt(b.name);
@@ -811,11 +897,9 @@ const ScheduleViewer = () => {
       return letterA.localeCompare(letterB);
     });
     
-    console.log('Отфильтрованные классы:', filtered);
     return filtered;
   }, [allClasses, classGroup, searchTerm]);
 
-  // Определяем какое расписание показывать
   const currentSchedule = useMemo(() => {
     if (classGroup === '1-4-second') {
       return SECOND_SHIFT_SCHEDULE;
@@ -868,29 +952,48 @@ const ScheduleViewer = () => {
   }, [isDraggingTable, handleTableMouseMove, handleTableMouseUp]);
 
   const updateLesson = useCallback(async (className, day, lessonNumber, lesson) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${API_URL}/schedule/lesson`, {
-        className,
-        dayOfWeek: day,
-        lessonNumber,
-        lesson
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
+    if (!lesson || !lesson.subject || !lesson.teacher || !lesson.room) {
       setSchedules(prev => {
         const newSchedules = JSON.parse(JSON.stringify(prev));
-        if (!newSchedules[className]) newSchedules[className] = {};
-        if (!newSchedules[className][day]) newSchedules[className][day] = {};
-        
-        if (lesson && lesson.subject && lesson.teacher && lesson.room) {
-          newSchedules[className][day][lessonNumber] = lesson;
-        } else {
+        if (newSchedules[className]?.[day]?.[lessonNumber]) {
           delete newSchedules[className][day][lessonNumber];
         }
         return newSchedules;
       });
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      
+      const payload = {
+        className: className.trim(),
+        dayOfWeek: day.trim(),
+        lessonNumber: parseInt(lessonNumber),
+        lesson: {
+          subject: lesson.subject.trim(),
+          teacher: lesson.teacher.trim(),
+          room: lesson.room.trim()
+        }
+      };
+      
+      const response = await axios.put(`${API_URL}/schedule/lesson`, payload, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.data.success) {
+        setSchedules(prev => {
+          const newSchedules = JSON.parse(JSON.stringify(prev));
+          if (!newSchedules[className]) newSchedules[className] = {};
+          if (!newSchedules[className][day]) newSchedules[className][day] = {};
+          newSchedules[className][day][lessonNumber] = lesson;
+          return newSchedules;
+        });
+        showToast(`Урок "${lesson.subject}" сохранен`, 'success');
+      }
     } catch (error) {
       console.error('Error updating lesson:', error);
       showToast(error.response?.data?.message || 'Ошибка сохранения', 'error');
@@ -908,15 +1011,16 @@ const ScheduleViewer = () => {
     );
   }, [notificationsEnabled, showToast]);
 
-  const handleDragStart = useCallback((e, lesson, sourceClass, sourceDay) => {
-    if (!isEditMode) return;
-    setDraggedLesson({ lesson, sourceClass, sourceDay });
-    e.dataTransfer.setData('text/plain', JSON.stringify({ lesson, sourceClass, sourceDay }));
+  const handleDragStart = useCallback((e, dragData) => {
+    if (!isEditMode || isMoving) {
+      e.preventDefault();
+      return false;
+    }
+    e.dataTransfer.setData('text/plain', JSON.stringify(dragData));
     e.dataTransfer.effectAllowed = 'move';
-  }, [isEditMode]);
+  }, [isEditMode, isMoving]);
 
   const handleDragEnd = useCallback(() => {
-    setDraggedLesson(null);
     setDragOverCell(null);
   }, []);
 
@@ -937,48 +1041,89 @@ const ScheduleViewer = () => {
     setDragOverCell(null);
   }, [isEditMode]);
 
-  const handleDrop = useCallback((e, targetClass, targetDay, lessonNumber) => {
-    if (!isEditMode) return;
+  const handleDrop = useCallback(async (e, targetClass, targetDay, targetLessonNumber) => {
+    if (!isEditMode || isMoving) return;
     e.preventDefault();
     setDragOverCell(null);
     
-    if (!draggedLesson) return;
-    
-    const conflicts = checkConflicts(schedules, draggedLesson.lesson, targetClass, targetDay, lessonNumber);
-    
-    if (conflicts.length > 0) {
-      const mainConflict = conflicts[0];
-      showConflictNotification({
-        ...mainConflict,
-        lesson: draggedLesson.lesson,
-        className: targetClass,
-        day: FULL_DAYS[DAYS.indexOf(targetDay)],
-        dayKey: targetDay,
-        lessonNumber
-      });
-      setDraggedLesson(null);
+    let dragData;
+    try {
+      dragData = JSON.parse(e.dataTransfer.getData('text/plain'));
+    } catch {
       return;
     }
     
-    let sourceLessonNumber = null;
-    for (let i = 1; i <= 7; i++) {
-      const lesson = schedules[draggedLesson.sourceClass]?.[draggedLesson.sourceDay]?.[i];
-      if (lesson && lesson.subject === draggedLesson.lesson.subject && 
-          lesson.teacher === draggedLesson.lesson.teacher && 
-          lesson.room === draggedLesson.lesson.room) {
-        sourceLessonNumber = i;
-        break;
+    if (!dragData?.lesson) return;
+    
+    const { lesson, sourceLessonNumber, sourceClass, sourceDay } = dragData;
+    
+    // Проверка на ту же ячейку
+    if (sourceClass === targetClass && sourceDay === targetDay && sourceLessonNumber === targetLessonNumber) {
+      return;
+    }
+    
+    // Проверка конфликтов
+    const conflicts = checkConflicts(schedules, lesson, targetClass, targetDay, targetLessonNumber);
+    if (conflicts.length > 0) {
+      showConflictNotification({
+        ...conflicts[0],
+        lesson,
+        className: targetClass,
+        day: FULL_DAYS[DAYS.indexOf(targetDay)],
+        lessonNumber: targetLessonNumber
+      });
+      return;
+    }
+    
+    setIsMoving(true);
+    const oldSchedules = JSON.parse(JSON.stringify(schedules));
+    
+    // МГНОВЕННОЕ ОБНОВЛЕНИЕ UI
+    setSchedules(prev => {
+      const newSchedules = JSON.parse(JSON.stringify(prev));
+      const movingLesson = newSchedules[sourceClass]?.[sourceDay]?.[sourceLessonNumber];
+      if (!movingLesson) return prev;
+      
+      const targetLessonData = newSchedules[targetClass]?.[targetDay]?.[targetLessonNumber];
+      
+      delete newSchedules[sourceClass][sourceDay][sourceLessonNumber];
+      
+      if (targetLessonData) {
+        delete newSchedules[targetClass][targetDay][targetLessonNumber];
+        if (!newSchedules[sourceClass]) newSchedules[sourceClass] = {};
+        if (!newSchedules[sourceClass][sourceDay]) newSchedules[sourceClass][sourceDay] = {};
+        newSchedules[sourceClass][sourceDay][sourceLessonNumber] = targetLessonData;
       }
-    }
+      
+      if (!newSchedules[targetClass]) newSchedules[targetClass] = {};
+      if (!newSchedules[targetClass][targetDay]) newSchedules[targetClass][targetDay] = {};
+      newSchedules[targetClass][targetDay][targetLessonNumber] = movingLesson;
+      
+      return newSchedules;
+    });
     
-    if (sourceLessonNumber) {
-      updateLesson(draggedLesson.sourceClass, draggedLesson.sourceDay, sourceLessonNumber, null);
+    // АСИНХРОННЫЙ ЗАПРОС К СЕРВЕРУ (не блокирует UI)
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/schedule/move-lesson`, {
+        sourceClass,
+        sourceDay,
+        sourceLessonNumber,
+        targetClass,
+        targetDay,
+        targetLessonNumber
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 5000
+      });
+      showToast(`"${lesson.subject}"`, 'success');
+    } catch (error) {
+      setSchedules(oldSchedules);
+      showToast('Ошибка', 'error');
+    } finally {
+      setIsMoving(false);
     }
-    updateLesson(targetClass, targetDay, lessonNumber, draggedLesson.lesson);
-    
-    showToast(`Урок "${draggedLesson.lesson.subject}" перемещен в ${targetClass} класс`, 'success');
-    setDraggedLesson(null);
-  }, [isEditMode, draggedLesson, schedules, updateLesson, showConflictNotification, showToast]);
+  }, [isEditMode, schedules, showConflictNotification, showToast, isMoving]);
 
   const handleEdit = useCallback((className, day, lessonNumber, lesson) => {
     if (!isEditMode) return;
@@ -1014,21 +1159,13 @@ const ScheduleViewer = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setSchedules(prev => {
-        const newSchedules = JSON.parse(JSON.stringify(prev));
-        filteredClasses.forEach(classItem => {
-          if (newSchedules[classItem.name]) {
-            newSchedules[classItem.name][day] = {};
-          }
-        });
-        return newSchedules;
-      });
+      await loadSchedulesFromDB();
       showToast(`Расписание на ${dayName} очищено`, 'warning');
     } catch (error) {
       console.error('Error clearing day:', error);
       showToast('Ошибка очистки', 'error');
     }
-  }, [isEditMode, showToast, filteredClasses]);
+  }, [isEditMode, showToast, loadSchedulesFromDB]);
 
   const exportToExcel = useCallback(() => {
     const data = [];
@@ -1117,10 +1254,10 @@ const ScheduleViewer = () => {
       {!isEditMode && <ThemeToggle />}
       {!isEditMode && <BackButton />}
       
-      <div className="animated-bg">
+      {/* <div className="animated-bg">
         {[...Array(6)].map((_, i) => <div key={i} className="glass-circle"></div>)}
       </div>
-      
+       */}
       {!isEditMode && <Header />}
       
       <div className={`schedule-viewer-container ${isEditMode ? 'fullscreen' : ''}`}>
@@ -1269,12 +1406,16 @@ const ScheduleViewer = () => {
                               {lesson ? (
                                 <LessonCard 
                                   lesson={lesson} 
-                                  onDragStart={(e, l) => handleDragStart(e, l, className, day)} 
+                                  onDragStart={handleDragStart}
                                   onDragEnd={handleDragEnd} 
                                   onEdit={() => handleEdit(className, day, slot.number, lesson)} 
                                   onDelete={() => handleDelete(className, day, slot.number)} 
                                   isDraggable={isEditMode} 
-                                  conflicts={conflicts} 
+                                  conflicts={conflicts}
+                                  lessonNumber={slot.number}
+                                  className={className}
+                                  day={day}
+                                  isMoving={isMoving}
                                 />
                               ) : (
                                 <div className={`empty-slot-add ${!isEditMode ? 'disabled' : ''}`} onClick={() => handleAdd(className, day, slot.number)}>
@@ -1310,10 +1451,7 @@ const ScheduleViewer = () => {
                     headers: { Authorization: `Bearer ${token}` }
                   });
                   
-                  const response = await axios.get(`${API_URL}/schedule/all`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                  });
-                  setSchedules(response.data.schedules);
+                  await loadSchedulesFromDB();
                   showToast(`День скопирован: ${sourceClass} → ${targetClass}, ${FULL_DAYS[DAYS.indexOf(day)]}`, 'success');
                 } catch (error) {
                   console.error('Error copying day:', error);
@@ -1347,6 +1485,7 @@ const ScheduleViewer = () => {
               <div className="tip"><FaTrash /> Удалите ненужные уроки</div>
               <div className="tip"><FaPlus /> Добавьте урок в пустую ячейку</div>
               <div className="tip conflict-tip"><FaExclamationTriangle /> Красная карточка = конфликт</div>
+              <div className="tip"><FaDoorOpen /> Кабинеты с приоритетными предметами отмечены звездочкой ⭐</div>
             </>
           ) : (
             <div className="tip"><FaInfoCircle /> Включите режим редактирования для изменения расписания</div>

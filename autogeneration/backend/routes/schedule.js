@@ -1,4 +1,4 @@
-// routes/schedule.js
+// routes/schedule.js - ИСПРАВЛЕННАЯ ВЕРСИЯ
 const express = require('express');
 const db = require('../models/database');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
@@ -11,36 +11,193 @@ const DAYS = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
 const DAYS_RU = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
 
 // Вспомогательная функция для получения ID класса по имени
+const classIdCache = new Map();
+
 async function getClassIdByName(className) {
-    const number = parseInt(className.match(/\d+/)?.[0] || '1');
-    const letter = className.match(/[А-Я]+/)?.[0] || 'А';
+    if (classIdCache.has(className)) {
+        return classIdCache.get(className);
+    }
+    
+    console.log('🔍 Поиск класса:', className);
+    
+    // Пробуем найти по полному названию
+    let result = await db.query(
+        `SELECT id FROM classes WHERE CONCAT(number, letter) = $1 OR CONCAT(number, letter) || ' класс' = $1`,
+        [className]
+    );
+    
+    if (result.rows.length === 0) {
+        const number = parseInt(className.match(/\d+/)?.[0] || '0');
+        const letter = className.match(/[А-Я]/)?.[0] || '';
+        
+        if (number && letter) {
+            result = await db.query(
+                'SELECT id FROM classes WHERE number = $1 AND letter = $2',
+                [number, letter]
+            );
+        }
+    }
+    
+    const id = result.rows[0]?.id;
+    console.log('📌 Результат поиска класса:', { className, foundId: id });
+    
+    if (id) {
+        classIdCache.set(className, id);
+        setTimeout(() => classIdCache.delete(className), 300000);
+    }
+    
+    return id;
+}
+
+// Получение ID предмета
+const subjectIdCache = new Map();
+
+async function getSubjectIdByName(subjectName) {
+    if (subjectIdCache.has(subjectName)) {
+        return subjectIdCache.get(subjectName);
+    }
     
     const result = await db.query(
-        'SELECT id FROM classes WHERE number = $1 AND letter = $2',
-        [number, letter]
-    );
-    return result.rows[0]?.id;
-}
-
-// Вспомогательная функция для получения ID предмета по имени
-async function getSubjectIdByName(subjectName) {
-    const result = await db.query(
-        'SELECT id FROM subjects WHERE name = $1',
+        'SELECT id FROM lessons WHERE name = $1',
         [subjectName]
     );
-    return result.rows[0]?.id;
+    
+    const id = result.rows[0]?.id;
+    
+    if (id) {
+        subjectIdCache.set(subjectName, id);
+        setTimeout(() => subjectIdCache.delete(subjectName), 300000);
+    }
+    
+    return id;
 }
 
-// Вспомогательная функция для получения ID учителя по имени
+// Получение ID учителя по имени
+const teacherIdCache = new Map();
+
 async function getTeacherIdByName(teacherName) {
-    const result = await db.query(
-        'SELECT id FROM teachers WHERE name = $1',
-        [teacherName]
-    );
-    return result.rows[0]?.id;
+    if (teacherIdCache.has(teacherName)) {
+        return teacherIdCache.get(teacherName);
+    }
+    
+    // Разбиваем имя на части
+    const nameParts = teacherName.trim().split(/\s+/);
+    const lastName = nameParts[0] || '';
+    const firstName = nameParts[1] || '';
+    
+    let result;
+    
+    if (lastName && firstName) {
+        result = await db.query(`
+            SELECT id FROM teachers 
+            WHERE last_name = $1 AND first_name = $2
+        `, [lastName, firstName]);
+    } else {
+        result = await db.query(`
+            SELECT id FROM teachers 
+            WHERE CONCAT(last_name, ' ', first_name) = $1
+               OR CONCAT(last_name, ' ', first_name, ' ', COALESCE(middle_name, '')) = $1
+        `, [teacherName]);
+    }
+    
+    const id = result.rows[0]?.id;
+    
+    if (id) {
+        teacherIdCache.set(teacherName, id);
+        setTimeout(() => teacherIdCache.delete(teacherName), 300000);
+    }
+    
+    return id;
 }
+
+function getSubjectColor(subject) {
+    const colors = {
+        'Математика': '#f59e0b',
+        'Русский язык': '#10b981',
+        'Литература': '#10b981',
+        'Физика': '#3b82f6',
+        'Химия': '#8b5cf6',
+        'Биология': '#06b6d4',
+        'История': '#ef4444',
+        'Обществознание': '#ef4444',
+        'География': '#84cc16',
+        'Английский язык': '#ec4899',
+        'Немецкий язык': '#ec4899',
+        'Информатика': '#6366f1',
+        'ОБЖ': '#21435A',
+        'Физкультура': '#22c55e'
+    };
+    return colors[subject] || '#21435A';
+}
+
+// ========== API ДЛЯ ПОЛУЧЕНИЯ ДАННЫХ ==========
+
+router.get('/lessons', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT id, name, description, created_at 
+            FROM lessons 
+            ORDER BY name
+        `);
+        res.json(result.rows || []);
+    } catch (err) {
+        console.error('GET /schedule/lessons error:', err);
+        res.status(500).json({ message: 'Ошибка загрузки уроков' });
+    }
+});
+
+router.get('/rooms', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                r.id,
+                r.number,
+                r.name,
+                r.priority,
+                COALESCE(
+                    json_agg(
+                        json_build_object(
+                            'id', lp.id,
+                            'lesson_id', lp.lesson_id,
+                            'lesson_name', l.name
+                        )
+                    ) FILTER (WHERE lp.lesson_id IS NOT NULL),
+                    '[]'::json
+                ) as lesson_priorities
+            FROM rooms r
+            LEFT JOIN room_lesson_priorities lp ON r.id = lp.room_id
+            LEFT JOIN lessons l ON lp.lesson_id = l.id
+            GROUP BY r.id
+            ORDER BY r.number
+        `);
+        res.json(result.rows || []);
+    } catch (err) {
+        console.error('GET /schedule/rooms error:', err);
+        res.status(500).json({ message: 'Ошибка загрузки кабинетов' });
+    }
+});
+
+router.get('/teachers', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                t.id,
+                t.last_name,
+                t.first_name,
+                t.middle_name,
+                CONCAT(t.last_name, ' ', t.first_name, ' ', COALESCE(t.middle_name, '')) as name
+            FROM teachers t
+            ORDER BY t.last_name, t.first_name
+        `);
+        res.json(result.rows || []);
+    } catch (err) {
+        console.error('GET /schedule/teachers error:', err);
+        res.status(500).json({ message: 'Ошибка загрузки учителей' });
+    }
+});
 
 // ========== НАСТРОЙКИ ==========
+
 router.get('/settings', authenticateToken, async (req, res) => {
     try {
         const result = await db.query('SELECT * FROM schedule_settings WHERE id = 1');
@@ -58,11 +215,7 @@ router.get('/settings', authenticateToken, async (req, res) => {
     }
 });
 
-router.post('/settings', authenticateToken, async (req, res) => {
-    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
-        return res.status(403).json({ message: 'Доступ запрещен' });
-    }
-    
+router.post('/settings', authenticateToken, authorizeRoles('admin', 'superadmin'), async (req, res) => {
     try {
         const {
             startTime,
@@ -127,96 +280,8 @@ router.post('/settings', authenticateToken, async (req, res) => {
     }
 });
 
-// ========== ГЕНЕРАЦИЯ ==========
-router.post('/generate', authenticateToken, async (req, res) => {
-    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
-        return res.status(403).json({ message: 'Доступ запрещен' });
-    }
-    
-    try {
-        const settingsResult = await db.query('SELECT * FROM schedule_settings WHERE id = 1');
-        const settings = settingsResult.rows[0];
-        
-        const classesResult = await db.query('SELECT id, number, letter FROM classes');
-        const classes = classesResult.rows;
-        
-        const subjectsResult = await db.query('SELECT id, name FROM subjects');
-        
-        const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт'];
-        if (settings.saturday_lessons) {
-            weekDays.push('Сб');
-        }
-        
-        const dayMap = {
-            'Пн': 1, 'Вт': 2, 'Ср': 3, 'Чт': 4, 'Пт': 5, 'Сб': 6
-        };
-        
-        await db.query('DELETE FROM lesson_schedule');
-        
-        let totalLessons = 0;
-        
-        for (const classItem of classes) {
-            const className = `${classItem.number}${classItem.letter}`;
-            const isSecondShift = settings.second_shift && 
-                settings.second_shift_classes.includes(className);
-            
-            const maxLessons = isSecondShift ? 
-                Math.min(settings.max_lessons_per_day, 6) : 
-                settings.max_lessons_per_day;
-            
-            for (const day of weekDays) {
-                const dayNum = dayMap[day];
-                
-                for (let lessonNum = 1; lessonNum <= maxLessons; lessonNum++) {
-                    const randomSubject = subjectsResult.rows[
-                        Math.floor(Math.random() * subjectsResult.rows.length)
-                    ];
-                    
-                    const randomTeacher = await db.query(`
-                        SELECT id FROM teachers 
-                        ORDER BY RANDOM() 
-                        LIMIT 1
-                    `);
-                    
-                    const room = `${Math.floor(Math.random() * 300) + 100}`;
-                    
-                    await db.query(
-                        `INSERT INTO lesson_schedule 
-                         (class_id, subject_id, teacher_id, day_of_week, lesson_number, room)
-                         VALUES ($1, $2, $3, $4, $5, $6)`,
-                        [classItem.id, randomSubject.id, randomTeacher.rows[0]?.id || null, dayNum, lessonNum, room]
-                    );
-                    totalLessons++;
-                }
-            }
-        }
-        
-        await logActivity(
-            req.user.id,
-            req.user.login,
-            req.user.role,
-            'generate',
-            `Запущена генерация расписания`,
-            null
-        );
-        
-        res.json({
-            message: 'Расписание успешно сгенерировано',
-            stats: {
-                classes: classes.length,
-                totalLessons: totalLessons,
-                days: weekDays.length
-            }
-        });
-        
-    } catch (err) {
-        console.error('Error generating schedule:', err);
-        res.status(500).json({ message: 'Ошибка при генерации расписания' });
-    }
-});
+// ========== ПОЛУЧЕНИЕ КЛАССОВ ==========
 
-// ========== ПОЛУЧЕНИЕ КЛАССОВ ДЛЯ SCHEDULEVIEWER ==========
-// Получить все классы из БД для ScheduleViewer
 router.get('/viewer/classes', authenticateToken, async (req, res) => {
     try {
         const result = await db.query(`
@@ -236,9 +301,6 @@ router.get('/viewer/classes', authenticateToken, async (req, res) => {
     }
 });
 
-// ========== ПОЛУЧЕНИЕ РАСПИСАНИЯ ==========
-
-// Получить все классы
 router.get('/classes', authenticateToken, async (req, res) => {
     try {
         const result = await db.query(
@@ -251,58 +313,29 @@ router.get('/classes', authenticateToken, async (req, res) => {
     }
 });
 
-// Получить всех учителей
-router.get('/teachers', authenticateToken, async (req, res) => {
-    try {
-        const result = await db.query(`
-            SELECT t.id, COALESCE(t.name, t.last_name || ' ' || t.first_name) as name, array_agg(s.name) as subjects
-            FROM teachers t
-            LEFT JOIN teacher_subjects ts ON t.id = ts.teacher_id
-            LEFT JOIN subjects s ON ts.subject_id = s.id
-            GROUP BY t.id
-            ORDER BY t.name
-        `);
-        res.json(result.rows);
-    } catch (err) {
-        console.error('Error fetching teachers:', err);
-        res.status(500).json({ message: 'Ошибка сервера' });
-    }
-});
+// ========== ПОЛУЧЕНИЕ РАСПИСАНИЯ ==========
 
-// Получить все предметы
-router.get('/subjects', authenticateToken, async (req, res) => {
-    try {
-        const result = await db.query(
-            'SELECT id, name, color FROM subjects ORDER BY name'
-        );
-        res.json(result.rows);
-    } catch (err) {
-        console.error('Error fetching subjects:', err);
-        res.status(500).json({ message: 'Ошибка сервера' });
-    }
-});
-
-// Получить полное расписание для всех классов (из БД, по реальным классам)
 router.get('/all', authenticateToken, async (req, res) => {
     try {
         const schedules = {};
         
-        // Получаем реальные классы из БД
         const classesResult = await db.query(
-            'SELECT id, CONCAT(number, letter) as name, number, letter FROM classes ORDER BY number, letter'
+            'SELECT id, CONCAT(number, letter) as name FROM classes ORDER BY number, letter'
         );
-        const dbClasses = classesResult.rows;
         
-        for (const classItem of dbClasses) {
+        for (const classItem of classesResult.rows) {
             const className = classItem.name;
             const classId = classItem.id;
             
             const lessonsResult = await db.query(`
-                SELECT ls.day_of_week, ls.lesson_number, ls.room,
-                       s.name as subject_name, s.color as subject_color,
-                       COALESCE(t.name, t.last_name || ' ' || t.first_name) as teacher_name
+                SELECT 
+                    ls.day_of_week, 
+                    ls.lesson_number, 
+                    ls.room,
+                    l.name as subject_name,
+                    CONCAT(t.last_name, ' ', t.first_name, ' ', COALESCE(t.middle_name, '')) as teacher_name
                 FROM lesson_schedule ls
-                JOIN subjects s ON ls.subject_id = s.id
+                JOIN lessons l ON ls.subject_id = l.id
                 JOIN teachers t ON ls.teacher_id = t.id
                 WHERE ls.class_id = $1
                 ORDER BY ls.day_of_week, ls.lesson_number
@@ -318,8 +351,7 @@ router.get('/all', authenticateToken, async (req, res) => {
                     schedule[dayName][lesson.lesson_number] = {
                         subject: lesson.subject_name,
                         teacher: lesson.teacher_name,
-                        room: lesson.room,
-                        color: lesson.subject_color
+                        room: lesson.room
                     };
                 }
             });
@@ -334,98 +366,324 @@ router.get('/all', authenticateToken, async (req, res) => {
     }
 });
 
-// Получить расписание для конкретного класса
+// ========== ПОЛУЧЕНИЕ РАСПИСАНИЯ КЛАССА (ИСПРАВЛЕННЫЙ) ==========
+
 router.get('/class/:className', authenticateToken, async (req, res) => {
     try {
         const { className } = req.params;
-        const number = parseInt(className.match(/\d+/)?.[0] || '1');
-        const letter = className.match(/[А-Я]+/)?.[0] || 'А';
+        console.log('🔍 Запрос расписания для класса:', className);
         
-        const classResult = await db.query(
-            'SELECT id FROM classes WHERE number = $1 AND letter = $2',
-            [number, letter]
-        );
+        let classId = null;
         
-        if (classResult.rows.length === 0) {
+        const classResult = await db.query(`
+            SELECT id, number, letter 
+            FROM classes 
+            WHERE CONCAT(number, letter) = $1 OR CONCAT(number, letter) || ' класс' = $1
+        `, [className]);
+        
+        if (classResult.rows.length > 0) {
+            classId = classResult.rows[0].id;
+            console.log('✅ Найден класс:', classResult.rows[0]);
+        } else {
+            const number = parseInt(className.match(/\d+/)?.[0] || '0');
+            const letter = className.match(/[А-Я]/)?.[0] || '';
+            
+            if (number && letter) {
+                const result = await db.query(
+                    'SELECT id FROM classes WHERE number = $1 AND letter = $2',
+                    [number, letter]
+                );
+                if (result.rows.length > 0) {
+                    classId = result.rows[0].id;
+                }
+            }
+        }
+        
+        if (!classId) {
+            console.log('❌ Класс не найден:', className);
             return res.status(404).json({ message: 'Класс не найден' });
         }
         
-        const classId = classResult.rows[0].id;
-        
-        const lessonsResult = await db.query(`
-            SELECT ls.day_of_week, ls.lesson_number, ls.room,
-                   s.name as subject_name, s.color as subject_color,
-                   COALESCE(t.name, t.last_name || ' ' || t.first_name) as teacher_name
+        const scheduleResult = await db.query(`
+            SELECT 
+                ls.day_of_week,
+                ls.lesson_number,
+                l.name as subject,
+                CONCAT(t.last_name, ' ', t.first_name, ' ', COALESCE(t.middle_name, '')) as teacher,
+                ls.room,
+                l.id as lesson_id,
+                t.id as teacher_id
             FROM lesson_schedule ls
-            JOIN subjects s ON ls.subject_id = s.id
+            JOIN lessons l ON ls.subject_id = l.id
             JOIN teachers t ON ls.teacher_id = t.id
             WHERE ls.class_id = $1
             ORDER BY ls.day_of_week, ls.lesson_number
         `, [classId]);
         
-        const schedule = {};
-        DAYS_RU.forEach(day => { schedule[day] = {}; });
+        console.log(`📚 Найдено ${scheduleResult.rows.length} уроков для класса ${className}`);
         
-        lessonsResult.rows.forEach(lesson => {
-            const dayIndex = lesson.day_of_week - 1;
-            const dayName = DAYS_RU[dayIndex];
+        const dayMap = {
+            1: 'Понедельник',
+            2: 'Вторник',
+            3: 'Среда',
+            4: 'Четверг',
+            5: 'Пятница',
+            6: 'Суббота'
+        };
+        
+        const schedule = {
+            'Понедельник': [],
+            'Вторник': [],
+            'Среда': [],
+            'Четверг': [],
+            'Пятница': [],
+            'Суббота': []
+        };
+        
+        scheduleResult.rows.forEach(row => {
+            const dayName = dayMap[row.day_of_week];
             if (dayName) {
-                schedule[dayName][lesson.lesson_number] = {
-                    subject: lesson.subject_name,
-                    teacher: lesson.teacher_name,
-                    room: lesson.room,
-                    color: lesson.subject_color
-                };
+                schedule[dayName].push({
+                    number: row.lesson_number,
+                    subject: row.subject,
+                    teacher: row.teacher,
+                    room: row.room,
+                    lesson_id: row.lesson_id,
+                    teacher_id: row.teacher_id
+                });
             }
         });
         
-        res.json({ schedule, className });
+        for (const day in schedule) {
+            schedule[day].sort((a, b) => a.number - b.number);
+        }
+        
+        res.json({ success: true, schedule, className });
+        
     } catch (err) {
-        console.error('Error fetching class schedule:', err);
+        console.error('❌ Ошибка получения расписания класса:', err);
+        res.status(500).json({ message: 'Ошибка сервера: ' + err.message });
+    }
+});
+
+router.get('/class-shift/:className', authenticateToken, async (req, res) => {
+    try {
+        const { className } = req.params;
+        const classId = await getClassIdByName(className);
+        
+        const result = await db.query(
+            'SELECT shift FROM classes WHERE id = $1',
+            [classId]
+        );
+        
+        const shift = result.rows[0]?.shift || 1;
+        res.json({ shift });
+    } catch (err) {
+        console.error('Error fetching class shift:', err);
         res.status(500).json({ message: 'Ошибка сервера' });
+    }
+});
+
+// ========== ЛИЧНЫЙ КАБИНЕТ УЧИТЕЛЯ ==========
+
+router.get('/teacher/my-schedule', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        console.log('👨‍🏫 Запрос расписания для учителя, userId:', userId);
+        
+        const teacherResult = await db.query(`
+            SELECT id, last_name, first_name, middle_name 
+            FROM teachers 
+            WHERE user_id = $1
+        `, [userId]);
+        
+        if (teacherResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Учитель не найден' });
+        }
+        
+        const teacherId = teacherResult.rows[0].id;
+        const teacherFullName = teacherResult.rows[0].last_name + ' ' + teacherResult.rows[0].first_name;
+        console.log('✅ Найден учитель:', { id: teacherId, name: teacherFullName });
+        
+        const scheduleResult = await db.query(`
+            SELECT 
+                ls.day_of_week,
+                ls.lesson_number,
+                l.name as subject,
+                l.id as lesson_id,
+                CONCAT(c.number, c.letter) as class_name,
+                ls.room,
+                c.shift
+            FROM lesson_schedule ls
+            JOIN lessons l ON ls.subject_id = l.id
+            JOIN classes c ON ls.class_id = c.id
+            WHERE ls.teacher_id = $1
+            ORDER BY ls.day_of_week, ls.lesson_number
+        `, [teacherId]);
+        
+        console.log(`📚 Найдено ${scheduleResult.rows.length} уроков для учителя`);
+        
+        const dayMap = {
+            1: 'Понедельник',
+            2: 'Вторник',
+            3: 'Среда',
+            4: 'Четверг',
+            5: 'Пятница',
+            6: 'Суббота'
+        };
+        
+        const schedule = {
+            'Понедельник': [],
+            'Вторник': [],
+            'Среда': [],
+            'Четверг': [],
+            'Пятница': [],
+            'Суббота': []
+        };
+        
+        scheduleResult.rows.forEach(row => {
+            const dayName = dayMap[row.day_of_week];
+            if (dayName) {
+                schedule[dayName].push({
+                    id: row.lesson_id,
+                    number: row.lesson_number,
+                    subject: row.subject,
+                    className: row.class_name,
+                    room: row.room,
+                    shift: row.shift,
+                    color: getSubjectColor(row.subject)
+                });
+            }
+        });
+        
+        for (const day in schedule) {
+            schedule[day].sort((a, b) => a.number - b.number);
+        }
+        
+        res.json({ 
+            success: true, 
+            schedule,
+            teacher: {
+                id: teacherId,
+                name: teacherFullName
+            }
+        });
+    } catch (err) {
+        console.error('❌ Ошибка загрузки расписания учителя:', err);
+        res.status(500).json({ message: 'Ошибка загрузки расписания' });
+    }
+});
+
+router.get('/teacher/my-extracurricular', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        const teacherResult = await db.query(`
+            SELECT id FROM teachers WHERE user_id = $1
+        `, [userId]);
+        
+        if (teacherResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Учитель не найден' });
+        }
+        
+        const teacherId = teacherResult.rows[0].id;
+        
+        const activitiesResult = await db.query(`
+            SELECT 
+                ek.name,
+                ek.day_of_week,
+                ek.start_time,
+                ek.end_time,
+                ek.room
+            FROM extracurricular_activities ek
+            WHERE ek.teacher_id = $1
+            ORDER BY ek.day_of_week, ek.start_time
+        `, [teacherId]);
+        
+        const dayMap = {
+            1: 'Понедельник',
+            2: 'Вторник',
+            3: 'Среда',
+            4: 'Четверг',
+            5: 'Пятница',
+            6: 'Суббота'
+        };
+        
+        const activities = {
+            'Понедельник': [],
+            'Вторник': [],
+            'Среда': [],
+            'Четверг': [],
+            'Пятница': [],
+            'Суббота': []
+        };
+        
+        activitiesResult.rows.forEach(activity => {
+            const dayName = dayMap[activity.day_of_week];
+            if (dayName) {
+                activities[dayName].push({
+                    name: activity.name,
+                    startTime: activity.start_time,
+                    endTime: activity.end_time,
+                    room: activity.room,
+                    color: '#ffa502'
+                });
+            }
+        });
+        
+        res.json({ success: true, activities });
+    } catch (err) {
+        console.error('GET /teacher/my-extracurricular error:', err);
+        res.status(500).json({ message: 'Ошибка загрузки дополнительных занятий' });
     }
 });
 
 // ========== РЕДАКТИРОВАНИЕ РАСПИСАНИЯ ==========
 
-// Обновить урок
 router.put('/lesson', authenticateToken, authorizeRoles('admin', 'superadmin'), async (req, res) => {
     const client = await db.getClient();
     
     try {
         const { className, dayOfWeek, lessonNumber, lesson } = req.body;
         
+        console.log('📝 Сохранение урока:', { className, dayOfWeek, lessonNumber, lesson });
+        
         if (!className || !dayOfWeek || !lessonNumber || !lesson) {
             return res.status(400).json({ message: 'Не все поля заполнены' });
         }
         
-        const number = parseInt(className.match(/\d+/)?.[0] || '1');
-        const letter = className.match(/[А-Я]+/)?.[0] || 'А';
-        
-        const classResult = await client.query(
-            'SELECT id FROM classes WHERE number = $1 AND letter = $2',
-            [number, letter]
-        );
-        
-        if (classResult.rows.length === 0) {
-            return res.status(404).json({ message: 'Класс не найден' });
+        if (!lesson.subject || !lesson.teacher || !lesson.room) {
+            return res.status(400).json({ message: 'Предмет, учитель и кабинет обязательны' });
         }
         
-        const classId = classResult.rows[0].id;
+        const classId = await getClassIdByName(className);
+        if (!classId) {
+            return res.status(404).json({ message: 'Класс не найден' });
+        }
         
         const dayMap = { 'ПН': 1, 'ВТ': 2, 'СР': 3, 'ЧТ': 4, 'ПТ': 5, 'СБ': 6 };
         const dayNumber = dayMap[dayOfWeek];
         
+        if (!dayNumber) {
+            return res.status(400).json({ message: 'Некорректный день недели' });
+        }
+        
         const subjectId = await getSubjectIdByName(lesson.subject);
         const teacherId = await getTeacherIdByName(lesson.teacher);
         
-        if (!subjectId || !teacherId) {
-            return res.status(400).json({ message: 'Предмет или учитель не найдены' });
+        if (!subjectId) {
+            return res.status(400).json({ message: `Предмет "${lesson.subject}" не найден в базе` });
         }
         
-        // Проверка существующего урока
+        if (!teacherId) {
+            return res.status(400).json({ message: `Учитель "${lesson.teacher}" не найден в базе` });
+        }
+        
+        await client.query('BEGIN');
+        
         const existingResult = await client.query(
-            'SELECT id FROM lesson_schedule WHERE class_id = $1 AND day_of_week = $2 AND lesson_number = $3',
+            `SELECT id FROM lesson_schedule 
+             WHERE class_id = $1 AND day_of_week = $2 AND lesson_number = $3`,
             [classId, dayNumber, lessonNumber]
         );
         
@@ -436,13 +694,17 @@ router.put('/lesson', authenticateToken, authorizeRoles('admin', 'superadmin'), 
                  WHERE class_id = $4 AND day_of_week = $5 AND lesson_number = $6`,
                 [subjectId, teacherId, lesson.room, classId, dayNumber, lessonNumber]
             );
+            console.log('✏️ Урок обновлён');
         } else {
             await client.query(
                 `INSERT INTO lesson_schedule (class_id, subject_id, teacher_id, day_of_week, lesson_number, room)
                  VALUES ($1, $2, $3, $4, $5, $6)`,
                 [classId, subjectId, teacherId, dayNumber, lessonNumber, lesson.room]
             );
+            console.log('➕ Урок добавлен');
         }
+        
+        await client.query('COMMIT');
         
         await logActivity(
             req.user.id,
@@ -457,30 +719,21 @@ router.put('/lesson', authenticateToken, authorizeRoles('admin', 'superadmin'), 
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Error updating lesson:', err);
-        res.status(500).json({ message: 'Ошибка сервера' });
+        res.status(500).json({ message: 'Ошибка сервера: ' + err.message });
     } finally {
         client.release();
     }
 });
 
-// Удалить урок
 router.delete('/lesson', authenticateToken, authorizeRoles('admin', 'superadmin'), async (req, res) => {
     try {
         const { className, dayOfWeek, lessonNumber } = req.body;
         
-        const number = parseInt(className.match(/\d+/)?.[0] || '1');
-        const letter = className.match(/[А-Я]+/)?.[0] || 'А';
-        
-        const classResult = await db.query(
-            'SELECT id FROM classes WHERE number = $1 AND letter = $2',
-            [number, letter]
-        );
-        
-        if (classResult.rows.length === 0) {
+        const classId = await getClassIdByName(className);
+        if (!classId) {
             return res.status(404).json({ message: 'Класс не найден' });
         }
         
-        const classId = classResult.rows[0].id;
         const dayMap = { 'ПН': 1, 'ВТ': 2, 'СР': 3, 'ЧТ': 4, 'ПТ': 5, 'СБ': 6 };
         const dayNumber = dayMap[dayOfWeek];
         
@@ -505,17 +758,17 @@ router.delete('/lesson', authenticateToken, authorizeRoles('admin', 'superadmin'
     }
 });
 
-// Очистить день во всех классах
 router.delete('/clear-day/:dayOfWeek', authenticateToken, authorizeRoles('admin', 'superadmin'), async (req, res) => {
     try {
         const { dayOfWeek } = req.params;
         const dayMap = { 'ПН': 1, 'ВТ': 2, 'СР': 3, 'ЧТ': 4, 'ПТ': 5, 'СБ': 6 };
         const dayNumber = dayMap[dayOfWeek];
         
-        await db.query(
-            'DELETE FROM lesson_schedule WHERE day_of_week = $1',
-            [dayNumber]
-        );
+        if (!dayNumber) {
+            return res.status(400).json({ message: 'Некорректный день недели' });
+        }
+        
+        await db.query('DELETE FROM lesson_schedule WHERE day_of_week = $1', [dayNumber]);
         
         await logActivity(
             req.user.id,
@@ -533,7 +786,6 @@ router.delete('/clear-day/:dayOfWeek', authenticateToken, authorizeRoles('admin'
     }
 });
 
-// Скопировать день из одного класса в другой
 router.post('/copy-day', authenticateToken, authorizeRoles('admin', 'superadmin'), async (req, res) => {
     const client = await db.getClient();
     
@@ -543,18 +795,8 @@ router.post('/copy-day', authenticateToken, authorizeRoles('admin', 'superadmin'
         const dayMap = { 'ПН': 1, 'ВТ': 2, 'СР': 3, 'ЧТ': 4, 'ПТ': 5, 'СБ': 6 };
         const dayNumber = dayMap[dayOfWeek];
         
-        const getClassId = async (className) => {
-            const number = parseInt(className.match(/\d+/)?.[0] || '1');
-            const letter = className.match(/[А-Я]+/)?.[0] || 'А';
-            const result = await client.query(
-                'SELECT id FROM classes WHERE number = $1 AND letter = $2',
-                [number, letter]
-            );
-            return result.rows[0]?.id;
-        };
-        
-        const sourceClassId = await getClassId(sourceClass);
-        const targetClassId = await getClassId(targetClass);
+        const sourceClassId = await getClassIdByName(sourceClass);
+        const targetClassId = await getClassIdByName(targetClass);
         
         if (!sourceClassId || !targetClassId) {
             return res.status(404).json({ message: 'Класс не найден' });
@@ -601,56 +843,122 @@ router.post('/copy-day', authenticateToken, authorizeRoles('admin', 'superadmin'
     }
 });
 
-// Получить смену класса
-router.get('/class-shift/:className', authenticateToken, async (req, res) => {
+// ========== DRAG-AND-DROP ==========
+
+router.post('/move-lesson', authenticateToken, authorizeRoles('admin', 'superadmin'), async (req, res) => {
+    const client = await db.getClient();
+    
     try {
-        const { className } = req.params;
-        const number = parseInt(className.match(/\d+/)?.[0] || '1');
-        const letter = className.match(/[А-Я]+/)?.[0] || 'А';
+        const { 
+            sourceClass, sourceDay, sourceLessonNumber,
+            targetClass, targetDay, targetLessonNumber 
+        } = req.body;
         
-        const result = await db.query(
-            'SELECT shift FROM classes WHERE number = $1 AND letter = $2',
-            [number, letter]
+        const sourceClassId = await getClassIdByName(sourceClass);
+        const targetClassId = await getClassIdByName(targetClass);
+        
+        if (!sourceClassId || !targetClassId) {
+            return res.status(404).json({ message: 'Класс не найден' });
+        }
+        
+        const dayMap = { 'ПН': 1, 'ВТ': 2, 'СР': 3, 'ЧТ': 4, 'ПТ': 5, 'СБ': 6 };
+        const sourceDayNum = dayMap[sourceDay];
+        const targetDayNum = dayMap[targetDay];
+        
+        const lessonsResult = await client.query(`
+            SELECT class_id, day_of_week, lesson_number, subject_id, teacher_id, room
+            FROM lesson_schedule 
+            WHERE (class_id = $1 AND day_of_week = $2 AND lesson_number = $3)
+               OR (class_id = $4 AND day_of_week = $5 AND lesson_number = $6)
+        `, [sourceClassId, sourceDayNum, sourceLessonNumber, targetClassId, targetDayNum, targetLessonNumber]);
+        
+        const sourceLesson = lessonsResult.rows.find(l => 
+            l.class_id === sourceClassId && l.day_of_week === sourceDayNum && l.lesson_number === sourceLessonNumber
         );
         
-        const shift = result.rows[0]?.shift || 1;
-        res.json({ shift });
+        if (!sourceLesson) {
+            return res.status(404).json({ message: 'Урок в исходной ячейке не найден' });
+        }
+        
+        const targetLesson = lessonsResult.rows.find(l => 
+            l.class_id === targetClassId && l.day_of_week === targetDayNum && l.lesson_number === targetLessonNumber
+        );
+        
+        await client.query('BEGIN');
+        
+        await client.query(`
+            DELETE FROM lesson_schedule 
+            WHERE (class_id = $1 AND day_of_week = $2 AND lesson_number = $3)
+               OR (class_id = $4 AND day_of_week = $5 AND lesson_number = $6)
+        `, [sourceClassId, sourceDayNum, sourceLessonNumber, targetClassId, targetDayNum, targetLessonNumber]);
+        
+        const insertPromises = [];
+        
+        if (targetLesson) {
+            insertPromises.push(client.query(
+                `INSERT INTO lesson_schedule (class_id, subject_id, teacher_id, day_of_week, lesson_number, room)
+                 VALUES ($1, $2, $3, $4, $5, $6)`,
+                [sourceClassId, targetLesson.subject_id, targetLesson.teacher_id, 
+                 sourceDayNum, sourceLessonNumber, targetLesson.room]
+            ));
+        }
+        
+        insertPromises.push(client.query(
+            `INSERT INTO lesson_schedule (class_id, subject_id, teacher_id, day_of_week, lesson_number, room)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [targetClassId, sourceLesson.subject_id, sourceLesson.teacher_id,
+             targetDayNum, targetLessonNumber, sourceLesson.room]
+        ));
+        
+        await Promise.all(insertPromises);
+        await client.query('COMMIT');
+        
+        logActivity(
+            req.user.id,
+            req.user.login,
+            req.user.role,
+            'move',
+            `Перемещен урок из ${sourceClass}, ${sourceDay}, ${sourceLessonNumber} в ${targetClass}, ${targetDay}, ${targetLessonNumber}`,
+            null
+        ).catch(console.error);
+        
+        res.json({ success: true, message: 'Урок перемещен' });
+        
     } catch (err) {
-        console.error('Error fetching class shift:', err);
-        res.status(500).json({ message: 'Ошибка сервера' });
+        await client.query('ROLLBACK');
+        console.error('Error moving lesson:', err);
+        res.status(500).json({ message: 'Ошибка перемещения урока' });
+    } finally {
+        client.release();
     }
 });
 
-// Проверка конфликтов
+// ========== ПРОВЕРКА КОНФЛИКТОВ ==========
+
 router.post('/check-conflicts', authenticateToken, async (req, res) => {
     try {
         const { className, dayOfWeek, lessonNumber, lesson } = req.body;
         
-        const subjectId = await getSubjectIdByName(lesson.subject);
-        const teacherId = await getTeacherIdByName(lesson.teacher);
+        const classId = await getClassIdByName(className);
+        if (!classId) {
+            return res.status(404).json({ message: 'Класс не найден' });
+        }
         
-        const number = parseInt(className.match(/\d+/)?.[0] || '1');
-        const letter = className.match(/[А-Я]+/)?.[0] || 'А';
-        
-        const classResult = await db.query(
-            'SELECT id FROM classes WHERE number = $1 AND letter = $2',
-            [number, letter]
-        );
-        
-        const currentClassId = classResult.rows[0]?.id;
         const dayMap = { 'ПН': 1, 'ВТ': 2, 'СР': 3, 'ЧТ': 4, 'ПТ': 5, 'СБ': 6 };
         const dayNumber = dayMap[dayOfWeek];
         
         const conflicts = [];
         
-        // Проверка по кабинету
         if (lesson.room) {
             const roomConflicts = await db.query(`
                 SELECT c.number, c.letter
                 FROM lesson_schedule ls
                 JOIN classes c ON ls.class_id = c.id
-                WHERE ls.day_of_week = $1 AND ls.lesson_number = $2 AND ls.room = $3 AND ls.class_id != $4
-            `, [dayNumber, lessonNumber, lesson.room, currentClassId]);
+                WHERE ls.day_of_week = $1 
+                  AND ls.lesson_number = $2 
+                  AND ls.room = $3 
+                  AND ls.class_id != $4
+            `, [dayNumber, lessonNumber, lesson.room, classId]);
             
             roomConflicts.rows.forEach(row => {
                 conflicts.push({
@@ -662,27 +970,53 @@ router.post('/check-conflicts', authenticateToken, async (req, res) => {
             });
         }
         
-        // Проверка по учителю
-        const teacherConflicts = await db.query(`
-            SELECT c.number, c.letter
-            FROM lesson_schedule ls
-            JOIN classes c ON ls.class_id = c.id
-            WHERE ls.day_of_week = $1 AND ls.lesson_number = $2 AND ls.teacher_id = $3 AND ls.class_id != $4
-        `, [dayNumber, lessonNumber, teacherId, currentClassId]);
-        
-        teacherConflicts.rows.forEach(row => {
-            conflicts.push({
-                type: 'teacher',
-                message: `Преподаватель ${lesson.teacher} уже ведет урок у ${row.number}${row.letter} класса`,
-                severity: 'error',
-                conflictValue: lesson.teacher
+        const teacherId = await getTeacherIdByName(lesson.teacher);
+        if (teacherId) {
+            const teacherConflicts = await db.query(`
+                SELECT c.number, c.letter
+                FROM lesson_schedule ls
+                JOIN classes c ON ls.class_id = c.id
+                WHERE ls.day_of_week = $1 
+                  AND ls.lesson_number = $2 
+                  AND ls.teacher_id = $3 
+                  AND ls.class_id != $4
+            `, [dayNumber, lessonNumber, teacherId, classId]);
+            
+            teacherConflicts.rows.forEach(row => {
+                conflicts.push({
+                    type: 'teacher',
+                    message: `Преподаватель ${lesson.teacher} уже ведет урок у ${row.number}${row.letter} класса`,
+                    severity: 'error',
+                    conflictValue: lesson.teacher
+                });
             });
-        });
+        }
         
         res.json({ conflicts });
     } catch (err) {
         console.error('Error checking conflicts:', err);
         res.status(500).json({ message: 'Ошибка сервера' });
+    }
+});
+
+// ========== ВРЕМЕННЫЙ ЭНДПОИНТ ДЛЯ ОТЛАДКИ ==========
+
+router.get('/debug/teachers', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                id,
+                last_name,
+                first_name,
+                middle_name,
+                CONCAT(last_name, ' ', first_name) as short_name,
+                CONCAT(last_name, ' ', first_name, ' ', COALESCE(middle_name, '')) as full_name
+            FROM teachers 
+            ORDER BY last_name
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 

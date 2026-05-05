@@ -170,11 +170,11 @@ const TeacherClassManagement = () => {
             <div className={styles.page}>
                 <ThemeToggle />
                 <BackButton fallbackPath="/teacher" />
-                <div className="animated-bg">
+                {/* <div className="animated-bg">
                     {[...Array(10)].map((_, i) => (
                         <div key={i} className="glass-circle"></div>
                     ))}
-                </div>
+                </div> */}
                 <Header />
                 <main className={styles.container}>
                     <div className={styles.loader}>
@@ -192,11 +192,11 @@ const TeacherClassManagement = () => {
             <div className={styles.page}>
                 <ThemeToggle />
                 <BackButton fallbackPath="/teacher" />
-                <div className="animated-bg">
+                {/* <div className="animated-bg">
                     {[...Array(10)].map((_, i) => (
                         <div key={i} className="glass-circle"></div>
                     ))}
-                </div>
+                </div> */}
                 <Header />
                 <main className={styles.container}>
                     <div className={styles.disabledCard}>
@@ -218,11 +218,11 @@ const TeacherClassManagement = () => {
             <ThemeToggle />
             <BackButton fallbackPath="/teacher" />
             
-            <div className="animated-bg">
+            {/* <div className="animated-bg">
                 {[...Array(10)].map((_, i) => (
                     <div key={i} className="glass-circle"></div>
                 ))}
-            </div>
+            </div> */}
 
             <Header />
 

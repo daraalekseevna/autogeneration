@@ -643,11 +643,11 @@ const ExtracurricularActivities = () => {
             <div className={styles.page}>
                 <ThemeToggle />
                 <BackButton fallbackPath="/" />
-                <div className="animated-bg">
+                {/* <div className="animated-bg">
                     {[...Array(10)].map((_, i) => (
                         <div key={i} className="glass-circle"></div>
                     ))}
-                </div>
+                </div> */}
                 <Header />
                 <main className={styles.container}>
                     <div className={styles.loader}>
@@ -665,11 +665,11 @@ const ExtracurricularActivities = () => {
             <ThemeToggle />
             <BackButton fallbackPath="/" />
             
-            <div className="animated-bg">
+            {/* <div className="animated-bg">
                 {[...Array(10)].map((_, i) => (
                     <div key={i} className="glass-circle"></div>
                 ))}
-            </div>
+            </div> */}
 
             <Header />
 
