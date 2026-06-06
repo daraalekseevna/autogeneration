@@ -427,7 +427,7 @@
     }
 }
 
-/* ===== ДНИ В РЯДУ - АДАПТИВНАЯ СЕТКА ===== */
+/* ===== ДНИ В РЯДУ - ДВА РЯДА ПО 3 КОЛОНКИ ===== */
 .daysRow {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -438,14 +438,14 @@
     background: transparent;
 }
 
-/* ===== КОЛОНКА ДНЯ - БЕЗ СКРОЛЛА ===== */
+/* ===== КОЛОНКА ДНЯ - СГЛАЖЕННЫЕ УГЛЫ ===== */
 .dayColumn {
     background: var(--bg-card);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border-radius: 16px;
+    border-radius: 20px;
     border: 1px solid var(--border-color);
-    overflow: visible;
+    overflow: hidden;
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
@@ -462,7 +462,7 @@ body.dark-theme .dayColumn {
     box-shadow: var(--shadow-hover);
 }
 
-/* ШАПКА ДНЯ */
+/* ШАПКА ДНЯ - СКРУГЛЕННЫЕ ВЕРХНИЕ УГЛЫ */
 .dayHeader {
     padding: 14px 16px;
     background: #21435A;
@@ -471,6 +471,7 @@ body.dark-theme .dayColumn {
     justify-content: space-between;
     width: 100%;
     box-sizing: border-box;
+    border-radius: 20px 20px 0 0;
 }
 
 .dayHeaderLeft {
@@ -499,13 +500,15 @@ body.dark-theme .dayColumn {
     font-weight: 500;
 }
 
-/* КОНТЕНТ ДНЯ - БЕЗ СКРОЛЛА */
+/* КОНТЕНТ ДНЯ - СКРУГЛЕННЫЕ НИЖНИЕ УГЛЫ */
 .dayContent {
     padding: 12px;
     min-height: auto;
     max-height: none;
     overflow-y: visible !important;
     overflow-x: visible !important;
+    background: inherit;
+    border-radius: 0 0 20px 20px;
 }
 
 /* ===== ПУСТОЙ ДЕНЬ ===== */
@@ -519,7 +522,7 @@ body.dark-theme .dayColumn {
     color: var(--text-muted);
     font-size: 13px;
     border: 1px dashed var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     background: rgba(255, 255, 255, 0.05);
 }
 
@@ -534,7 +537,7 @@ body.dark-theme .dayColumn {
     padding: 10px 12px;
     margin-bottom: 8px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
+    border-radius: 12px;
     box-shadow: none;
     cursor: default;
     transition: all 0.3s ease;
@@ -580,7 +583,7 @@ body.dark-theme .activityCard {
     width: 24px;
     height: 24px;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -665,7 +668,7 @@ body.dark-theme .activityCard {
     max-width: 600px;
     background: var(--bg-card);
     backdrop-filter: blur(10px);
-    border-radius: 20px;
+    border-radius: 24px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     overflow: hidden;
     display: flex;
@@ -904,7 +907,7 @@ body.dark-theme .activityCard {
 .colorBtn {
     aspect-ratio: 1;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     width: 100%;
     transition: all 0.2s ease;
@@ -984,7 +987,7 @@ body.dark-theme .activityCard {
     padding: 60px 20px;
     background: var(--bg-card);
     backdrop-filter: blur(10px);
-    border-radius: 12px;
+    border-radius: 20px;
     border: 1px solid var(--border-color);
 }
 
@@ -1045,6 +1048,77 @@ body.dark-theme .activityCard {
     background: transparent;
 }
 
+/* ===== СТИЛИ ДЛЯ ПОДТВЕРЖДЕНИЯ УДАЛЕНИЯ ===== */
+.deleteConfirmation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    text-align: center;
+}
+
+.deleteIcon {
+    font-size: 32px;
+    color: #f44336;
+}
+
+.deleteWarning {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 0;
+}
+
+.deleteWarning strong {
+    color: var(--text-primary);
+}
+
+.deleteActions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.btnConfirm {
+    padding: 8px 20px;
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btnConfirm:hover {
+    background: #d32f2f;
+    transform: translateY(-1px);
+}
+
+.btnCancel {
+    padding: 8px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btnCancel:hover {
+    background: var(--bg-card-hover);
+}
+
 /* ========== ПОЛНАЯ АДАПТАЦИЯ ========== */
 
 /* Большие экраны (1920px+) */
@@ -1068,10 +1142,10 @@ body.dark-theme .activityCard {
     }
 }
 
-/* Планшеты (768px - 1024px) */
+/* Планшеты (768px - 1024px) - уже 3 колонки в ряд */
 @media (max-width: 1024px) {
     .daysRow {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 16px;
     }
     
@@ -1099,7 +1173,7 @@ body.dark-theme .activityCard {
     }
 }
 
-/* Планшеты вертикальные и большие телефоны (576px - 768px) */
+/* Планшеты вертикальные и большие телефоны (576px - 768px) - переходим в 1 колонку */
 @media (max-width: 768px) {
     .topBar {
         top: 12px;
@@ -1344,59 +1418,6 @@ body.dark-theme .activityCard {
         width: 200px;
         height: 200px;
         filter: blur(40px);
-    }
-}
-
-/* Стили для печати */
-@media print {
-    .topBar,
-    .adminBanner,
-    .headerActions,
-    .btnFilter,
-    .btnPrimary,
-    .filtersPanel,
-    .statsCompact,
-    .notification,
-    .footer,
-    header,
-    .animatedBg,
-    .glassCircle {
-        display: none !important;
-    }
-    
-    .page {
-        background: white !important;
-    }
-    
-    .container {
-        padding: 20px !important;
-    }
-    
-    .daysRow {
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: 10px !important;
-    }
-    
-    .dayColumn {
-        background: white !important;
-        border: 1px solid #ccc !important;
-        overflow: visible !important;
-    }
-    
-    .dayHeader {
-        background: #21435A !important;
-        print-color-adjust: exact;
-        -webkit-print-color-adjust: exact;
-    }
-    
-    .activityCard {
-        break-inside: avoid;
-        page-break-inside: avoid;
-        border: 1px solid #eee !important;
-    }
-    
-    .cardActions {
-        display: none !important;
     }
 }
 

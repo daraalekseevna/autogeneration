@@ -1,4 +1,4 @@
-// routes/schedule.js - ИСПРАВЛЕННАЯ ВЕРСИЯ
+// routes/schedule.js - ПОЛНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ
 const express = require('express');
 const db = require('../models/database');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
@@ -10,8 +10,10 @@ const router = express.Router();
 const DAYS = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
 const DAYS_RU = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
 
-// Вспомогательная функция для получения ID класса по имени
+// Кэши
 const classIdCache = new Map();
+const subjectIdCache = new Map();
+const teacherIdCache = new Map();
 
 async function getClassIdByName(className) {
     if (classIdCache.has(className)) {
@@ -20,7 +22,6 @@ async function getClassIdByName(className) {
     
     console.log('🔍 Поиск класса:', className);
     
-    // Пробуем найти по полному названию
     let result = await db.query(
         `SELECT id FROM classes WHERE CONCAT(number, letter) = $1 OR CONCAT(number, letter) || ' класс' = $1`,
         [className]
@@ -49,9 +50,6 @@ async function getClassIdByName(className) {
     return id;
 }
 
-// Получение ID предмета
-const subjectIdCache = new Map();
-
 async function getSubjectIdByName(subjectName) {
     if (subjectIdCache.has(subjectName)) {
         return subjectIdCache.get(subjectName);
@@ -72,15 +70,11 @@ async function getSubjectIdByName(subjectName) {
     return id;
 }
 
-// Получение ID учителя по имени
-const teacherIdCache = new Map();
-
 async function getTeacherIdByName(teacherName) {
     if (teacherIdCache.has(teacherName)) {
         return teacherIdCache.get(teacherName);
     }
     
-    // Разбиваем имя на части
     const nameParts = teacherName.trim().split(/\s+/);
     const lastName = nameParts[0] || '';
     const firstName = nameParts[1] || '';
@@ -129,6 +123,61 @@ function getSubjectColor(subject) {
     };
     return colors[subject] || '#21435A';
 }
+
+// ========== ПУБЛИЧНЫЕ ЭНДПОИНТЫ ДЛЯ ФРОНТЕНДА ==========
+
+// Получить список предметов для расписания (с короткими названиями)
+router.get('/public-lessons', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT id, name, short_name as "shortName", description 
+            FROM lessons 
+            ORDER BY name
+        `);
+        res.json(result.rows || []);
+    } catch (err) {
+        console.error('GET /public-lessons error:', err);
+        res.status(500).json({ message: 'Ошибка загрузки предметов' });
+    }
+});
+
+// Получить список учителей для расписания (с цветом)
+router.get('/public-teachers', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                t.id, 
+                t.last_name, 
+                t.first_name, 
+                t.middle_name,
+                t.color,
+                CONCAT(t.last_name, ' ', t.first_name, ' ', COALESCE(t.middle_name, '')) as name
+            FROM teachers t
+            JOIN users u ON t.user_id = u.id
+            WHERE u.role = 'teacher'
+            ORDER BY t.last_name, t.first_name
+        `);
+        res.json(result.rows || []);
+    } catch (err) {
+        console.error('GET /public-teachers error:', err);
+        res.status(500).json({ message: 'Ошибка загрузки учителей' });
+    }
+});
+
+// Получить список кабинетов для расписания
+router.get('/public-rooms', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT id, number, name 
+            FROM rooms 
+            ORDER BY number
+        `);
+        res.json(result.rows || []);
+    } catch (err) {
+        console.error('GET /public-rooms error:', err);
+        res.status(500).json({ message: 'Ошибка загрузки кабинетов' });
+    }
+});
 
 // ========== API ДЛЯ ПОЛУЧЕНИЯ ДАННЫХ ==========
 
@@ -333,7 +382,8 @@ router.get('/all', authenticateToken, async (req, res) => {
                     ls.lesson_number, 
                     ls.room,
                     l.name as subject_name,
-                    CONCAT(t.last_name, ' ', t.first_name, ' ', COALESCE(t.middle_name, '')) as teacher_name
+                    CONCAT(t.last_name, ' ', t.first_name) as teacher_name,
+                    t.color as teacher_color
                 FROM lesson_schedule ls
                 JOIN lessons l ON ls.subject_id = l.id
                 JOIN teachers t ON ls.teacher_id = t.id
@@ -342,16 +392,17 @@ router.get('/all', authenticateToken, async (req, res) => {
             `, [classId]);
             
             const schedule = {};
-            DAYS_RU.forEach(day => { schedule[day] = {}; });
+            const dayMap = {1: 'Понедельник', 2: 'Вторник', 3: 'Среда', 4: 'Четверг', 5: 'Пятница'};
             
             lessonsResult.rows.forEach(lesson => {
-                const dayIndex = lesson.day_of_week - 1;
-                const dayName = DAYS_RU[dayIndex];
+                const dayName = dayMap[lesson.day_of_week];
                 if (dayName) {
+                    if (!schedule[dayName]) schedule[dayName] = {};
                     schedule[dayName][lesson.lesson_number] = {
                         subject: lesson.subject_name,
                         teacher: lesson.teacher_name,
-                        room: lesson.room
+                        room: lesson.room,
+                        teacherColor: lesson.teacher_color
                     };
                 }
             });
@@ -366,7 +417,7 @@ router.get('/all', authenticateToken, async (req, res) => {
     }
 });
 
-// ========== ПОЛУЧЕНИЕ РАСПИСАНИЯ КЛАССА (ИСПРАВЛЕННЫЙ) ==========
+// ========== ПОЛУЧЕНИЕ РАСПИСАНИЯ КЛАССА ==========
 
 router.get('/class/:className', authenticateToken, async (req, res) => {
     try {
@@ -409,10 +460,11 @@ router.get('/class/:className', authenticateToken, async (req, res) => {
                 ls.day_of_week,
                 ls.lesson_number,
                 l.name as subject,
-                CONCAT(t.last_name, ' ', t.first_name, ' ', COALESCE(t.middle_name, '')) as teacher,
+                CONCAT(t.last_name, ' ', t.first_name) as teacher,
                 ls.room,
                 l.id as lesson_id,
-                t.id as teacher_id
+                t.id as teacher_id,
+                t.color as teacher_color
             FROM lesson_schedule ls
             JOIN lessons l ON ls.subject_id = l.id
             JOIN teachers t ON ls.teacher_id = t.id
@@ -432,31 +484,27 @@ router.get('/class/:className', authenticateToken, async (req, res) => {
         };
         
         const schedule = {
-            'Понедельник': [],
-            'Вторник': [],
-            'Среда': [],
-            'Четверг': [],
-            'Пятница': [],
-            'Суббота': []
+            'Понедельник': {},
+            'Вторник': {},
+            'Среда': {},
+            'Четверг': {},
+            'Пятница': {},
+            'Суббота': {}
         };
         
         scheduleResult.rows.forEach(row => {
             const dayName = dayMap[row.day_of_week];
             if (dayName) {
-                schedule[dayName].push({
-                    number: row.lesson_number,
+                schedule[dayName][row.lesson_number] = {
                     subject: row.subject,
                     teacher: row.teacher,
                     room: row.room,
                     lesson_id: row.lesson_id,
-                    teacher_id: row.teacher_id
-                });
+                    teacher_id: row.teacher_id,
+                    teacherColor: row.teacher_color
+                };
             }
         });
-        
-        for (const day in schedule) {
-            schedule[day].sort((a, b) => a.number - b.number);
-        }
         
         res.json({ success: true, schedule, className });
         
@@ -513,10 +561,12 @@ router.get('/teacher/my-schedule', authenticateToken, async (req, res) => {
                 l.id as lesson_id,
                 CONCAT(c.number, c.letter) as class_name,
                 ls.room,
-                c.shift
+                c.shift,
+                t.color as teacher_color
             FROM lesson_schedule ls
             JOIN lessons l ON ls.subject_id = l.id
             JOIN classes c ON ls.class_id = c.id
+            JOIN teachers t ON ls.teacher_id = t.id
             WHERE ls.teacher_id = $1
             ORDER BY ls.day_of_week, ls.lesson_number
         `, [teacherId]);
@@ -551,7 +601,7 @@ router.get('/teacher/my-schedule', authenticateToken, async (req, res) => {
                     className: row.class_name,
                     room: row.room,
                     shift: row.shift,
-                    color: getSubjectColor(row.subject)
+                    color: row.teacher_color || getSubjectColor(row.subject)
                 });
             }
         });
@@ -999,6 +1049,89 @@ router.post('/check-conflicts', authenticateToken, async (req, res) => {
     }
 });
 
+// ========== ПОЛУЧЕНИЕ УЧИТЕЛЕЙ ПО ПРЕДМЕТУ ==========
+
+router.get('/teachers-by-lesson/:lessonName', authenticateToken, async (req, res) => {
+    try {
+        const { lessonName } = req.params;
+        
+        const lessonResult = await db.query(
+            'SELECT id FROM lessons WHERE name = $1',
+            [lessonName]
+        );
+        
+        if (lessonResult.rows.length === 0) {
+            return res.json([]);
+        }
+        
+        const lessonId = lessonResult.rows[0].id;
+        
+        const teachersResult = await db.query(`
+            SELECT 
+                t.id,
+                t.last_name,
+                t.first_name,
+                t.middle_name,
+                t.color,
+                CONCAT(t.last_name, ' ', t.first_name, ' ', COALESCE(t.middle_name, '')) as name
+            FROM teachers t
+            JOIN teacher_lessons tl ON t.id = tl.teacher_id
+            WHERE tl.lesson_id = $1
+            ORDER BY t.last_name
+        `, [lessonId]);
+        
+        res.json(teachersResult.rows || []);
+    } catch (err) {
+        console.error('GET /teachers-by-lesson error:', err);
+        res.status(500).json({ message: 'Ошибка сервера' });
+    }
+});
+
+// ========== ПОЛУЧЕНИЕ КАБИНЕТОВ ПО ПРЕДМЕТУ ==========
+
+router.get('/rooms-by-lesson/:lessonName', authenticateToken, async (req, res) => {
+    try {
+        const { lessonName } = req.params;
+        
+        const lessonResult = await db.query(
+            'SELECT id FROM lessons WHERE name = $1',
+            [lessonName]
+        );
+        
+        if (lessonResult.rows.length === 0) {
+            return res.json([]);
+        }
+        
+        const lessonId = lessonResult.rows[0].id;
+        
+        const roomsResult = await db.query(`
+            SELECT 
+                r.id,
+                r.number,
+                r.name,
+                r.priority
+            FROM rooms r
+            JOIN room_lesson_priorities rlp ON r.id = rlp.room_id
+            WHERE rlp.lesson_id = $1
+            ORDER BY r.priority DESC, r.number
+        `, [lessonId]);
+        
+        if (roomsResult.rows.length > 0) {
+            res.json(roomsResult.rows);
+        } else {
+            const allRooms = await db.query(`
+                SELECT id, number, name, priority
+                FROM rooms
+                ORDER BY number
+            `);
+            res.json(allRooms.rows);
+        }
+    } catch (err) {
+        console.error('GET /rooms-by-lesson error:', err);
+        res.status(500).json({ message: 'Ошибка сервера' });
+    }
+});
+
 // ========== ВРЕМЕННЫЙ ЭНДПОИНТ ДЛЯ ОТЛАДКИ ==========
 
 router.get('/debug/teachers', authenticateToken, async (req, res) => {
@@ -1017,6 +1150,551 @@ router.get('/debug/teachers', authenticateToken, async (req, res) => {
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+});
+
+// ============= ГЕНЕРАЦИЯ ЧЕРЕЗ МИКРОСЕРВИС =============
+
+router.post('/generate-from-microservice', authenticateToken, authorizeRoles('admin', 'superadmin'), async (req, res) => {
+    try {
+        const axios = require('axios');
+        const MICROSERVICE_URL = process.env.SCHEDULE_GENERATOR_URL || 'http://localhost:5001';
+        
+        console.log('Запуск генерации расписания через микросервис...');
+        
+        const response = await axios.post(`${MICROSERVICE_URL}/api/generate`, {
+            nodeApiUrl: `${req.protocol}://${req.get('host')}`,
+            token: req.headers.authorization?.replace('Bearer ', '')
+        }, {
+            timeout: 300000,
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.data.success) {
+            await saveGeneratedSchedule(response.data.schedule);
+            
+            await logActivity(
+                req.user.id,
+                req.user.login,
+                req.user.role,
+                'generate',
+                'Сгенерировано новое расписание с учетом СанПиН',
+                null
+            );
+            
+            res.json({ success: true, message: 'Расписание сгенерировано', schedule: response.data.schedule });
+        } else {
+            res.status(500).json({ success: false, message: response.data.error || 'Ошибка генерации' });
+        }
+    } catch (error) {
+        console.error('Generate error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+async function saveGeneratedSchedule(schedule) {
+    const client = await db.getClient();
+    
+    try {
+        await client.query('BEGIN');
+        await client.query('DELETE FROM lesson_schedule');
+        
+        let totalLessons = 0;
+        const dayMap = { 'Понедельник': 1, 'Вторник': 2, 'Среда': 3, 'Четверг': 4, 'Пятница': 5 };
+        
+        for (const className of Object.keys(schedule)) {
+            const classResult = await client.query('SELECT id FROM classes WHERE CONCAT(number, letter) = $1', [className]);
+            if (classResult.rows.length === 0) continue;
+            const classId = classResult.rows[0].id;
+            
+            const days = schedule[className];
+            for (const [dayName, lessons] of Object.entries(days)) {
+                const dayNumber = dayMap[dayName];
+                if (!dayNumber) continue;
+                
+                for (const lesson of lessons) {
+                    const subjectResult = await client.query('SELECT id FROM lessons WHERE name = $1', [lesson.subject]);
+                    if (subjectResult.rows.length === 0) continue;
+                    const subjectId = subjectResult.rows[0].id;
+                    
+                    const nameParts = lesson.teacher.split(' ');
+                    const lastName = nameParts[0] || '';
+                    const firstName = nameParts[1] || '';
+                    
+                    const teacherResult = await client.query('SELECT id FROM teachers WHERE last_name = $1 AND first_name = $2', [lastName, firstName]);
+                    if (teacherResult.rows.length === 0) continue;
+                    const teacherId = teacherResult.rows[0].id;
+                    
+                    await client.query(`
+                        INSERT INTO lesson_schedule (class_id, subject_id, teacher_id, day_of_week, lesson_number, room)
+                        VALUES ($1, $2, $3, $4, $5, $6)
+                    `, [classId, subjectId, teacherId, dayNumber, lesson.lessonNumber, lesson.office]);
+                    totalLessons++;
+                }
+            }
+        }
+        
+        await client.query('COMMIT');
+        console.log(`Сохранено ${totalLessons} уроков`);
+    } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+    } finally {
+        client.release();
+    }
+}
+
+// ========== СОХРАНЕНИЕ И ПУБЛИКАЦИЯ РАСПИСАНИЯ ==========
+
+router.post('/save-draft', authenticateToken, authorizeRoles('admin', 'superadmin'), async (req, res) => {
+    const { schedule, versionName, versionDescription } = req.body;
+    const client = await db.getClient();
+    
+    try {
+        await client.query('BEGIN');
+        
+        const versionResult = await client.query(
+            `INSERT INTO schedule_versions (version_number, name, description, created_by, status)
+             SELECT COALESCE(MAX(version_number), 0) + 1, $1, $2, $3, 'draft'
+             FROM schedule_versions
+             RETURNING *`,
+            [versionName || `Черновик ${new Date().toLocaleString()}`, versionDescription || '', req.user.id]
+        );
+        
+        const versionId = versionResult.rows[0].id;
+        await client.query('DELETE FROM lesson_schedule WHERE version_id = $1', [versionId]);
+        
+        let savedCount = 0;
+        const dayMap = { 'Понедельник': 1, 'Вторник': 2, 'Среда': 3, 'Четверг': 4, 'Пятница': 5 };
+        
+        for (const [className, days] of Object.entries(schedule)) {
+            const classResult = await client.query('SELECT id FROM classes WHERE CONCAT(number, letter) = $1', [className]);
+            if (classResult.rows.length === 0) continue;
+            const classId = classResult.rows[0].id;
+            
+            for (const [dayName, lessons] of Object.entries(days)) {
+                const dayNumber = dayMap[dayName];
+                if (!dayNumber) continue;
+                
+                for (const [lessonNumber, lesson] of Object.entries(lessons)) {
+                    const subjectResult = await client.query('SELECT id FROM lessons WHERE name = $1', [lesson.subject]);
+                    if (subjectResult.rows.length === 0) continue;
+                    const subjectId = subjectResult.rows[0].id;
+                    
+                    const nameParts = lesson.teacher.split(' ');
+                    const lastName = nameParts[0] || '';
+                    const firstName = nameParts[1] || '';
+                    
+                    const teacherResult = await client.query('SELECT id FROM teachers WHERE last_name = $1 AND first_name = $2', [lastName, firstName]);
+                    if (teacherResult.rows.length === 0) continue;
+                    const teacherId = teacherResult.rows[0].id;
+                    
+                    await client.query(`
+                        INSERT INTO lesson_schedule (version_id, class_id, subject_id, teacher_id, day_of_week, lesson_number, room, is_published)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, false)
+                    `, [versionId, classId, subjectId, teacherId, dayNumber, parseInt(lessonNumber), lesson.room]);
+                    savedCount++;
+                }
+            }
+        }
+        
+        await client.query('COMMIT');
+        
+        await logActivity(
+            req.user.id,
+            req.user.login,
+            req.user.role,
+            'save_draft',
+            `Сохранен черновик расписания: ${versionName || 'черновик'} (${savedCount} уроков)`,
+            null
+        );
+        
+        res.json({ 
+            success: true, 
+            message: `Черновик сохранен (${savedCount} уроков)`,
+            versionId: versionId,
+            versionNumber: versionResult.rows[0].version_number
+        });
+        
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Error saving draft:', err);
+        res.status(500).json({ message: err.message });
+    } finally {
+        client.release();
+    }
+});
+
+router.post('/publish/:versionId', authenticateToken, authorizeRoles('admin', 'superadmin'), async (req, res) => {
+    const { versionId } = req.params;
+    const { validFrom, validTo } = req.body;
+    const client = await db.getClient();
+    
+    try {
+        await client.query('BEGIN');
+        
+        const versionCheck = await client.query('SELECT id, version_number, name FROM schedule_versions WHERE id = $1', [versionId]);
+        if (versionCheck.rows.length === 0) {
+            return res.status(404).json({ message: 'Версия не найдена' });
+        }
+        
+        await client.query('UPDATE schedule_versions SET status = $1 WHERE status = $2', ['archived', 'published']);
+        await client.query('UPDATE lesson_schedule SET is_published = false WHERE is_published = true');
+        
+        await client.query(`
+            UPDATE schedule_versions 
+            SET status = 'published', valid_from = $1, valid_to = $2, published_at = NOW()
+            WHERE id = $3
+        `, [validFrom || new Date(), validTo || null, versionId]);
+        
+        await client.query('UPDATE lesson_schedule SET is_published = true WHERE version_id = $1', [versionId]);
+        
+        await client.query('DELETE FROM active_schedule');
+        await client.query(`
+            INSERT INTO active_schedule (version_id, class_id, day_of_week, lesson_number, subject_id, teacher_id, room)
+            SELECT version_id, class_id, day_of_week, lesson_number, subject_id, teacher_id, room
+            FROM lesson_schedule
+            WHERE version_id = $1 AND is_published = true
+        `, [versionId]);
+        
+        await client.query('COMMIT');
+        
+        await logActivity(
+            req.user.id,
+            req.user.login,
+            req.user.role,
+            'publish',
+            `Опубликовано расписание: ${versionCheck.rows[0].name || 'версия ' + versionCheck.rows[0].version_number}`,
+            null
+        );
+        
+        res.json({ success: true, message: 'Расписание опубликовано', version: versionCheck.rows[0] });
+        
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Error publishing schedule:', err);
+        res.status(500).json({ message: err.message });
+    } finally {
+        client.release();
+    }
+});
+
+router.get('/versions', authenticateToken, async (req, res) => {
+    try {
+        const tableCheck = await db.query(`
+            SELECT EXISTS (
+                SELECT 1 FROM information_schema.tables 
+                WHERE table_name = 'schedule_versions'
+            )
+        `);
+        
+        if (!tableCheck.rows[0].exists) {
+            return res.json([]);
+        }
+        
+        const countResult = await db.query('SELECT COUNT(*) as count FROM schedule_versions');
+        
+        if (parseInt(countResult.rows[0].count) === 0) {
+            return res.json([]);
+        }
+        
+        const result = await db.query(`
+            SELECT 
+                v.id,
+                v.version_number,
+                COALESCE(v.name, 'Версия ' || v.version_number) as name,
+                v.description,
+                v.status,
+                v.valid_from,
+                v.valid_to,
+                v.created_at,
+                v.published_at,
+                u.login as created_by_name,
+                COALESCE((SELECT COUNT(*) FROM lesson_schedule WHERE version_id = v.id), 0) as lessons_count
+            FROM schedule_versions v
+            LEFT JOIN users u ON v.created_by = u.id
+            ORDER BY v.version_number DESC
+        `);
+        
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error getting versions:', err);
+        res.json([]);
+    }
+});
+
+router.get('/active', authenticateToken, async (req, res) => {
+    try {
+        const countResult = await db.query('SELECT COUNT(*) as count FROM lesson_schedule');
+        
+        if (parseInt(countResult.rows[0].count) === 0) {
+            return res.json({ schedules: {}, version_id: null });
+        }
+        
+        const result = await db.query(`
+            SELECT 
+                c.number || c.letter as class_name,
+                ls.day_of_week,
+                ls.lesson_number,
+                l.name as subject_name,
+                CONCAT(t.last_name, ' ', t.first_name) as teacher_name,
+                t.color as teacher_color,
+                ls.room
+            FROM lesson_schedule ls
+            JOIN classes c ON ls.class_id = c.id
+            JOIN lessons l ON ls.subject_id = l.id
+            JOIN teachers t ON ls.teacher_id = t.id
+            ORDER BY c.number, c.letter, ls.day_of_week, ls.lesson_number
+        `);
+        
+        const schedules = {};
+        const dayMap = { 1: 'Понедельник', 2: 'Вторник', 3: 'Среда', 4: 'Четверг', 5: 'Пятница' };
+        
+        for (const row of result.rows) {
+            if (!schedules[row.class_name]) {
+                schedules[row.class_name] = {};
+            }
+            const dayName = dayMap[row.day_of_week];
+            if (!schedules[row.class_name][dayName]) {
+                schedules[row.class_name][dayName] = {};
+            }
+            schedules[row.class_name][dayName][row.lesson_number] = {
+                subject: row.subject_name,
+                teacher: row.teacher_name,
+                room: row.room,
+                teacherColor: row.teacher_color
+            };
+        }
+        
+        res.json({ schedules, version_id: null });
+    } catch (err) {
+        console.error('Error getting active schedule:', err);
+        res.json({ schedules: {}, version_id: null });
+    }
+});
+
+router.put('/update-lesson', authenticateToken, authorizeRoles('admin', 'superadmin'), async (req, res) => {
+    const { versionId, classId, dayOfWeek, lessonNumber, subjectId, teacherId, room } = req.body;
+    const client = await db.getClient();
+    
+    try {
+        await client.query('BEGIN');
+        
+        const existing = await client.query(
+            `SELECT id FROM lesson_schedule 
+             WHERE version_id = $1 AND class_id = $2 AND day_of_week = $3 AND lesson_number = $4`,
+            [versionId, classId, dayOfWeek, lessonNumber]
+        );
+        
+        if (existing.rows.length > 0) {
+            await client.query(
+                `UPDATE lesson_schedule 
+                 SET subject_id = $1, teacher_id = $2, room = $3, updated_at = NOW()
+                 WHERE version_id = $4 AND class_id = $5 AND day_of_week = $6 AND lesson_number = $7`,
+                [subjectId, teacherId, room, versionId, classId, dayOfWeek, lessonNumber]
+            );
+        } else {
+            await client.query(
+                `INSERT INTO lesson_schedule (version_id, class_id, subject_id, teacher_id, day_of_week, lesson_number, room, is_published)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, false)`,
+                [versionId, classId, subjectId, teacherId, dayOfWeek, lessonNumber, room]
+            );
+        }
+        
+        const versionStatus = await client.query('SELECT status FROM schedule_versions WHERE id = $1', [versionId]);
+        
+        if (versionStatus.rows[0]?.status === 'published') {
+            await client.query(
+                `UPDATE active_schedule 
+                 SET subject_id = $1, teacher_id = $2, room = $3
+                 WHERE version_id = $4 AND class_id = $5 AND day_of_week = $6 AND lesson_number = $7`,
+                [subjectId, teacherId, room, versionId, classId, dayOfWeek, lessonNumber]
+            );
+        }
+        
+        await client.query('COMMIT');
+        
+        await logActivity(
+            req.user.id,
+            req.user.login,
+            req.user.role,
+            'edit',
+            `Отредактирован урок в классе ID ${classId}, день ${dayOfWeek}, урок ${lessonNumber}`,
+            null
+        );
+        
+        res.json({ success: true, message: 'Урок обновлен' });
+        
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Error updating lesson:', err);
+        res.status(500).json({ message: err.message });
+    } finally {
+        client.release();
+    }
+});
+
+// ============= ДОПОЛНИТЕЛЬНЫЕ ЭНДПОИНТЫ ДЛЯ ScheduleViewer =============
+
+router.get('/draft', authenticateToken, async (req, res) => {
+    try {
+        const countResult = await db.query('SELECT COUNT(*) as count FROM lesson_schedule');
+        
+        if (parseInt(countResult.rows[0].count) === 0) {
+            return res.json({ schedules: {}, version_id: null });
+        }
+        
+        const result = await db.query(`
+            SELECT 
+                c.number || c.letter as class_name,
+                ls.day_of_week,
+                ls.lesson_number,
+                l.name as subject_name,
+                CONCAT(t.last_name, ' ', t.first_name) as teacher_name,
+                t.color as teacher_color,
+                ls.room
+            FROM lesson_schedule ls
+            JOIN classes c ON ls.class_id = c.id
+            JOIN lessons l ON ls.subject_id = l.id
+            JOIN teachers t ON ls.teacher_id = t.id
+            ORDER BY c.number, c.letter, ls.day_of_week, ls.lesson_number
+        `);
+        
+        const schedules = {};
+        const dayMap = {1: 'Понедельник', 2: 'Вторник', 3: 'Среда', 4: 'Четверг', 5: 'Пятница'};
+        
+        for (const row of result.rows) {
+            if (!schedules[row.class_name]) {
+                schedules[row.class_name] = {};
+            }
+            const dayName = dayMap[row.day_of_week];
+            if (!schedules[row.class_name][dayName]) {
+                schedules[row.class_name][dayName] = {};
+            }
+            schedules[row.class_name][dayName][row.lesson_number] = {
+                subject: row.subject_name,
+                teacher: row.teacher_name,
+                room: row.room,
+                teacherColor: row.teacher_color
+            };
+        }
+        
+        res.json({ schedules, version_id: null });
+    } catch (err) {
+        console.error('Error getting draft:', err);
+        res.json({ schedules: {}, version_id: null });
+    }
+});
+
+router.get('/version/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await db.query(`
+            SELECT 
+                c.number || c.letter as class_name,
+                ls.day_of_week,
+                ls.lesson_number,
+                l.name as subject_name,
+                CONCAT(t.last_name, ' ', t.first_name) as teacher_name,
+                ls.room
+            FROM lesson_schedule ls
+            JOIN classes c ON ls.class_id = c.id
+            JOIN lessons l ON ls.subject_id = l.id
+            JOIN teachers t ON ls.teacher_id = t.id
+            WHERE ls.version_id = $1 OR ($1 = 'current' AND ls.is_published = true)
+            ORDER BY c.number, c.letter, ls.day_of_week, ls.lesson_number
+        `, [id === 'current' ? null : parseInt(id)]);
+        
+        const schedule = {};
+        const dayMap = {1: 'Понедельник', 2: 'Вторник', 3: 'Среда', 4: 'Четверг', 5: 'Пятница'};
+        
+        for (const row of result.rows) {
+            if (!schedule[row.class_name]) {
+                schedule[row.class_name] = {};
+            }
+            const dayName = dayMap[row.day_of_week];
+            if (!schedule[row.class_name][dayName]) {
+                schedule[row.class_name][dayName] = {};
+            }
+            schedule[row.class_name][dayName][row.lesson_number] = {
+                subject: row.subject_name,
+                teacher: row.teacher_name,
+                room: row.room
+            };
+        }
+        
+        res.json({ schedule });
+    } catch (err) {
+        console.error('Error getting version:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.post('/publish', authenticateToken, authorizeRoles('admin', 'superadmin'), async (req, res) => {
+    const { schedule } = req.body;
+    const client = await db.getClient();
+    
+    try {
+        await client.query('BEGIN');
+        await client.query('DELETE FROM lesson_schedule');
+        
+        let totalLessons = 0;
+        const dayMap = { 'Понедельник': 1, 'Вторник': 2, 'Среда': 3, 'Четверг': 4, 'Пятница': 5 };
+        
+        for (const [className, days] of Object.entries(schedule)) {
+            const classResult = await client.query('SELECT id FROM classes WHERE CONCAT(number, letter) = $1', [className]);
+            if (classResult.rows.length === 0) continue;
+            const classId = classResult.rows[0].id;
+            
+            for (const [dayName, lessons] of Object.entries(days)) {
+                const dayNumber = dayMap[dayName];
+                if (!dayNumber) continue;
+                
+                for (const [lessonNumber, lesson] of Object.entries(lessons)) {
+                    const subjectResult = await client.query('SELECT id FROM lessons WHERE name = $1', [lesson.subject]);
+                    if (subjectResult.rows.length === 0) continue;
+                    const subjectId = subjectResult.rows[0].id;
+                    
+                    const nameParts = lesson.teacher.split(' ');
+                    const teacherResult = await client.query('SELECT id FROM teachers WHERE last_name = $1 AND first_name LIKE $2', [nameParts[0] || '', '%' + (nameParts[1] || '') + '%']);
+                    if (teacherResult.rows.length === 0) continue;
+                    const teacherId = teacherResult.rows[0].id;
+                    
+                    await client.query(`
+                        INSERT INTO lesson_schedule (class_id, subject_id, teacher_id, day_of_week, lesson_number, room, is_published)
+                        VALUES ($1, $2, $3, $4, $5, $6, true)
+                    `, [classId, subjectId, teacherId, dayNumber, parseInt(lessonNumber), lesson.room]);
+                    totalLessons++;
+                }
+            }
+        }
+        
+        await client.query('COMMIT');
+        console.log(`✅ Опубликовано ${totalLessons} уроков`);
+        
+        res.json({ success: true, message: `Расписание опубликовано (${totalLessons} уроков)` });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Error publishing:', err);
+        res.status(500).json({ message: err.message });
+    } finally {
+        client.release();
+    }
+});
+
+router.post('/publish-version/:id', authenticateToken, authorizeRoles('admin', 'superadmin'), async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        await db.query('UPDATE lesson_schedule SET is_published = false WHERE is_published = true');
+        await db.query('UPDATE lesson_schedule SET is_published = true WHERE version_id = $1', [id]);
+        await db.query('UPDATE schedule_versions SET status = $1 WHERE id = $2', ['published', id]);
+        
+        res.json({ success: true, message: 'Версия опубликована' });
+    } catch (err) {
+        console.error('Error publishing version:', err);
+        res.status(500).json({ message: err.message });
     }
 });
 

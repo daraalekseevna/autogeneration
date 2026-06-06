@@ -1525,3 +1525,488 @@ body {
     border: 2px dashed #667eea;
     transition: all 0.05s ease;
 }
+/* Стили для кнопок сворачивания дней */
+.day-collapse-btn,
+.class-collapse-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  margin-left: 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.day-collapse-btn:hover,
+.class-collapse-btn:hover {
+  background: rgba(0,0,0,0.05);
+  color: #333;
+}
+
+.day-collapse-btn .collapse-text {
+  margin-left: 4px;
+  font-size: 10px;
+}
+
+.class-collapse-btn {
+  opacity: 0.5;
+}
+
+.class-collapse-btn:hover {
+  opacity: 1;
+}
+
+/* Строка свернутого дня */
+.day-collapsed-row .collapsed-placeholder {
+  text-align: center;
+  padding: 20px;
+  background: #f5f5f5;
+  color: #999;
+}
+
+.collapsed-day-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.collapsed-day-message svg {
+  font-size: 16px;
+}
+
+/* Кнопки сворачивания всех дней */
+.collapse-all-days-buttons {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  justify-content: center;
+}
+
+.collapse-all-btn,
+.expand-all-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 10px;
+  border-radius: 4px;
+  color: #666;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.collapse-all-btn:hover,
+.expand-all-btn:hover {
+  background: rgba(0,0,0,0.05);
+  color: #333;
+}
+
+/* Заголовок класса */
+.class-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+/* Кнопки сохранения и публикации */
+.action-btn.save-draft-btn {
+    background: #ff9800;
+    color: white;
+}
+
+.action-btn.save-draft-btn:hover:not(:disabled) {
+    background: #f57c00;
+}
+
+.action-btn.publish-btn {
+    background: #4caf50;
+    color: white;
+}
+
+.action-btn.publish-btn:hover {
+    background: #45a049;
+}
+
+.action-btn.save-draft-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Баннер активного расписания */
+.active-schedule-banner {
+    background: linear-gradient(135deg, #4caf50 0%, #2196F3 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+}
+
+.active-schedule-banner.expired {
+    background: linear-gradient(135deg, #ff9800 0%, #f44336 100%);
+}
+
+.active-schedule-banner svg {
+    font-size: 18px;
+}
+
+/* Модальное окно для выбора дат */
+.validity-modal {
+    max-width: 450px;
+}
+
+.modal-header-icon {
+    width: 36px;
+    height: 36px;
+    background: #4caf50;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+}
+
+.btn-publish {
+    background: #4caf50;
+    color: white;
+}
+
+.btn-publish:hover:not(:disabled) {
+    background: #45a049;
+}
+
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: rgba(244, 67, 54, 0.1);
+    border-radius: 10px;
+    color: #f44336;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+/* Дополнительные стили */
+.info-hint {
+    display: block;
+    font-size: 11px;
+    color: #f59e0b;
+    margin-top: 4px;
+}
+/* Дополнительные стили */
+.info-hint-warning {
+  display: block;
+  font-size: 11px;
+  color: #ef4444;
+  margin-top: 4px;
+}
+
+.day-collapse-btn, .day-expand-btn {
+  background: rgba(33, 67, 90, 0.8);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.day-expand-btn {
+  background: #4caf50;
+}
+
+.clear-day-all-btn {
+  background: #dc2626;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.class-collapse-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+.collapse-all-days-buttons {
+  display: flex;
+  gap: 8px;
+  margin-left: 12px;
+}
+
+.collapse-all-btn, .expand-all-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+.day-collapsed-row {
+  background: #f5f5f5;
+}
+
+.collapsed-day-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.drag-over {
+  background-color: rgba(33, 67, 90, 0.1);
+}
+.active-schedule-banner {
+    background: linear-gradient(135deg, #4caf50, #2196F3);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.active-schedule-banner.expired {
+    background: linear-gradient(135deg, #ff9800, #f44336);
+}
+
+.class-header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.class-collapse-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 10px;
+}
+
+.day-name-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.day-collapse-btn, .day-expand-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 10px;
+    width: fit-content;
+}
+
+.day-short-name {
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+.day-collapsed-row .day-cell {
+    background: #f5f5f5;
+}
+
+.collapsed-placeholder {
+    text-align: center;
+    color: #999;
+    padding: 20px;
+}
+
+.drag-over {
+    background-color: rgba(33, 67, 90, 0.1);
+}
+
+.info-message {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: rgba(33, 150, 243, 0.1);
+    border-radius: 10px;
+    color: #2196F3;
+    font-size: 13px;
+    margin-bottom: 0;
+}/* Дополнительные стили для модального окна */
+.info-hint {
+  display: block;
+  font-size: 11px;
+  color: #f59e0b;
+  margin-top: 4px;
+}
+
+.info-hint-warning {
+  display: block;
+  font-size: 11px;
+  color: #ef4444;
+  margin-top: 4px;
+}
+
+.active-schedule-banner {
+  background: linear-gradient(135deg, #4caf50, #2196F3);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.active-schedule-banner.expired {
+  background: linear-gradient(135deg, #ff9800, #f44336);
+}
+
+.class-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.class-collapse-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+.class-collapse-btn:hover {
+  background: rgba(255,255,255,0.4);
+}
+
+.day-name-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.day-collapse-btn, .day-expand-btn {
+  background: rgba(33, 67, 90, 0.8);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+}
+
+.day-expand-btn {
+  background: #4caf50;
+}
+
+.day-expand-btn:hover {
+  background: #45a049;
+}
+
+.day-short-name {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.day-collapsed-row {
+  background: #f5f5f5;
+}
+
+.collapsed-day-cell {
+  background: #eef2f5;
+  vertical-align: middle;
+}
+
+.collapsed-placeholder {
+  text-align: center;
+  color: #999;
+  padding: 20px;
+  background: #fafafa;
+}
+
+.collapsed-day-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.drag-over {
+  background-color: rgba(33, 67, 90, 0.1);
+}
+
+.clear-day-all-btn {
+  background: #dc2626;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.clear-day-all-btn:hover {
+  background: #b91c1c;
+}
+
+.collapse-all-days-buttons {
+  display: flex;
+  gap: 8px;
+  margin-left: 12px;
+}
+
+.collapse-all-btn, .expand-all-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.collapse-all-btn:hover, .expand-all-btn:hover {
+  background: rgba(255,255,255,0.3);
+}

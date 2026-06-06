@@ -101,7 +101,7 @@ body {
     overflow-x: hidden;
 }
 
-/* ========== АНИМИРОВАННЫЙ ФОН ========== */
+/* ========== АНИМИРОВАННЫЙ ФОН (УСКОРЕННЫЙ) ========== */
 .animated-bg {
     position: fixed;
     top: 0;
@@ -124,7 +124,7 @@ body:not(.dark-theme) .animated-bg {
     position: absolute;
     border-radius: 50%;
     filter: blur(35px);
-    animation: float 20s infinite ease-in-out;
+    animation: floatFast 12s infinite ease-in-out; /* Было 20s, стало 12s */
     transform-origin: center;
 }
 
@@ -147,7 +147,7 @@ body.dark-theme .glass-circle {
     top: 10%;
     left: 5%;
     background: radial-gradient(circle at 30% 30%, rgba(106,13,173,0.7) 0%, rgba(0,153,255,0.6) 40%, transparent 70%);
-    animation-duration: 30s;
+    animation-duration: 18s; /* Было 30s, стало 18s */
     border-radius: 43% 57% 52% 48% / 48% 43% 57% 52%;
 }
 
@@ -158,8 +158,8 @@ body.dark-theme .glass-circle {
     top: 60%;
     right: 8%;
     background: radial-gradient(circle at 70% 20%, rgba(68,153,209,0.7) 0%, rgba(137,43,226,0.6) 40%, transparent 70%);
-    animation-duration: 28s;
-    animation-delay: -7s;
+    animation-duration: 16s; /* Было 28s, стало 16s */
+    animation-delay: -4s;
     border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
 }
 
@@ -170,8 +170,8 @@ body.dark-theme .glass-circle {
     bottom: 15%;
     left: 12%;
     background: radial-gradient(circle at 50% 50%, rgba(156,39,176,0.65) 0%, rgba(107,163,202,0.6) 40%, transparent 70%);
-    animation-duration: 32s;
-    animation-delay: -12s;
+    animation-duration: 19s; /* Было 32s, стало 19s */
+    animation-delay: -7s;
     border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
 }
 
@@ -182,8 +182,8 @@ body.dark-theme .glass-circle {
     top: 25%;
     right: 22%;
     background: linear-gradient(135deg, rgba(106,13,173,0.65), rgba(68,153,209,0.6));
-    animation-duration: 26s;
-    animation-delay: -5s;
+    animation-duration: 15s; /* Было 26s, стало 15s */
+    animation-delay: -3s;
     border-radius: 55% 45% 65% 35% / 45% 55% 45% 55%;
 }
 
@@ -194,8 +194,8 @@ body.dark-theme .glass-circle {
     bottom: 35%;
     right: 28%;
     background: radial-gradient(circle at 80% 50%, rgba(0,153,255,0.6), rgba(137,43,226,0.55));
-    animation-duration: 29s;
-    animation-delay: -15s;
+    animation-duration: 17s; /* Было 29s, стало 17s */
+    animation-delay: -9s;
     border-radius: 70% 30% 50% 50% / 60% 40% 60% 40%;
 }
 
@@ -206,8 +206,8 @@ body.dark-theme .glass-circle {
     top: 70%;
     left: 35%;
     background: radial-gradient(circle at 40% 60%, rgba(137,43,226,0.6), rgba(107,163,202,0.55));
-    animation-duration: 27s;
-    animation-delay: -20s;
+    animation-duration: 14s; /* Было 27s, стало 14s */
+    animation-delay: -12s;
     border-radius: 45% 55% 35% 65% / 55% 45% 55% 45%;
 }
 
@@ -218,8 +218,8 @@ body.dark-theme .glass-circle {
     top: 15%;
     left: 40%;
     background: linear-gradient(45deg, rgba(156,39,176,0.65), rgba(0,153,255,0.6));
-    animation-duration: 24s;
-    animation-delay: -8s;
+    animation-duration: 13s; /* Было 24s, стало 13s */
+    animation-delay: -5s;
     border-radius: 65% 35% 45% 55% / 35% 65% 35% 65%;
 }
 
@@ -230,8 +230,8 @@ body.dark-theme .glass-circle {
     top: -100px;
     left: -150px;
     background: radial-gradient(circle at center, rgba(106,13,173,0.5), transparent);
-    animation-duration: 35s;
-    animation-delay: -25s;
+    animation-duration: 20s; /* Было 35s, стало 20s */
+    animation-delay: -15s;
     border-radius: 50%;
 }
 
@@ -242,8 +242,8 @@ body.dark-theme .glass-circle {
     bottom: -120px;
     right: -100px;
     background: radial-gradient(circle at center, rgba(68,153,209,0.5), transparent);
-    animation-duration: 33s;
-    animation-delay: -18s;
+    animation-duration: 20s; /* Было 33s, стало 20s */
+    animation-delay: -10s;
     border-radius: 50%;
 }
 
@@ -254,17 +254,20 @@ body.dark-theme .glass-circle {
     top: 40%;
     left: 60%;
     background: linear-gradient(120deg, rgba(106,13,173,0.6), rgba(68,153,209,0.55), rgba(156,39,176,0.5));
-    animation-duration: 31s;
-    animation-delay: -10s;
+    animation-duration: 18s; /* Было 31s, стало 18s */
+    animation-delay: -6s;
     border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%;
 }
 
-@keyframes float {
+/* УСКОРЕННАЯ АНИМАЦИЯ float - увеличиваем амплитуду для более заметного движения */
+@keyframes floatFast {
     0%,100% { transform: translate(0,0) rotate(0deg) scale(1); }
-    20% { transform: translate(40px,30px) rotate(2deg) scale(1.03); }
-    40% { transform: translate(-25px,45px) rotate(-3deg) scale(0.98); }
-    60% { transform: translate(35px,-25px) rotate(4deg) scale(1.02); }
-    80% { transform: translate(-20px,-35px) rotate(-2deg) scale(0.99); }
+    15% { transform: translate(50px, 40px) rotate(3deg) scale(1.05); }
+    30% { transform: translate(-30px, 60px) rotate(-4deg) scale(1.02); }
+    45% { transform: translate(40px, -35px) rotate(5deg) scale(0.98); }
+    60% { transform: translate(-40px, 25px) rotate(-3deg) scale(1.03); }
+    75% { transform: translate(25px, -50px) rotate(2deg) scale(0.97); }
+    90% { transform: translate(-20px, -30px) rotate(-2deg) scale(1.02); }
 }
 
 /* ========== КНОПКА ТЕМЫ (ГЛОБАЛЬНАЯ) ========== */

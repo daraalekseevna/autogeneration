@@ -53,16 +53,15 @@ export const rolesConfig = {
     }
 };
 
-// Маршруты для разных ролей
+// Маршруты ролей
 export const roleRoutes = {
     superadmin: '/superadmin',
     admin: '/',
     teacher: '/teacher',
-    class: '/class',  // <-- ИСПРАВЛЕНО: было '/class/schedule', стало '/class'
+    class: '/class',  
     student: '/student'
 };
 
-// Функция для получения маршрута по роли (с отладкой)
 export const getRouteByRole = (role) => {
     console.log('getRouteByRole called with role:', role);
     console.log('Available routes:', roleRoutes);

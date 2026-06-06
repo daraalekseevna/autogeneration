@@ -15,6 +15,8 @@ import ClassSchedule from './pages/ClassSchedule';
 import AdminScheduleEditor from './pages/AdminScheduleEditor';
 import AdminFullScheduleEditor from './pages/AdminFullScheduleEditor';
 import './App.css';
+import './styles/SuperAdmin.css';
+
 
 function App() {
     return (

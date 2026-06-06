@@ -1,18 +1,35 @@
-/* SuperAdmin.css - ПОЛНАЯ ВЕРСИЯ, ИЗОЛИРОВАННАЯ */
-/* Все стили обернуты в .superadmin-container */
+/* SuperAdmin.css - ПОЛНАЯ ВЕРСИЯ СО ВСЕМИ СТИЛЯМИ ДЛЯ SANPIN */
+/* Все стили изолированы в .superadmin-container */
 
-/* ========== ИЗОЛИРОВАННЫЙ КОНТЕЙНЕР ========== */
+/* ========== ПЕРЕМЕННЫЕ (ОРИГИНАЛЬНЫЕ ЦВЕТА) ========== */
+.superadmin-container {
+    --primary: #21435A;
+    --primary-light: #2c5a7a;
+    --primary-dark: #1a3548;
+    --secondary: #f59e0b;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border-color: #e2e8f0;
+    --border-solid: #cbd5e1;
+    --bg-card: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-input: #ffffff;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* ========== БАЗОВЫЙ КОНТЕЙНЕР ========== */
 .superadmin-container {
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 2rem;
-    animation: superadminFadeIn 0.4s ease;
-}
-
-@keyframes superadminFadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 
 /* ========== ЗАГОЛОВОК ========== */
@@ -24,14 +41,42 @@
 .superadmin-container .superadmin-title {
     color: var(--text-primary);
     margin-bottom: 0.5rem;
-    font-size: 2rem;
-    font-weight: 700;
-    letter-spacing: -0.5px;
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.3px;
 }
 
 .superadmin-container .superadmin-subtitle {
     color: var(--text-muted);
-    font-size: 0.95rem;
+    font-size: 0.875rem;
+}
+
+/* ========== КНОПКА НАЗАД ========== */
+.superadmin-container .back-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+}
+
+.superadmin-container .back-button:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: translateX(-3px);
 }
 
 /* ========== СТАТИСТИКА ========== */
@@ -43,122 +88,82 @@
 }
 
 @media (max-width: 1200px) {
-    .superadmin-container .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
+    .superadmin-container .stats-grid { grid-template-columns: repeat(3, 1fr); }
 }
-
 @media (max-width: 768px) {
-    .superadmin-container .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    .superadmin-container .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+    .superadmin-container .stats-grid { grid-template-columns: 1fr; }
 }
 
 .superadmin-container .stat-card {
     background: var(--bg-card);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 1.25rem;
+    border-radius: 12px;
+    padding: 1rem;
     text-align: center;
     border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.superadmin-container .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary), var(--primary-light));
-    transform: scaleX(0);
-    transition: transform 0.3s ease;
-}
-
-.superadmin-container .stat-card:hover::before {
-    transform: scaleX(1);
+    transition: all 0.2s ease;
 }
 
 .superadmin-container .stat-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
+    border-color: var(--primary-light);
 }
 
 .superadmin-container .stat-number {
-    font-size: 2rem;
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--primary);
     line-height: 1.2;
 }
 
 .superadmin-container .stat-label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
     margin-top: 0.5rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* ========== ТАБЫ ========== */
 .superadmin-container .tabs-container {
     display: flex;
-    gap: 0.75rem;
-    margin-bottom: 2rem;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
     flex-wrap: wrap;
-    border-bottom: 2px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
     padding-bottom: 0.5rem;
 }
 
 .superadmin-container .tab-button {
-    padding: 0.7rem 1.4rem;
+    padding: 0.5rem 1.2rem;
     border: none;
     background: transparent;
     color: var(--text-secondary);
-    border-radius: 12px;
+    border-radius: 8px;
     cursor: pointer;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: all 0.25s ease;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    position: relative;
-}
-
-.superadmin-container .tab-button::after {
-    content: '';
-    position: absolute;
-    bottom: -0.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 2px;
-    background: var(--primary);
-    transition: width 0.25s ease;
+    gap: 0.5rem;
 }
 
 .superadmin-container .tab-button:hover {
     color: var(--primary);
-    background: rgba(33, 67, 90, 0.08);
+    background: rgba(33, 67, 90, 0.05);
 }
 
 .superadmin-container .tab-button.active {
     color: var(--primary);
-    background: rgba(33, 67, 90, 0.1);
+    background: rgba(33, 67, 90, 0.08);
 }
 
-.superadmin-container .tab-button.active::after {
-    width: 80%;
-}
-
-/* ========== КОНТЕНТ ========== */
+/* ========== СЕТКА КОНТЕНТА ========== */
 .superadmin-container .content-grid {
     display: grid;
     grid-template-columns: 1fr 2fr;
@@ -166,45 +171,40 @@
 }
 
 @media (max-width: 1024px) {
-    .superadmin-container .content-grid {
-        grid-template-columns: 1fr;
-    }
+    .superadmin-container .content-grid { grid-template-columns: 1fr; }
 }
 
-/* ========== КАРТОЧКИ ФОРМ И ТАБЛИЦ ========== */
+/* ========== КАРТОЧКИ ========== */
 .superadmin-container .form-container,
 .superadmin-container .table-container {
     background: var(--bg-card);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 1.5rem;
+    border-radius: 12px;
+    padding: 1.25rem;
     border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
+    transition: box-shadow 0.2s ease;
 }
 
 .superadmin-container .form-container:hover,
 .superadmin-container .table-container:hover {
     box-shadow: var(--shadow-md);
-    border-color: rgba(33, 67, 90, 0.2);
 }
 
 .superadmin-container .form-title,
 .superadmin-container .table-title {
     color: var(--text-primary);
-    margin-bottom: 1.25rem;
-    font-size: 1.1rem;
-    font-weight: 700;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
     padding-bottom: 0.75rem;
-    border-bottom: 2px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .superadmin-container .form-title svg,
 .superadmin-container .table-title svg {
     color: var(--primary);
-    font-size: 1.1rem;
 }
 
 /* ========== ФОРМЫ ========== */
@@ -214,24 +214,20 @@
 
 .superadmin-container .form-group label {
     display: block;
-    margin-bottom: 0.4rem;
-    font-size: 0.8rem;
-    font-weight: 600;
+    margin-bottom: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 500;
     color: var(--text-secondary);
-    letter-spacing: 0.3px;
 }
 
 .superadmin-container .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
-    margin-bottom: 0.5rem;
 }
 
-@media (max-width: 576px) {
-    .superadmin-container .form-row {
-        grid-template-columns: 1fr;
-    }
+@media (max-width: 640px) {
+    .superadmin-container .form-row { grid-template-columns: 1fr; }
 }
 
 .superadmin-container .form-input,
@@ -239,13 +235,12 @@
 .superadmin-container .form-group select,
 .superadmin-container .form-group textarea {
     width: 100%;
-    padding: 0.7rem 1rem;
-    border: 1.5px solid var(--border-solid);
-    border-radius: 12px;
-    font-size: 0.85rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--border-solid);
+    border-radius: 8px;
+    font-size: 0.875rem;
     background: var(--bg-input);
     color: var(--text-primary);
-    font-family: inherit;
     transition: all 0.2s ease;
 }
 
@@ -254,56 +249,84 @@
 .superadmin-container .form-group textarea:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.15);
+    box-shadow: 0 0 0 2px rgba(33, 67, 90, 0.1);
 }
 
-.superadmin-container .form-group input:disabled,
-.superadmin-container .form-group select:disabled,
-.superadmin-container .form-group textarea:disabled {
+.superadmin-container .form-group input:disabled {
     background: var(--bg-secondary);
     cursor: not-allowed;
     opacity: 0.7;
 }
 
+/* ========== СЕЛЕКТОР ПРЕДМЕТОВ ========== */
+.superadmin-container .subject-selector-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--border-solid);
+    border-radius: 8px;
+    background: var(--bg-input);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.superadmin-container .subject-selector-button:hover {
+    border-color: var(--primary);
+    background: rgba(33, 67, 90, 0.02);
+}
+
+.superadmin-container .subject-selector-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.superadmin-container .subject-selector-content svg {
+    color: var(--primary);
+}
+
+.superadmin-container .subject-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 0.5rem;
+}
+
+.superadmin-container .subject-preview-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--primary);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: white;
+}
+
 /* ========== КНОПКИ ========== */
 .superadmin-container .submit-button {
     width: 100%;
-    padding: 0.8rem;
+    padding: 0.7rem;
     border: none;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    background: var(--primary);
     color: white;
-    border-radius: 14px;
+    border-radius: 8px;
     cursor: pointer;
-    font-weight: 600;
-    font-size: 0.9rem;
+    font-weight: 500;
+    font-size: 0.875rem;
     margin-top: 0.5rem;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.6rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.superadmin-container .submit-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
-}
-
-.superadmin-container .submit-button:hover::before {
-    left: 100%;
+    gap: 0.5rem;
 }
 
 .superadmin-container .submit-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(33, 67, 90, 0.3);
+    background: var(--primary-light);
+    transform: translateY(-1px);
 }
 
 .superadmin-container .submit-button:active {
@@ -313,7 +336,7 @@
 /* ========== ТАБЛИЦЫ ========== */
 .superadmin-container .table-responsive {
     overflow-x: auto;
-    border-radius: 12px;
+    border-radius: 8px;
 }
 
 .superadmin-container .data-table {
@@ -323,56 +346,51 @@
 }
 
 .superadmin-container .data-table th {
-    padding: 1rem 0.8rem;
+    padding: 0.75rem 0.75rem;
     text-align: left;
     color: var(--text-primary);
-    font-weight: 700;
-    border-bottom: 2px solid var(--primary);
-    font-size: 0.8rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     background: var(--bg-secondary);
 }
 
 .superadmin-container .data-table td {
-    padding: 0.9rem 0.8rem;
+    padding: 0.7rem 0.75rem;
     border-bottom: 1px solid var(--border-color);
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     vertical-align: middle;
 }
 
-.superadmin-container .data-table tr {
-    transition: all 0.2s ease;
-}
-
 .superadmin-container .data-table tr:hover {
-    background: rgba(33, 67, 90, 0.04);
+    background: rgba(33, 67, 90, 0.02);
 }
 
 /* ========== КНОПКИ ДЕЙСТВИЙ ========== */
 .superadmin-container .action-cell {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
-    align-items: center;
 }
 
 .superadmin-container .action-button {
-    padding: 0.45rem 0.9rem;
+    padding: 0.35rem 0.75rem;
     border: none;
-    border-radius: 10px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
+    gap: 0.4rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
 }
 
 .superadmin-container .action-button:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     filter: brightness(1.05);
 }
 
@@ -396,19 +414,68 @@
     color: white;
 }
 
+/* ========== ЦВЕТОВАЯ ЯЧЕЙКА ========== */
+.superadmin-container .color-cell {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.superadmin-container .color-cell:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ========== КНОПКА ВЫБОРА ЦВЕТА ========== */
+.superadmin-container .color-picker-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+}
+
+.superadmin-container .color-picker-button:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(33, 67, 90, 0.05);
+}
+
+/* ========== ЦВЕТОВОЙ СЕЛЕКТОР В ФОРМЕ ========== */
+.superadmin-container .color-selector-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.superadmin-container .color-preview {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s;
+}
+
+.superadmin-container .color-preview:hover {
+    transform: scale(1.05);
+}
+
 /* ========== БЭЙДЖИ ========== */
 .superadmin-container .primary-school-badge {
     display: inline-block;
-    background: linear-gradient(135deg, var(--warning), #d97706);
+    background: var(--warning);
     color: white;
-    padding: 3px 10px;
-    border-radius: 30px;
+    padding: 2px 10px;
+    border-radius: 20px;
     font-size: 9px;
-    font-weight: 700;
+    font-weight: 600;
     margin-left: 8px;
-    white-space: nowrap;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
 .superadmin-container .subjects-tags {
@@ -420,69 +487,1451 @@
 
 .superadmin-container .subject-tag {
     display: inline-block;
-    padding: 5px 12px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    border-radius: 30px;
+    padding: 4px 12px;
+    background: var(--primary);
+    border-radius: 20px;
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 500;
     color: white;
-    letter-spacing: 0.3px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .superadmin-container .edit-subjects-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 5px 12px;
+    gap: 4px;
+    padding: 4px 10px;
     background: transparent;
-    border: 1.5px solid var(--primary);
-    border-radius: 30px;
-    font-size: 10px;
-    font-weight: 600;
+    border: 1px solid var(--primary);
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 500;
     cursor: pointer;
     color: var(--primary);
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
 }
 
 .superadmin-container .edit-subjects-btn:hover {
     background: var(--primary);
     color: white;
-    transform: translateY(-1px);
-}
-
-.superadmin-container .no-subjects {
-    color: var(--text-muted);
-    font-size: 11px;
-    font-style: italic;
 }
 
 .superadmin-container .shift-badge {
     display: inline-block;
     padding: 0.3rem 0.8rem;
-    border-radius: 30px;
+    border-radius: 20px;
     font-size: 0.7rem;
     font-weight: 600;
     color: white;
 }
 
 .superadmin-container .shift-1 {
-    background: linear-gradient(135deg, var(--success), #059669);
+    background: var(--success);
 }
 
 .superadmin-container .shift-2 {
-    background: linear-gradient(135deg, var(--info), #2563eb);
+    background: var(--info);
+}
+
+.superadmin-container .room-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: #e0f2fe;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #0369a1;
+}
+
+.superadmin-container .no-room {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 11px;
+}
+
+.superadmin-container .class-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--success);
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+}
+
+.superadmin-container .no-subjects {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 11px;
+}
+
+.superadmin-container .more-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--bg-secondary);
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.superadmin-container .add-classes-btn,
+.superadmin-container .edit-classes-btn {
+    border: none;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.superadmin-container .add-classes-btn {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.superadmin-container .add-classes-btn:hover {
+    background: #fde68a;
+}
+
+.superadmin-container .edit-classes-btn {
+    background: var(--primary);
+    color: white;
+}
+
+.superadmin-container .edit-classes-btn:hover {
+    background: var(--primary-dark);
+}
+
+/* ========== ТЕГИ УЧИТЕЛЕЙ В КАБИНЕТАХ ========== */
+.superadmin-container .teacher-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--primary);
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 500;
+    color: white;
+}
+
+/* ========== ПРИОРИТЕТНЫЕ ПРЕДМЕТЫ ========== */
+.superadmin-container .priority-subject-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    background: rgba(33, 67, 90, 0.12);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--primary);
+}
+
+/* ========== МОДАЛЬНЫЕ ОКНА ========== */
+.superadmin-container .modal-overlay-fixed,
+.superadmin-container .subject-modal-overlay,
+.superadmin-container .room-modal-overlay,
+.superadmin-container .upload-modal-overlay,
+.superadmin-container .confirm-modal-overlay,
+.superadmin-container .wizard-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+}
+
+.superadmin-container .modal-content-fixed,
+.superadmin-container .subject-modal-content,
+.superadmin-container .room-modal-content,
+.superadmin-container .upload-modal-content,
+.superadmin-container .confirm-modal-content,
+.superadmin-container .wizard-modal-content {
+    background: var(--bg-card);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+.superadmin-container .wizard-modal-content {
+    max-width: 700px;
+}
+
+.superadmin-container .modal-header-fixed,
+.superadmin-container .subject-modal-header,
+.superadmin-container .room-modal-header,
+.superadmin-container .upload-modal-header,
+.superadmin-container .confirm-modal-header,
+.superadmin-container .wizard-modal-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--primary);
+    color: white;
+}
+
+.superadmin-container .modal-header-fixed h3,
+.superadmin-container .subject-modal-header h3,
+.superadmin-container .room-modal-header h3,
+.superadmin-container .upload-modal-header h3,
+.superadmin-container .confirm-modal-header h3,
+.superadmin-container .wizard-modal-header h2 {
+    margin: 0;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: white;
+}
+
+.superadmin-container .modal-close-fixed,
+.superadmin-container .subject-modal-close,
+.superadmin-container .room-modal-close,
+.superadmin-container .upload-modal-close,
+.superadmin-container .wizard-close {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+
+.superadmin-container .modal-close-fixed:hover,
+.superadmin-container .subject-modal-close:hover,
+.superadmin-container .room-modal-close:hover,
+.superadmin-container .upload-modal-close:hover,
+.superadmin-container .wizard-close:hover {
+    background: rgba(255,255,255,0.25);
+}
+
+.superadmin-container .modal-body-fixed,
+.superadmin-container .room-modal-body,
+.superadmin-container .confirm-modal-body,
+.superadmin-container .wizard-body {
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.superadmin-container .modal-footer-fixed,
+.superadmin-container .room-modal-footer,
+.superadmin-container .upload-modal-footer,
+.superadmin-container .confirm-modal-footer,
+.superadmin-container .wizard-step-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    background: var(--bg-secondary);
+}
+
+.superadmin-container .wizard-step-footer {
+    justify-content: space-between;
+}
+
+/* Кнопки в модалках */
+.superadmin-container .btn-cancel-modal,
+.superadmin-container .btn-cancel,
+.superadmin-container .subject-modal-cancel,
+.superadmin-container .confirm-btn-cancel,
+.superadmin-container .btn-back-step {
+    padding: 6px 16px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+}
+
+.superadmin-container .btn-cancel-modal:hover,
+.superadmin-container .btn-cancel:hover,
+.superadmin-container .subject-modal-cancel:hover,
+.superadmin-container .confirm-btn-cancel:hover,
+.superadmin-container .btn-back-step:hover {
+    background: rgba(33, 67, 90, 0.05);
+}
+
+.superadmin-container .btn-save-modal,
+.superadmin-container .btn-save,
+.superadmin-container .subject-modal-save,
+.superadmin-container .btn-next-step,
+.superadmin-container .btn-upload {
+    padding: 6px 20px;
+    background: var(--primary);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+}
+
+.superadmin-container .btn-save-modal:hover,
+.superadmin-container .btn-save:hover,
+.superadmin-container .subject-modal-save:hover,
+.superadmin-container .btn-next-step:hover,
+.superadmin-container .btn-upload:hover {
+    background: var(--primary-light);
+}
+
+.superadmin-container .confirm-btn-delete {
+    padding: 6px 16px;
+    background: var(--danger);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: white;
+    transition: all 0.15s;
+}
+
+.superadmin-container .confirm-btn-delete:hover {
+    background: #b91c1c;
+}
+
+.superadmin-container .btn-edit-modal {
+    padding: 6px 16px;
+    background: var(--warning);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+}
+
+.superadmin-container .btn-edit-modal:hover {
+    background: #e68a00;
+}
+
+.superadmin-container .btn-delete-modal {
+    padding: 6px 16px;
+    background: var(--danger);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+}
+
+.superadmin-container .btn-delete-modal:hover {
+    background: #b91c1c;
+}
+
+/* Модалка подтверждения */
+.superadmin-container .confirm-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.75rem;
+}
+
+.superadmin-container .confirm-item-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--danger);
+    text-align: center;
+    padding: 0.5rem;
+    background: rgba(239, 68, 68, 0.08);
+    border-radius: 8px;
+    margin: 0.75rem 0;
+}
+
+.superadmin-container .confirm-warning {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* ========== ПРОГРЕСС В МАСТЕРЕ ========== */
+.superadmin-container .wizard-progress {
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.superadmin-container .progress-track {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+}
+
+.superadmin-container .progress-track::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--border-color);
+    z-index: 1;
+}
+
+.superadmin-container .progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    z-index: 2;
+    background: var(--bg-secondary);
+    padding: 0 8px;
+    flex: 1;
+}
+
+.superadmin-container .step-marker {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.superadmin-container .progress-step.active .step-marker {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.superadmin-container .progress-step.completed .step-marker {
+    border-color: var(--success);
+    background: var(--success);
+    color: white;
+}
+
+.superadmin-container .step-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.superadmin-container .progress-step.active .step-label {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* ========== МОДАЛКА ВЫБОРА ПРЕДМЕТОВ ========== */
+.superadmin-container .subject-modal-search {
+    padding: 0 1rem 0.75rem;
+    position: relative;
+}
+
+.superadmin-container .subject-modal-search .search-icon {
+    position: absolute;
+    left: 1.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.superadmin-container .subject-modal-search input {
+    width: 100%;
+    padding: 0.5rem 0.5rem 0.5rem 2rem;
+    border: 1px solid var(--border-solid);
+    border-radius: 8px;
+    font-size: 0.8rem;
+}
+
+.superadmin-container .subject-modal-select-all {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.superadmin-container .select-all-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.superadmin-container .subject-modal-list {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.superadmin-container .subject-modal-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.superadmin-container .subject-modal-item:hover {
+    background: rgba(33, 67, 90, 0.04);
+}
+
+.superadmin-container .subject-modal-item input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+.superadmin-container .subject-modal-item-name {
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.superadmin-container .lesson-short-name-hint {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-left: 4px;
+}
+
+.superadmin-container .subject-modal-empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+}
+
+.superadmin-container .subject-modal-empty svg {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+.superadmin-container .subject-modal-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.superadmin-container .subject-modal-selected-count {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--primary);
+    background: rgba(33, 67, 90, 0.08);
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.superadmin-container .subject-modal-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ========== ПРИОРИТЕТНЫЕ ПРЕДМЕТЫ КАБИНЕТА ========== */
+.superadmin-container .priority-subjects-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.superadmin-container .no-priority {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.7rem;
+}
+
+.superadmin-container .subject-priorities-search {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.superadmin-container .subject-priorities-search svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.superadmin-container .subject-priorities-search input {
+    width: 100%;
+    padding: 8px 10px 8px 32px;
+    border: 1px solid var(--border-solid);
+    border-radius: 8px;
+    font-size: 0.8rem;
+}
+
+.superadmin-container .subject-priorities-list {
+    max-height: 160px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.superadmin-container .subject-priority-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+.superadmin-container .subject-priority-item:hover {
+    background: rgba(33, 67, 90, 0.04);
+}
+
+.superadmin-container .subject-priority-item input {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+/* ========== КАРТОЧКА ЗАГРУЗКИ УРОКОВ ========== */
+.superadmin-container .upload-instructions-card {
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.superadmin-container .instructions-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+    color: var(--primary);
+}
+
+.superadmin-container .instructions-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.superadmin-container .download-template-btn {
+    margin-top: 8px;
+    padding: 4px 12px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.65rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+}
+
+.superadmin-container .download-template-btn:hover {
+    background: var(--primary-light);
+}
+
+.superadmin-container .upload-dropzone {
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.15s;
+    background: var(--bg-input);
+}
+
+.superadmin-container .upload-dropzone.drag-active {
+    border-color: var(--primary);
+    background: rgba(33, 67, 90, 0.03);
+}
+
+.superadmin-container .upload-dropzone-label {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.superadmin-container .dropzone-icon {
+    font-size: 2rem;
+    color: var(--primary);
+}
+
+.superadmin-container .dropzone-title {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.superadmin-container .dropzone-subtitle {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+
+.superadmin-container .remove-file-btn {
+    background: rgba(239, 68, 68, 0.1);
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--danger);
+    transition: all 0.15s;
+    margin-top: 6px;
+}
+
+.superadmin-container .remove-file-btn:hover {
+    background: var(--danger);
+    color: white;
+}
+
+.superadmin-container .upload-progress-container {
+    margin-top: 0.75rem;
+}
+
+.superadmin-container .progress-bar {
+    height: 3px;
+    background: var(--border-color);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.superadmin-container .progress-fill {
+    height: 100%;
+    background: var(--primary);
+    transition: width 0.3s;
+}
+
+.superadmin-container .progress-text {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    text-align: center;
+}
+
+.superadmin-container .upload-status {
+    margin-top: 10px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+}
+
+.superadmin-container .upload-status.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.superadmin-container .upload-status.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.superadmin-container .upload-preview {
+    margin-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.75rem;
+}
+
+.superadmin-container .preview-title {
+    font-weight: 600;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.superadmin-container .preview-table-wrapper {
+    overflow-x: auto;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.superadmin-container .preview-table {
+    width: 100%;
+    font-size: 0.65rem;
+    border-collapse: collapse;
+}
+
+.superadmin-container .preview-table th,
+.superadmin-container .preview-table td {
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.superadmin-container .preview-table th {
+    background: var(--bg-secondary);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.superadmin-container .preview-more {
+    padding: 6px 8px;
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+}
+
+/* ========== КАБИНЕТЫ ========== */
+.superadmin-container .rooms-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+
+.superadmin-container .add-room-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.superadmin-container .add-room-btn:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+}
+
+/* ========== УРОКИ ========== */
+.superadmin-container .lessons-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.superadmin-container .lessons-actions .add-room-btn {
+    width: auto;
+    margin-top: 0;
+}
+
+.superadmin-container .lessons-actions .upload-btn {
+    background: var(--success);
+}
+
+.superadmin-container .lessons-actions .upload-btn:hover {
+    background: #059669;
+}
+
+/* ========== МАСТЕР НОВОГО УЧЕБНОГО ГОДА ========== */
+.superadmin-container .new-year-button-container {
+    display: flex;
+    justify-content: center;
+    margin: 0.5rem 0 1.5rem;
+}
+
+.superadmin-container .new-year-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.superadmin-container .new-year-btn:hover {
+    background: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* ========== САНПИН ТАБ ========== */
+.superadmin-container .sanpin-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+.superadmin-container .sanpin-tab {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.15s;
+}
+
+.superadmin-container .sanpin-tab:hover {
+    background: rgba(33, 67, 90, 0.05);
+    color: var(--primary);
+}
+
+.superadmin-container .sanpin-tab.active {
+    background: var(--primary);
+    color: white;
+}
+
+.superadmin-container .sanpin-header {
+    margin-bottom: 1.25rem;
+}
+
+.superadmin-container .sanpin-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.superadmin-container .sanpin-header p {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.superadmin-container .sanpin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.superadmin-container .sanpin-section {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.superadmin-container .sanpin-section h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+}
+
+.superadmin-container .sanpin-field {
+    margin-bottom: 0.75rem;
+}
+
+.superadmin-container .sanpin-field label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    color: var(--text-secondary);
+}
+
+.superadmin-container .sanpin-field input,
+.superadmin-container .sanpin-field select,
+.superadmin-container .sanpin-field textarea {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--border-solid);
+    border-radius: 8px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+}
+
+.superadmin-container .sanpin-section.full-width {
+    grid-column: 1 / -1;
+}
+
+.superadmin-container .sanpin-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.75rem;
+}
+
+.superadmin-container .btn-save-large {
+    padding: 0.6rem 1.5rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.15s;
+}
+
+.superadmin-container .btn-save-large:hover {
+    background: var(--primary-light);
+}
+
+/* ========== СЛОЖНОСТЬ ПРЕДМЕТОВ ========== */
+.superadmin-container .difficulty-info-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.superadmin-container .info-card {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg-card);
+    border-radius: 10px;
+    border-left: 3px solid var(--primary);
+}
+
+.superadmin-container .info-card svg {
+    font-size: 1.25rem;
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.superadmin-container .info-card strong {
+    display: block;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.superadmin-container .info-card p {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.superadmin-container .difficulty-form,
+.superadmin-container .hours-form {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--border-color);
+}
+
+.superadmin-container .difficulty-form .form-actions,
+.superadmin-container .hours-form .form-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    justify-content: flex-end;
+}
+
+.superadmin-container .difficulty-table-container,
+.superadmin-container .hours-table-container {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--border-color);
+    overflow-x: auto;
+}
+
+.superadmin-container .difficulty-table,
+.superadmin-container .hours-table,
+.superadmin-container .summary-table,
+.superadmin-container .grade-detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+}
+
+.superadmin-container .difficulty-table th,
+.superadmin-container .hours-table th,
+.superadmin-container .summary-table th,
+.superadmin-container .grade-detail-table th {
+    padding: 0.6rem;
+    text-align: left;
+    background: rgba(33, 67, 90, 0.04);
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.superadmin-container .difficulty-table td,
+.superadmin-container .hours-table td,
+.superadmin-container .summary-table td,
+.superadmin-container .grade-detail-table td {
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.superadmin-container .grade-cell {
+    background: rgba(33, 67, 90, 0.03);
+    font-weight: 600;
+}
+
+.superadmin-container .table-header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.superadmin-container .table-header-actions h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.superadmin-container .btn-add-small {
+    padding: 0.3rem 0.7rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.15s;
+}
+
+.superadmin-container .btn-add-small:hover {
+    background: var(--primary-light);
+}
+
+.superadmin-container .btn-link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 0.7rem;
+    margin-left: 0.5rem;
+    text-decoration: underline;
+}
+
+.superadmin-container .difficulty-badge {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    border-radius: 50%;
+    font-weight: 700;
+    color: white;
+    font-size: 0.75rem;
+}
+
+.superadmin-container .difficulty-badge-small {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    border-radius: 50%;
+    font-weight: 700;
+    color: white;
+    font-size: 0.65rem;
+}
+
+.superadmin-container .subject-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: white;
+}
+
+.superadmin-container .weight-cell {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.superadmin-container .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 500;
+}
+
+.superadmin-container .status-badge.success {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+}
+
+.superadmin-container .status-badge.warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--warning);
+}
+
+.superadmin-container .status-badge.muted {
+    background: rgba(148, 163, 184, 0.15);
+    color: var(--text-muted);
+}
+
+.superadmin-container .overload-row {
+    background: rgba(239, 68, 68, 0.04);
+}
+
+.superadmin-container .weekly-load-summary {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--border-color);
+}
+
+.superadmin-container .weekly-load-summary h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text-primary);
+}
+
+.superadmin-container .grade-detail-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--border-color);
+}
+
+.superadmin-container .grade-detail-card h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.superadmin-container .total-row {
+    background: rgba(33, 67, 90, 0.03);
+    font-weight: 600;
+}
+
+.superadmin-container .info-note {
+    margin-top: 0.75rem;
+    padding: 0.6rem;
+    background: rgba(33, 67, 90, 0.04);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+
+.superadmin-container .info-note svg {
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+/* ========== ДЕТАЛИ УРОКА ========== */
+.superadmin-container .lesson-detail-item {
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.superadmin-container .lesson-detail-item:last-child {
+    border-bottom: none;
+}
+
+.superadmin-container .lesson-detail-item strong {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.2rem;
+}
+
+.superadmin-container .lesson-detail-item p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* ========== УВЕДОМЛЕНИЯ ========== */
+.superadmin-container .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--primary);
+    color: white;
+    padding: 8px 18px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    z-index: 2100;
+    animation: slideInRight 0.25s ease;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.superadmin-container .notification.error {
+    background: var(--danger);
+}
+
+.superadmin-container .notification.success {
+    background: var(--success);
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* ========== ПУСТЫЕ СТРОКИ ========== */
+.superadmin-container .empty-row {
+    text-align: center !important;
+    padding: 1.5rem !important;
+    color: var(--text-muted);
+}
+
+.superadmin-container .empty-row svg {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+.superadmin-container .empty-row p {
+    margin: 0.25rem 0;
+}
+
+.superadmin-container .empty-row button {
+    margin-top: 8px;
+    padding: 5px 14px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.15s;
+}
+
+.superadmin-container .empty-row button:hover {
+    background: var(--primary-light);
+}
+
+/* ========== ЗАГРУЗКА ========== */
+.superadmin-container .sanpin-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    gap: 0.75rem;
+}
+
+.superadmin-container .sanpin-loading .spinner,
+.superadmin-container .spinner {
+    animation: spin 1s linear infinite;
+    font-size: 1.5rem;
+    color: var(--primary);
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 /* ========== СТАТИСТИКА СМЕН ========== */
 .superadmin-container .shift-stats {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: rgba(33, 67, 90, 0.06);
-    border-radius: 16px;
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(33, 67, 90, 0.04);
+    border-radius: 10px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .superadmin-container .shift-stat {
@@ -490,8 +1939,8 @@
 }
 
 .superadmin-container .shift-stat-number {
-    font-size: 1.5rem;
-    font-weight: 800;
+    font-size: 1.25rem;
+    font-weight: 700;
 }
 
 .superadmin-container .shift-stat-1 {
@@ -502,667 +1951,609 @@
     color: var(--info);
 }
 
-/* ========== ПРЕДУПРЕЖДЕНИЕ ========== */
-.superadmin-container .warning-box {
-    margin-top: 1rem;
-    padding: 0.8rem 1rem;
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
-    border-left: 4px solid var(--warning);
-    border-radius: 12px;
-    color: var(--text-secondary);
-    font-size: 0.8rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.superadmin-container .warning-box svg {
-    color: var(--warning);
-    font-size: 1rem;
-    flex-shrink: 0;
-}
-
-.superadmin-container .warning-box strong {
-    color: var(--warning);
-}
-
-/* ========== УВЕДОМЛЕНИЕ ========== */
-.superadmin-container .notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    color: white;
-    padding: 14px 24px;
-    border-radius: 16px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-    z-index: 1000;
-    animation: superadminSlideIn 0.3s ease;
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-@keyframes superadminSlideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-
-/* ========== ПУСТЫЕ СТРОКИ ========== */
-.superadmin-container .empty-row {
-    text-align: center !important;
-    padding: 2rem !important;
-    color: var(--text-muted);
-}
-
-.superadmin-container .empty-row svg {
-    font-size: 2rem;
-    margin-bottom: 0.8rem;
-    opacity: 0.5;
-}
-
-.superadmin-container .empty-row p {
-    margin: 0.5rem 0;
-}
-
-.superadmin-container .empty-row button {
-    margin-top: 10px;
-    padding: 8px 18px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 30px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.2s;
-}
-
-.superadmin-container .empty-row button:hover {
-    background: var(--primary-light);
-    transform: translateY(-1px);
-}
-
-/* ========== КАБИНЕТЫ ========== */
-.superadmin-container .rooms-container-table .table-container {
-    background: var(--bg-card);
-    border-radius: 20px;
-    padding: 1.5rem;
-}
-
-.superadmin-container .rooms-header {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 1.5rem;
-}
-
-.superadmin-container .add-room-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    color: white;
-    border: none;
-    border-radius: 40px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.85rem;
-    transition: all 0.3s ease;
-}
-
-.superadmin-container .add-room-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(33, 67, 90, 0.3);
-}
-
-/* ========== УРОКИ ========== */
-.superadmin-container .lessons-container {
+/* ========== ROOMS TAB ========== */
+.superadmin-container .rooms-container-table {
     width: 100%;
 }
 
-.superadmin-container .lessons-actions {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
+/* ========== SANPIN CONTAINER ========== */
+.superadmin-container .sanpin-container {
+    width: 100%;
 }
 
-.superadmin-container .lessons-actions .add-room-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.7rem 1.2rem;
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    color: white;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.85rem;
-    transition: all 0.3s ease;
-}
-
-.superadmin-container .lessons-actions .add-room-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(33, 67, 90, 0.3);
-}
-
-.superadmin-container .lessons-actions .upload-btn {
-    background: linear-gradient(135deg, #10b981, #059669);
-}
-
-.superadmin-container .lessons-actions .upload-btn:hover {
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-/* ========== ПРИОРИТЕТНЫЕ ПРЕДМЕТЫ ========== */
-.superadmin-container .priority-subjects-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-}
-
-.superadmin-container .priority-subject-tag {
-    display: inline-block;
-    padding: 3px 10px;
-    background: rgba(33, 67, 90, 0.12);
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 500;
-    color: var(--primary);
-}
-
-.superadmin-container .no-priority {
-    color: var(--text-muted);
-    font-style: italic;
-    font-size: 0.7rem;
-}
-
-/* ========== КНОПКА ВЫБОРА ПРЕДМЕТОВ ========== */
-.superadmin-container .subject-selector-button {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.7rem 1rem;
-    background: var(--primary);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.superadmin-container .subject-selector-button:hover {
-    background: var(--primary-light);
-    transform: translateY(-1px);
-}
-
-.superadmin-container .subject-selector-content {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: white;
-}
-
-.superadmin-container .subject-selector-content span {
-    font-weight: 500;
-}
-
-.superadmin-container .subject-selector-arrow {
-    color: white;
-    font-size: 0.8rem;
-}
-
-.superadmin-container .subject-preview {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.superadmin-container .subject-preview-tag {
-    display: inline-block;
-    padding: 5px 12px;
-    background: rgba(33, 67, 90, 0.12);
-    border: 1px solid var(--primary);
-    border-radius: 30px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--primary);
-}
-
-/* ========== МОДАЛЬНЫЕ ОКНА ========== */
-.superadmin-container .subject-modal-overlay,
-.superadmin-container .confirm-modal-overlay,
-.superadmin-container .room-modal-overlay,
-.superadmin-container .upload-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1100;
-}
-
-.superadmin-container .subject-modal-content,
-.superadmin-container .confirm-modal-content,
-.superadmin-container .room-modal-content,
-.superadmin-container .upload-modal-content {
-    background: var(--bg-card-solid);
-    border-radius: 24px;
-    width: 90%;
-    max-width: 550px;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
-    overflow: hidden;
-}
-
-.superadmin-container .subject-modal-header,
-.superadmin-container .confirm-modal-header,
-.superadmin-container .room-modal-header,
-.superadmin-container .upload-modal-header {
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--primary);
-    color: white;
-}
-
-.superadmin-container .subject-modal-header h3,
-.superadmin-container .confirm-modal-header h3,
-.superadmin-container .room-modal-header h3,
-.superadmin-container .upload-modal-header h3 {
-    margin: 0;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: white;
-}
-
-.superadmin-container .subject-modal-close,
-.superadmin-container .confirm-modal-close,
-.superadmin-container .room-modal-close,
-.superadmin-container .upload-modal-close {
-    background: rgba(255,255,255,0.2);
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-.superadmin-container .subject-modal-close:hover,
-.superadmin-container .confirm-modal-close:hover,
-.superadmin-container .room-modal-close:hover,
-.superadmin-container .upload-modal-close:hover {
-    background: rgba(255,255,255,0.3);
-    transform: rotate(90deg);
-}
-
-/* Модальное окно подтверждения */
-.superadmin-container .confirm-modal-header {
-    background: var(--danger);
-}
-
-.superadmin-container .confirm-icon {
-    width: 36px;
-    height: 36px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.superadmin-container .confirm-modal-body {
-    padding: 1.5rem;
+/* ========== LOADING CONTAINER ========== */
+.superadmin-container .loading-container {
+    padding: 2rem;
     text-align: center;
 }
 
-.superadmin-container .confirm-item-name {
-    font-size: 1rem;
-    font-weight: bold;
-    color: var(--danger);
-    margin: 0.8rem 0;
-    padding: 0.5rem;
-    background: rgba(220, 38, 38, 0.1);
-    border-radius: 10px;
-}
+/* ========== SANPIN - ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ДЛЯ ВСЕХ ВКЛАДОК ========== */
 
-.superadmin-container .confirm-warning {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
-
-.superadmin-container .confirm-modal-footer {
-    padding: 1rem 1.5rem;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-}
-
-.superadmin-container .confirm-btn-cancel {
-    padding: 8px 20px;
-    background: transparent;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: var(--text-secondary);
-    font-weight: 500;
-}
-
-.superadmin-container .confirm-btn-cancel:hover {
-    background: rgba(33, 67, 90, 0.08);
-    border-color: var(--primary);
-}
-
-.superadmin-container .confirm-btn-delete {
-    padding: 8px 20px;
-    background: var(--danger);
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
-    color: white;
-    font-weight: 600;
-}
-
-.superadmin-container .confirm-btn-delete:hover {
-    background: #b91c1c;
-    transform: translateY(-2px);
-}
-
-/* Модальное окно кабинета */
-.superadmin-container .room-modal-body {
-    padding: 1.5rem;
-    overflow-y: auto;
-    flex: 1;
-}
-
-.superadmin-container .room-modal-footer {
-    padding: 1rem 1.5rem;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-}
-
-.superadmin-container .btn-cancel {
-    padding: 8px 20px;
-    background: transparent;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: var(--text-secondary);
-    font-weight: 500;
-}
-
-.superadmin-container .btn-cancel:hover {
-    background: rgba(33, 67, 90, 0.08);
-    border-color: var(--primary);
-}
-
-.superadmin-container .btn-save {
-    padding: 8px 22px;
-    background: linear-gradient(135deg, var(--success), #059669);
-    border: none;
-    border-radius: 10px;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
-    font-weight: 600;
-}
-
-.superadmin-container .btn-save:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.superadmin-container .btn-upload {
-    padding: 8px 22px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    border: none;
-    border-radius: 10px;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
-    font-weight: 600;
-}
-
-.superadmin-container .btn-upload:hover:not(.disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(33, 67, 90, 0.3);
-}
-
-.superadmin-container .btn-upload.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Модальное окно выбора предметов */
-.superadmin-container .subject-modal-search {
-    padding: 1rem 1.5rem;
-    position: relative;
-}
-
-.superadmin-container .subject-modal-search .search-icon {
-    position: absolute;
-    left: 2rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-}
-
-.superadmin-container .subject-modal-search input {
+/* ---------- ПРАВИЛА СПАРИВАНИЯ (PairingRulesTab) ---------- */
+.superadmin-container .pairing-rules-tab {
     width: 100%;
-    padding: 0.7rem 0.7rem 0.7rem 2.2rem;
-    border: 1.5px solid var(--border-solid);
-    border-radius: 12px;
-    background: var(--bg-input);
-    color: var(--text-primary);
 }
 
-.superadmin-container .subject-modal-select-all {
-    padding: 0.5rem 1.5rem;
+.superadmin-container .pairing-rules-table-container {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    overflow-x: auto;
+}
+
+.superadmin-container .pairing-rules-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+}
+
+.superadmin-container .pairing-rules-table th {
+    padding: 0.6rem;
+    text-align: left;
+    background: rgba(33, 67, 90, 0.04);
+    font-weight: 600;
+    color: var(--text-primary);
     border-bottom: 1px solid var(--border-color);
 }
 
-.superadmin-container .select-all-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
+.superadmin-container .pairing-rules-table td {
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.superadmin-container .pairing-rules-table tr:hover {
+    background: rgba(33, 67, 90, 0.02);
+}
+
+.superadmin-container .pairing-mandatory-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 500;
+}
+
+.superadmin-container .pairing-mandatory-badge.yes {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+}
+
+.superadmin-container .pairing-mandatory-badge.no {
+    background: rgba(148, 163, 184, 0.15);
+    color: var(--text-muted);
+}
+
+.superadmin-container .pairing-day-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    background: rgba(33, 67, 90, 0.08);
+    color: var(--primary);
+}
+
+.superadmin-container .pairing-slots {
+    font-family: monospace;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+/* ---------- ГРУППОВЫЕ ЗАНЯТИЯ (GroupDivisionTab) ---------- */
+.superadmin-container .group-division-tab {
+    width: 100%;
+}
+
+.superadmin-container .group-division-table-container {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    overflow-x: auto;
+}
+
+.superadmin-container .group-division-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+}
+
+.superadmin-container .group-division-table th {
+    padding: 0.6rem;
+    text-align: left;
+    background: rgba(33, 67, 90, 0.04);
     font-weight: 600;
     color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
 }
 
-.superadmin-container .subject-modal-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0.5rem 0;
-    max-height: 300px;
+.superadmin-container .group-division-table td {
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
 }
 
-.superadmin-container .subject-modal-item {
+.superadmin-container .group-division-table tr:hover {
+    background: rgba(33, 67, 90, 0.02);
+}
+
+.superadmin-container .teacher-pair-tag {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: var(--primary);
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: white;
+    margin: 0 2px;
+}
+
+.superadmin-container .room-pair-tag {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: var(--info);
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: white;
+    margin: 0 2px;
+}
+
+.superadmin-container .group-day-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    background: rgba(33, 67, 90, 0.08);
+    color: var(--primary);
+    font-weight: 500;
+}
+
+/* ---------- СИНХРОНИЗАЦИЯ ПАРАЛЛЕЛЕЙ (ParallelSyncTab) ---------- */
+.superadmin-container .parallel-sync-tab {
+    width: 100%;
+}
+
+.superadmin-container .parallel-sync-table-container {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    overflow-x: auto;
+}
+
+.superadmin-container .parallel-sync-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+}
+
+.superadmin-container .parallel-sync-table th {
+    padding: 0.6rem;
+    text-align: left;
+    background: rgba(33, 67, 90, 0.04);
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.superadmin-container .parallel-sync-table td {
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.superadmin-container .parallel-sync-table tr:hover {
+    background: rgba(33, 67, 90, 0.02);
+}
+
+.superadmin-container .sync-required-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 500;
+}
+
+.superadmin-container .sync-required-badge.yes {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+}
+
+.superadmin-container .sync-required-badge.no {
+    background: rgba(148, 163, 184, 0.15);
+    color: var(--text-muted);
+}
+
+.superadmin-container .grade-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: var(--primary);
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: white;
+}
+
+/* ---------- ЗАПРЕЩЁННЫЕ ПОСЛЕДОВАТЕЛЬНОСТИ (ForbiddenSequencesTab) ---------- */
+.superadmin-container .forbidden-sequences-tab {
+    width: 100%;
+}
+
+.superadmin-container .forbidden-sequences-table-container {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    overflow-x: auto;
+}
+
+.superadmin-container .forbidden-sequences-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+}
+
+.superadmin-container .forbidden-sequences-table th {
+    padding: 0.6rem;
+    text-align: left;
+    background: rgba(33, 67, 90, 0.04);
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.superadmin-container .forbidden-sequences-table td {
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.superadmin-container .forbidden-sequences-table tr:hover {
+    background: rgba(33, 67, 90, 0.02);
+}
+
+.superadmin-container .severity-badge-error {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: rgba(239, 68, 68, 0.15);
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: var(--danger);
+}
+
+.superadmin-container .severity-badge-warning {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: rgba(245, 158, 11, 0.15);
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: var(--warning);
+}
+
+.superadmin-container .rule-description {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    line-height: 1.3;
+}
+
+/* ---------- ИНФОРМАЦИОННАЯ ПАНЕЛЬ ---------- */
+.superadmin-container .sanpin-info-card {
+    margin-top: 1.25rem;
+    padding: 0.75rem 1rem;
+    background: #f0f9ff;
+    border-radius: 8px;
+    border-left: 3px solid #0284c7;
+}
+
+.superadmin-container .sanpin-info-card h4 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    color: #0284c7;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 0.7rem 1.5rem;
+    gap: 0.4rem;
+}
+
+.superadmin-container .sanpin-info-card ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.superadmin-container .sanpin-info-card li {
+    margin-bottom: 0.2rem;
+}
+
+/* ---------- ЧЕКБОКСЫ В МОДАЛЬНЫХ ОКНАХ ---------- */
+.superadmin-container .teachers-checkboxes,
+.superadmin-container .rooms-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.superadmin-container .teachers-checkboxes label,
+.superadmin-container .rooms-checkboxes label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    background: var(--bg-secondary);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: normal;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.15s;
 }
 
-.superadmin-container .subject-modal-item:hover {
-    background: rgba(33, 67, 90, 0.06);
+.superadmin-container .teachers-checkboxes label:hover,
+.superadmin-container .rooms-checkboxes label:hover {
+    background: rgba(33, 67, 90, 0.08);
 }
 
-.superadmin-container .subject-modal-item input {
-    width: 18px;
-    height: 18px;
+.superadmin-container .teachers-checkboxes input,
+.superadmin-container .rooms-checkboxes input {
+    width: 14px;
+    height: 14px;
+    margin: 0;
     cursor: pointer;
     accent-color: var(--primary);
 }
 
-.superadmin-container .subject-modal-footer {
-    padding: 1rem 1.5rem;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+/* ---------- АДАПТАЦИЯ ДЛЯ МАЛЕНЬКИХ ЭКРАНОВ ---------- */
+@media (max-width: 640px) {
+    .superadmin-container .pairing-rules-table th,
+    .superadmin-container .pairing-rules-table td,
+    .superadmin-container .group-division-table th,
+    .superadmin-container .group-division-table td,
+    .superadmin-container .parallel-sync-table th,
+    .superadmin-container .parallel-sync-table td,
+    .superadmin-container .forbidden-sequences-table th,
+    .superadmin-container .forbidden-sequences-table td {
+        padding: 0.3rem 0.4rem;
+        font-size: 0.65rem;
+    }
+    
+    .superadmin-container .teacher-pair-tag,
+    .superadmin-container .room-pair-tag,
+    .superadmin-container .pairing-mandatory-badge,
+    .superadmin-container .severity-badge-error,
+    .superadmin-container .severity-badge-warning {
+        font-size: 0.55rem;
+        padding: 0.15rem 0.4rem;
+    }
 }
 
-.superadmin-container .subject-modal-selected-count {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--primary);
-}
-
-.superadmin-container .subject-modal-actions {
-    display: flex;
-    gap: 12px;
-}
-
-.superadmin-container .subject-modal-cancel {
-    padding: 8px 18px;
-    background: transparent;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: var(--text-secondary);
-}
-
-.superadmin-container .subject-modal-cancel:hover {
-    background: rgba(33, 67, 90, 0.08);
-    border-color: var(--primary);
-}
-
-.superadmin-container .subject-modal-save {
-    padding: 8px 20px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    border: none;
-    border-radius: 10px;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
-    font-weight: 600;
-}
-
-.superadmin-container .subject-modal-save:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(33, 67, 90, 0.3);
-}
-
-/* ========== МАСТЕР НОВОГО УЧЕБНОГО ГОДА ========== */
-.superadmin-container .new-year-button-container {
-    display: flex;
-    justify-content: center;
-    margin: 0.5rem 0 2rem;
-}
-
-.superadmin-container .new-year-btn {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, #3b6e9e 100%);
-    background-size: 200% auto;
-    color: white;
-    border: none;
-    padding: 14px 32px;
-    border-radius: 60px;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: all 0.3s ease;
-    box-shadow: 0 6px 20px rgba(33, 67, 90, 0.35);
-    position: relative;
-    overflow: hidden;
-}
-
-.superadmin-container .new-year-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
-}
-
-.superadmin-container .new-year-btn:hover::before {
-    left: 100%;
-}
-
-.superadmin-container .new-year-btn:hover {
-    transform: translateY(-3px);
-    background-position: right center;
-    box-shadow: 0 12px 30px rgba(33, 67, 90, 0.45);
-}
-
-/* ========== АДАПТАЦИЯ ========== */
 @media (max-width: 768px) {
     .superadmin-container {
         padding: 0 1rem;
     }
     
     .superadmin-container .superadmin-title {
-        font-size: 1.5rem;
+        font-size: 1.35rem;
     }
     
     .superadmin-container .tab-button {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
     }
     
     .superadmin-container .data-table th,
     .superadmin-container .data-table td {
-        padding: 0.6rem 0.4rem;
+        padding: 0.5rem 0.4rem;
         font-size: 0.7rem;
     }
     
     .superadmin-container .action-button {
-        padding: 0.3rem 0.6rem;
-        font-size: 0.65rem;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.6rem;
     }
-}
-
-@media (max-width: 576px) {
+    
     .superadmin-container .stats-grid {
+        gap: 0.75rem;
+    }
+    
+    .superadmin-container .sanpin-grid {
         grid-template-columns: 1fr;
     }
     
-    .superadmin-container .subject-priorities-list {
+    .superadmin-container .difficulty-info-cards {
         grid-template-columns: 1fr;
     }
+    
+    .superadmin-container .back-button {
+        top: 10px;
+        left: 10px;
+        padding: 4px 10px;
+        font-size: 0.7rem;
+    }
+    
+    .superadmin-container .lessons-actions {
+        flex-direction: column;
+    }
+    
+    .superadmin-container .lessons-actions .add-room-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .superadmin-container .subject-tag,
+    .superadmin-container .class-tag,
+    .superadmin-container .priority-subject-tag,
+    .superadmin-container .teacher-tag {
+        font-size: 9px;
+        padding: 3px 8px;
+    }
+}
+
+/* ========== СКРОЛЛБАР ========== */
+.superadmin-container ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.superadmin-container ::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 3px;
+}
+
+.superadmin-container ::-webkit-scrollbar-thumb {
+    background: var(--border-solid);
+    border-radius: 3px;
+}
+
+.superadmin-container ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+/* ========== ДНЕВНЫЕ ЛИМИТЫ (DailyLimitsTab) ========== */
+.superadmin-container .daily-limits-tab {
+    width: 100%;
+}
+
+.superadmin-container .daily-limits-form {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--border-color);
+}
+
+.superadmin-container .daily-limits-table-container {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    overflow-x: auto;
+}
+
+.superadmin-container .daily-limits-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+}
+
+.superadmin-container .daily-limits-table th {
+    padding: 0.6rem;
+    text-align: left;
+    background: rgba(33, 67, 90, 0.04);
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.superadmin-container .daily-limits-table td {
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.superadmin-container .daily-limits-table tr:hover {
+    background: rgba(33, 67, 90, 0.02);
+}
+
+.superadmin-container .day-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 500;
+    background: rgba(33, 67, 90, 0.08);
+    color: var(--primary);
+}
+
+.superadmin-container .weight-range {
+    font-family: monospace;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+/* ========== НЕДЕЛЬНЫЕ ЛИМИТЫ (WeeklyLimitsTab) ========== */
+.superadmin-container .weekly-limits-tab {
+    width: 100%;
+}
+
+.superadmin-container .weekly-limits-form {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--border-color);
+}
+
+.superadmin-container .weekly-limits-table-container {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    overflow-x: auto;
+}
+
+.superadmin-container .weekly-limits-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+}
+
+.superadmin-container .weekly-limits-table th {
+    padding: 0.6rem;
+    text-align: left;
+    background: rgba(33, 67, 90, 0.04);
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.superadmin-container .weekly-limits-table td {
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.superadmin-container .weekly-limits-table tr:hover {
+    background: rgba(33, 67, 90, 0.02);
+}
+
+.superadmin-container .limit-value {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+/* ========== КАРТОЧКА ПОДСКАЗКИ ДЛЯ ЛИМИТОВ ========== */
+.superadmin-container .limits-info-card {
+    margin-top: 1.25rem;
+    padding: 0.75rem 1rem;
+    background: #f0f9ff;
+    border-radius: 8px;
+    border-left: 3px solid #0284c7;
+}
+
+.superadmin-container .limits-info-card h4 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    color: #0284c7;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.superadmin-container .limits-info-card ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.superadmin-container .limits-info-card li {
+    margin-bottom: 0.2rem;
 }

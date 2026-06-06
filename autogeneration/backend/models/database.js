@@ -1,4 +1,4 @@
-// models/database.js
+// backend/models/database.js
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -9,28 +9,46 @@ const pool = new Pool({
     database: 'vkr',
 });
 
-// Проверка подключения
 pool.on('connect', () => {
-    console.log('📦 Подключено к PostgreSQL');
+    console.log('✅ Подключено к PostgreSQL');
 });
 
 pool.on('error', (err) => {
     console.error('❌ Ошибка PostgreSQL:', err);
 });
 
-module.exports = {
-    // Обычный запрос
-    query: (text, params) => pool.query(text, params),
-    
-    // Получить клиента для транзакций
-    getClient: async () => {
+// Функция для выполнения запросов
+const query = (text, params) => pool.query(text, params);
+
+// Функция для получения клиента (транзакции)
+const getClient = async () => {
+    const client = await pool.connect();
+    return client;
+};
+
+// Функция проверки подключения
+const testConnection = async () => {
+    try {
         const client = await pool.connect();
-        return client;
-    },
-    
-    // Получить пул
-    getPool: () => pool,
-    
-    // Закрыть все подключения
-    close: () => pool.end()
+        console.log('✅ База данных успешно подключена');
+        client.release();
+        return true;
+    } catch (err) {
+        console.error('❌ Ошибка подключения к БД:', err.message);
+        return false;
+    }
+};
+
+// Получить пул
+const getPool = () => pool;
+
+// Закрыть соединение
+const close = () => pool.end();
+
+module.exports = {
+    query,
+    getClient,
+    testConnection,
+    getPool,
+    close
 };

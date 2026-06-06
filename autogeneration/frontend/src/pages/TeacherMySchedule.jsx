@@ -7,7 +7,8 @@ import {
     FaChalkboardTeacher,
     FaMapMarkerAlt,
     FaClock,
-    FaArrowLeft
+    FaArrowLeft,
+    FaUsers
 } from 'react-icons/fa';
 import axios from 'axios';
 import Header from '../components/Header';
@@ -17,8 +18,9 @@ import BackButton from '../components/BackButton';
 import { WEEK_DAYS } from '../config/teacherScheduleData';
 import styles from '../styles/TeacherMySchedule.module.css';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+// ИСПРАВЛЕННЫЙ КОМПОНЕНТ КАРТОЧКИ УРОКА с отображением класса
 const LessonCard = ({ lesson }) => {
     const cardColor = lesson.color || '#21435A';
     
@@ -32,6 +34,10 @@ const LessonCard = ({ lesson }) => {
             <div className={styles.lessonCardSubject}>
                 <FaBook />
                 <span>{lesson.title}</span>
+            </div>
+            <div className={styles.lessonCardClass}>
+                <FaUsers />
+                <span>{lesson.className || '—'}</span>
             </div>
             <div className={styles.lessonCardRoom}>
                 <FaMapMarkerAlt />
@@ -158,6 +164,7 @@ const TeacherMySchedule = () => {
     const [lessons, setLessons] = useState([]);
     const [activities, setActivities] = useState({});
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const getAuthHeaders = () => {
         const token = localStorage.getItem('token');
@@ -172,6 +179,7 @@ const TeacherMySchedule = () => {
 
     const loadData = async () => {
         setLoading(true);
+        setError(null);
         try {
             const timestamp = Date.now();
             
@@ -201,6 +209,7 @@ const TeacherMySchedule = () => {
             
         } catch (error) {
             console.error('Error loading data:', error);
+            setError(error.response?.data?.message || 'Ошибка загрузки расписания');
         } finally {
             setLoading(false);
         }
@@ -214,11 +223,6 @@ const TeacherMySchedule = () => {
             <div className={styles.page}>
                 <ThemeToggle />
                 <BackButton fallbackPath="/teacher" />
-                {/* <div className="animated-bg">
-                    {[...Array(10)].map((_, i) => (
-                        <div key={i} className="glass-circle"></div>
-                    ))}
-                </div> */}
                 <Header />
                 <main className={styles.container}>
                     <div className={styles.loader}>
@@ -231,16 +235,27 @@ const TeacherMySchedule = () => {
         );
     }
 
+    if (error) {
+        return (
+            <div className={styles.page}>
+                <ThemeToggle />
+                <BackButton fallbackPath="/teacher" />
+                <Header />
+                <main className={styles.container}>
+                    <div className={styles.errorContainer}>
+                        <p>{error}</p>
+                        <button onClick={loadData}>Повторить</button>
+                    </div>
+                </main>
+                <Footer />
+            </div>
+        );
+    }
+
     return (
         <div className={styles.page}>
             <ThemeToggle />
             <BackButton fallbackPath="/teacher" />
-            
-            {/* <div className="animated-bg">
-                {[...Array(10)].map((_, i) => (
-                    <div key={i} className="glass-circle"></div>
-                ))}
-            </div> */}
 
             <Header />
 

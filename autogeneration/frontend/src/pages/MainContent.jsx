@@ -27,7 +27,7 @@ const actionCardsConfig = {
     generate: {
         type: 'generate',
         title: 'Автогенерация',
-        description: 'Загрузите Excel файл с данными и автоматически создайте расписание на учебный год',
+        description: 'Генерация оптимального расписания на учебный год',
         buttonText: 'Запустить генератор',
         icon: FaPlay,
         buttonClass: 'btn-primary',

@@ -2,10 +2,7 @@ const express = require('express');
 const db = require('../models/database');
 const { authenticateToken } = require('../middleware/auth');
 const { logActivity } = require('./activity');
-
 const router = express.Router();
-
-// Получить класс, которым руководит учитель
 router.get('/my-class', authenticateToken, async (req, res) => {
     try {
         console.log('=== /my-class called ===');
@@ -58,7 +55,6 @@ router.get('/my-class', authenticateToken, async (req, res) => {
     }
 });
 
-// Получить расписание учителя (уроки) - ИСПРАВЛЕНО (используем lessons вместо subjects)
 router.get('/my-schedule', authenticateToken, async (req, res) => {
     try {
         console.log('=== /my-schedule called ===');
@@ -76,7 +72,6 @@ router.get('/my-schedule', authenticateToken, async (req, res) => {
         const teacherId = teacherResult.rows[0].id;
         console.log('Teacher ID:', teacherId);
         
-        // ИСПРАВЛЕНО: используем lessons вместо subjects
         const scheduleResult = await db.query(
             `SELECT ls.day_of_week, ls.lesson_number, ls.room,
                     l.name as subject_name,
@@ -93,7 +88,6 @@ router.get('/my-schedule', authenticateToken, async (req, res) => {
         
         console.log('Schedule results count:', scheduleResult.rows.length);
         
-        // Выводим для отладки
         scheduleResult.rows.forEach(row => {
             console.log(`Урок: день=${row.day_of_week}, урок=${row.lesson_number}, предмет=${row.subject_name}, класс=${row.class_number}${row.class_letter}`);
         });
@@ -142,7 +136,6 @@ router.get('/my-schedule', authenticateToken, async (req, res) => {
     }
 });
 
-// Получить дополнительные занятия учителя
 router.get('/my-extracurricular', authenticateToken, async (req, res) => {
     try {
         console.log('=== /my-extracurricular called ===');
@@ -207,7 +200,6 @@ router.get('/my-extracurricular', authenticateToken, async (req, res) => {
     }
 });
 
-// Получить расписание класса (для классного руководства) - ИСПРАВЛЕНО
 router.get('/my-class/schedule', authenticateToken, async (req, res) => {
     try {
         console.log('=== /my-class/schedule called ===');
@@ -235,7 +227,6 @@ router.get('/my-class/schedule', authenticateToken, async (req, res) => {
         const classData = classResult.rows[0];
         console.log('Class found:', classData.number, classData.letter);
         
-        // ИСПРАВЛЕНО: используем lessons вместо subjects
         const scheduleResult = await db.query(
             `SELECT ls.day_of_week, ls.lesson_number, ls.room, 
                     l.name as subject_name,
@@ -290,7 +281,6 @@ router.get('/my-class/schedule', authenticateToken, async (req, res) => {
     }
 });
 
-// Получить список учеников класса (для классного руководства)
 router.get('/my-class/students', authenticateToken, async (req, res) => {
     try {
         console.log('=== /my-class/students called ===');
@@ -342,7 +332,6 @@ router.get('/my-class/students', authenticateToken, async (req, res) => {
     }
 });
 
-// НОВЫЙ ЭНДПОИНТ: получить ФИО учителя
 router.get('/my-info', authenticateToken, async (req, res) => {
     try {
         const result = await db.query(
@@ -370,3 +359,4 @@ router.get('/my-info', authenticateToken, async (req, res) => {
     }
 });
 
+module.exports = router;
