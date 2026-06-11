@@ -1,7 +1,6 @@
 // backend/models/database.js
 const { Pool } = require('pg');
 
-// Читаем строку подключения из переменной окружения
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
@@ -9,15 +8,14 @@ if (!connectionString) {
     console.error('Добавьте DATABASE_URL в Environment Variables на Render');
 }
 
-// Для локальной разработки можно использовать отдельную настройку
 let poolConfig;
 
 if (connectionString) {
-    // Продакшен (Render) — используем DATABASE_URL
+    // Продакшен (Render) — используем DATABASE_URL с правильными настройками SSL
     poolConfig = {
         connectionString: connectionString,
         ssl: {
-            rejectUnauthorized: false  // Обязательно для Supabase
+            rejectUnauthorized: false // Отключает строгую проверку сертификата (нужно для Supabase)
         }
     };
     console.log('🔗 Подключение к БД через DATABASE_URL');
