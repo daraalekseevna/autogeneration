@@ -1,14 +1,14 @@
-// ScheduleViewer.jsx - С ПРАВИЛЬНЫМ ВЫРАВНИВАНИЕМ УРОКОВ ПО СМЕНАМ
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+// ScheduleViewer.jsx - ПОЛНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ
+import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { 
   FaEdit, FaTrash, FaPlus, FaSearch, FaFileExcel, FaPrint, FaGripVertical, FaTimes,
-  FaArrowLeft, FaClock, FaUserGraduate, FaDoorOpen, FaCopy, FaPaste,
-  FaExclamationTriangle, FaCheckCircle, FaBell, FaSave, FaUpload, FaEye,
-  FaGraduationCap, FaChalkboardTeacher, FaChevronDown, FaListAlt,
-  FaChevronUp, FaInfoCircle, FaSchool, FaCloudUploadAlt, FaHistory,
-  FaSpinner, FaChevronLeft, FaChevronRight, FaUndo, FaRedo, FaSun, FaMoon
+  FaUserGraduate, FaDoorOpen, FaCopy, FaPaste,
+  FaExclamationTriangle, FaCheckCircle,
+  FaSave, FaEye, FaGraduationCap, FaChalkboardTeacher, FaChevronDown,
+  FaChevronUp, FaInfoCircle, FaCloudUploadAlt, FaHistory,
+  FaSpinner
 } from 'react-icons/fa';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import Header from '../components/Header';
@@ -22,13 +22,81 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const DAYS = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
 const FULL_DAYS = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
 
+// Карта преобразования дней недели
+const DAY_MAP_FULL_TO_SHORT = {
+  'Понедельник': 'ПН',
+  'Вторник': 'ВТ',
+  'Среда': 'СР',
+  'Четверг': 'ЧТ',
+  'Пятница': 'ПТ',
+  'Суббота': 'СБ'
+};
+
 // Кэш для данных
 let lessonsCache = null;
 let teachersCache = null;
 let roomsCache = null;
 let scheduleSettingsCache = null;
 
-// Функция для расчета времени урока с учетом перемен
+// Функция для проверки конфликтов
+const checkScheduleConflicts = (schedules) => {
+  const conflicts = [];
+  const teacherSchedule = new Map();
+  const roomSchedule = new Map();
+
+  for (const [className, days] of Object.entries(schedules)) {
+    for (const [day, lessons] of Object.entries(days)) {
+      for (const [lessonNum, lesson] of Object.entries(lessons)) {
+        if (!lesson || !lesson.teacher || !lesson.room) continue;
+
+        const lessonInfo = {
+          className,
+          day,
+          lessonNumber: parseInt(lessonNum),
+          subject: lesson.subject,
+          teacher: lesson.teacher,
+          room: lesson.room
+        };
+
+        const teacherKey = `${lesson.teacher}|${day}|${lessonNum}`;
+        if (teacherSchedule.has(teacherKey)) {
+          const existingLesson = teacherSchedule.get(teacherKey);
+          if (existingLesson.className !== className) {
+            conflicts.push({
+              key: `teacher_${Date.now()}_${Math.random()}`,
+              type: 'teacher',
+              severity: 'error',
+              message: `Учитель ${lesson.teacher} одновременно ведет уроки в разных классах: ${existingLesson.className} и ${className} (${day}, ${lessonNum} урок)`,
+              details: { first: existingLesson, second: lessonInfo }
+            });
+          }
+        } else {
+          teacherSchedule.set(teacherKey, lessonInfo);
+        }
+
+        const roomKey = `${lesson.room}|${day}|${lessonNum}`;
+        if (roomSchedule.has(roomKey)) {
+          const existingLesson = roomSchedule.get(roomKey);
+          if (existingLesson.className !== className) {
+            conflicts.push({
+              key: `room_${Date.now()}_${Math.random()}`,
+              type: 'room',
+              severity: 'error',
+              message: `Кабинет ${lesson.room} одновременно используется разными классами: ${existingLesson.className} и ${className} (${day}, ${lessonNum} урок)`,
+              details: { first: existingLesson, second: lessonInfo }
+            });
+          }
+        } else {
+          roomSchedule.set(roomKey, lessonInfo);
+        }
+      }
+    }
+  }
+
+  return conflicts;
+};
+
+// Функция для расчета времени урока
 const calculateLessonTimes = (settings, shift = 1) => {
   if (!settings) return {};
   
@@ -90,22 +158,96 @@ const calculateLessonTimes = (settings, shift = 1) => {
   return times;
 };
 
-const getTeacherInitials = (fullName) => {
-  if (!fullName) return '';
-  const parts = fullName.trim().split(/\s+/);
-  if (parts.length >= 1) {
-    const lastName = parts[0];
-    const lastNameShort = lastName.length > 3 ? lastName.substring(0, 3) : lastName;
-    if (parts.length >= 2) {
-      const firstNameInitial = parts[1] ? parts[1].charAt(0).toUpperCase() + '.' : '';
-      const middleNameInitial = parts[2] ? parts[2].charAt(0).toUpperCase() + '.' : '';
-      return `${lastNameShort}. ${firstNameInitial}${middleNameInitial}`;
+const convertScheduleDays = (schedules) => {
+  if (!schedules || Object.keys(schedules).length === 0) return {};
+  
+  const converted = {};
+  for (const [className, days] of Object.entries(schedules)) {
+    converted[className] = {};
+    for (const [fullDayName, lessons] of Object.entries(days)) {
+      const shortDayName = DAY_MAP_FULL_TO_SHORT[fullDayName];
+      if (shortDayName) {
+        converted[className][shortDayName] = {};
+        for (const [lessonNum, lesson] of Object.entries(lessons)) {
+          converted[className][shortDayName][lessonNum] = {
+            subject: lesson.subject,
+            teacher: lesson.teacher,
+            room: lesson.room,
+            teacherColor: lesson.teacherColor || lesson.teacher_color
+          };
+        }
+      }
     }
-    return `${lastNameShort}.`;
   }
-  return fullName;
+  return converted;
 };
 
+// Компонент LessonCard
+const LessonCard = memo(({ lesson, teacherColor, onEdit, onDelete, isDraggable, onDragStart, onDragEnd, lessonNumber, className, day, onCopy, onPaste, canPaste, hasConflict }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  
+  if (!lesson) return null;
+  
+  const getTeacherInitials = (fullName) => {
+    if (!fullName) return '';
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length >= 1) {
+      const lastName = parts[0];
+      const lastNameShort = lastName.length > 3 ? lastName.substring(0, 3) : lastName;
+      if (parts.length >= 2) {
+        const firstNameInitial = parts[1] ? parts[1].charAt(0).toUpperCase() + '.' : '';
+        const middleNameInitial = parts[2] ? parts[2].charAt(0).toUpperCase() + '.' : '';
+        return `${lastNameShort}. ${firstNameInitial}${middleNameInitial}`;
+      }
+      return `${lastNameShort}.`;
+    }
+    return fullName;
+  };
+  
+  const teacherInitials = getTeacherInitials(lesson.teacher);
+  const shortSubject = lesson.subject?.length > 8 ? lesson.subject.substring(0, 8) + '…' : lesson.subject;
+  const cardColor = teacherColor || '#3b82f6';
+  
+  const handleDragStart = useCallback((e) => {
+    if (!isDraggable) {
+      e.preventDefault();
+      return false;
+    }
+    e.dataTransfer.setData('text/plain', JSON.stringify({ lesson, lessonNumber, className, day }));
+    e.dataTransfer.effectAllowed = 'move';
+    onDragStart?.(e);
+  }, [isDraggable, lesson, lessonNumber, className, day, onDragStart]);
+  
+  return (
+    <div 
+      className={`lesson-card ${isDraggable ? 'edit-mode draggable' : 'view-mode'} ${hasConflict ? 'has-conflicts' : ''}`}
+      draggable={isDraggable}
+      onDragStart={handleDragStart}
+      onDragEnd={onDragEnd}
+      style={{ borderLeftColor: cardColor, backgroundColor: `${cardColor}10` }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {isDraggable && <div className="drag-icon"><FaGripVertical /></div>}
+      <div className="lesson-subject" title={lesson.subject}>{shortSubject}</div>
+      <div className="lesson-teacher"><FaUserGraduate /> {teacherInitials}</div>
+      <div className="lesson-room"><FaDoorOpen /> {lesson.room}</div>
+      {hasConflict && <div className="conflict-indicator"><FaExclamationTriangle /></div>}
+      {isHovered && isDraggable && (
+        <div className="lesson-actions">
+          <button className="lesson-action-btn edit" onClick={() => onEdit(lesson)}><FaEdit /></button>
+          <button className="lesson-action-btn delete" onClick={() => onDelete()}><FaTrash /></button>
+          <button className="lesson-action-btn copy" onClick={() => onCopy(lesson)}><FaCopy /></button>
+          {canPaste && <button className="lesson-action-btn paste" onClick={() => onPaste()}><FaPaste /></button>}
+        </div>
+      )}
+    </div>
+  );
+});
+
+LessonCard.displayName = 'LessonCard';
+
+// Toast уведомление
 const ToastNotification = ({ message, type, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(onClose, 5000);
@@ -124,45 +266,68 @@ const ToastNotification = ({ message, type, onClose }) => {
   );
 };
 
-const LessonCard = ({ lesson, teacherColor, onEdit, onDelete, isDraggable, onDragStart, onDragEnd, lessonNumber, className, day, onCopy, onPaste, canPaste }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  
-  if (!lesson) return null;
-  
-  const teacherInitials = getTeacherInitials(lesson.teacher);
-  const shortSubject = lesson.subject?.length > 3 ? lesson.subject.substring(0, 3) : lesson.subject;
-  const cardColor = teacherColor || '#3b82f6';
-  
-  return (
-    <div 
-      className={`lesson-card ${isDraggable ? 'edit-mode draggable' : 'view-mode'}`}
-      draggable={isDraggable}
-      onDragStart={(e) => isDraggable && onDragStart(e, { lesson, lessonNumber, className, day })}
-      onDragEnd={onDragEnd}
-      style={{ borderLeftColor: cardColor, backgroundColor: `${cardColor}10` }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {isDraggable && <div className="drag-icon"><FaGripVertical /></div>}
-      <div className="lesson-subject">{shortSubject}</div>
-      <div className="lesson-teacher"><FaUserGraduate /> {teacherInitials}</div>
-      <div className="lesson-room"><FaDoorOpen /> {lesson.room}</div>
-      {isHovered && isDraggable && (
-        <div className="lesson-actions">
-          <button className="lesson-action-btn edit" onClick={() => onEdit(lesson)}><FaEdit /></button>
-          <button className="lesson-action-btn delete" onClick={() => onDelete()}><FaTrash /></button>
-          <button className="lesson-action-btn copy" onClick={() => onCopy(lesson)}><FaCopy /></button>
-          {canPaste && <button className="lesson-action-btn paste" onClick={() => onPaste()}><FaPaste /></button>}
+// Панель конфликтов
+const ConflictsPanel = ({ conflicts, onFixConflict, onNavigateToLesson, isEditMode, isOpen, onToggle }) => {
+  if (!conflicts || conflicts.length === 0) {
+    return (
+      <div className="conflicts-panel-empty">
+        <FaCheckCircle /> Конфликтов не обнаружено
+      </div>
+    );
+  }
+
+  if (!isOpen) {
+    return (
+      <div className="conflicts-panel collapsed" onClick={onToggle}>
+        <div className="conflicts-panel-collapsed">
+          <FaExclamationTriangle style={{ color: '#f44336' }} />
+          <span>Обнаружено конфликтов: {conflicts.length}</span>
+          <button className="conflicts-expand-btn"><FaChevronDown /> Развернуть</button>
         </div>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="conflicts-panel">
+      <div className="conflicts-panel-header">
+        <div className="conflicts-panel-title">
+          <FaExclamationTriangle /> Обнаружено конфликтов: {conflicts.length}
+        </div>
+        <button className="conflicts-collapse-btn" onClick={onToggle} title="Свернуть панель">
+          <FaChevronUp /> Свернуть
+        </button>
+      </div>
+      <div className="conflicts-list">
+        {conflicts.map((conflict, idx) => (
+          <div key={conflict.key || idx} className="conflict-item error">
+            <div className="conflict-item-header">
+              <div className="conflict-item-type" style={{ color: '#f44336' }}>
+                {conflict.type === 'teacher' ? <FaUserGraduate /> : <FaDoorOpen />} 
+                {conflict.type === 'teacher' ? 'Конфликт учителя' : 'Конфликт кабинета'}
+              </div>
+              <div className="conflict-item-actions">
+                {isEditMode && (
+                  <button className="conflict-item-fix" onClick={() => onFixConflict(conflict)}>
+                    <FaCheckCircle /> Быстрое исправление
+                  </button>
+                )}
+                <button className="conflict-item-goto" onClick={() => onNavigateToLesson(conflict.details?.first)}>
+                  <FaEye /> Перейти
+                </button>
+              </div>
+            </div>
+            <div className="conflict-item-message">{conflict.message}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
 
+// Модальное окно редактирования
 const EditLessonModal = ({ isOpen, onClose, onSave, lesson, subjects, teachers, rooms }) => {
   const [formData, setFormData] = useState({ subject: '', teacher: '', room: '' });
-  const [conflicts, setConflicts] = useState([]);
-  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     if (lesson && isOpen) {
@@ -171,34 +336,8 @@ const EditLessonModal = ({ isOpen, onClose, onSave, lesson, subjects, teachers, 
         teacher: lesson.teacher || '',
         room: lesson.room || ''
       });
-      setConflicts([]);
     }
   }, [lesson, isOpen]);
-
-  const checkConflicts = async () => {
-    if (!formData.subject || !formData.teacher || !formData.room) return;
-    
-    setChecking(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${API_URL}/schedule/check-conflicts`, {
-        ...lesson,
-        ...formData
-      }, { headers: { Authorization: `Bearer ${token}` } });
-      setConflicts(response.data.conflicts || []);
-    } catch (err) {
-      console.error('Error checking conflicts:', err);
-    } finally {
-      setChecking(false);
-    }
-  };
-
-  useEffect(() => {
-    if (formData.subject && formData.teacher && formData.room) {
-      const timeout = setTimeout(checkConflicts, 500);
-      return () => clearTimeout(timeout);
-    }
-  }, [formData]);
 
   const handleSave = () => {
     if (!formData.subject || !formData.teacher || !formData.room) {
@@ -223,7 +362,7 @@ const EditLessonModal = ({ isOpen, onClose, onSave, lesson, subjects, teachers, 
             <label><FaGraduationCap /> Предмет</label>
             <select value={formData.subject} onChange={e => setFormData({...formData, subject: e.target.value})}>
               <option value="">Выберите предмет</option>
-              {subjects.map(s => <option key={s.id} value={s.name}>{s.name} ({s.shortName})</option>)}
+              {subjects.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
             </select>
           </div>
           <div className="form-group">
@@ -237,51 +376,26 @@ const EditLessonModal = ({ isOpen, onClose, onSave, lesson, subjects, teachers, 
             <label><FaDoorOpen /> Кабинет</label>
             <select value={formData.room} onChange={e => setFormData({...formData, room: e.target.value})}>
               <option value="">Выберите кабинет</option>
-              {rooms.map(r => <option key={r.id} value={r.number}>Кабинет {r.number} {r.name && `(${r.name})`}</option>)}
+              {rooms.map(r => <option key={r.id} value={r.number}>Кабинет {r.number}</option>)}
             </select>
           </div>
-          
-          {conflicts.length > 0 && (
-            <div className="conflicts-warning">
-              <div className="conflicts-header"><FaExclamationTriangle /> Обнаружены конфликты:</div>
-              <ul className="conflicts-list">
-                {conflicts.map((c, i) => (
-                  <li key={i} className={`conflict-${c.severity}`}>
-                    {c.message}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          
-          {checking && <div className="conflicts-checking"><FaSpinner className="spinner" /> Проверка конфликтов...</div>}
         </div>
         <div className="modal-actions">
           <button className="btn-secondary" onClick={onClose}>Отмена</button>
-          <button className="btn-primary" onClick={handleSave} disabled={checking}>
-            <FaSave /> Сохранить
-          </button>
+          <button className="btn-primary" onClick={handleSave}><FaSave /> Сохранить</button>
         </div>
       </div>
     </div>
   );
 };
 
+// История версий
 const VersionHistoryModal = ({ isOpen, onClose, versions, onLoadVersion, onPublishVersion, currentVersionId }) => {
   if (!isOpen) return null;
 
   const formatDate = (date) => {
     if (!date) return '—';
     return new Date(date).toLocaleString('ru-RU');
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'published': return <span className="status-badge published"><FaCheckCircle /> Опубликовано</span>;
-      case 'draft': return <span className="status-badge draft"><FaEdit /> Черновик</span>;
-      case 'archived': return <span className="status-badge archived"><FaHistory /> Архив</span>;
-      default: return <span className="status-badge">{status}</span>;
-    }
   };
 
   return (
@@ -295,22 +409,24 @@ const VersionHistoryModal = ({ isOpen, onClose, versions, onLoadVersion, onPubli
           <table className="versions-table">
             <thead>
               <tr>
-                <th>Версия</th><th>Название</th><th>Дата</th><th>Статус</th><th>Уроков</th><th>Действия</th>
+                <th>Версия</th>
+                <th>Название</th>
+                <th>Дата</th>
+                <th>Статус</th>
+                <th>Действия</th>
               </tr>
             </thead>
             <tbody>
-              {versions.map(v => (
+              {versions.map((v) => (
                 <tr key={v.id} className={currentVersionId === v.id ? 'current-version' : ''}>
-                  <td>v{v.version_number}</td>
+                  <td>{`v${v.version_number}`}</td>
                   <td>{v.name || `Черновик ${new Date(v.created_at).toLocaleDateString()}`}</td>
                   <td>{formatDate(v.created_at)}</td>
-                  <td>{getStatusBadge(v.status)}</td>
-                  <td>{v.lessons_count || 0}</td>
+                  <td>{v.status === 'published' ? 'Опубликовано' : 'Черновик'}</td>
                   <td className="actions">
-                    <button onClick={() => onLoadVersion(v)} className="version-btn load" title="Загрузить"><FaEye /></button>
-                    {v.status !== 'published' && (
-                      <button onClick={() => onPublishVersion(v)} className="version-btn publish" title="Опубликовать"><FaCloudUploadAlt /></button>
-                    )}
+                    <button onClick={() => onLoadVersion(v)} className="version-btn load" title="Загрузить">
+                      <FaEye />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -325,11 +441,12 @@ const VersionHistoryModal = ({ isOpen, onClose, versions, onLoadVersion, onPubli
   );
 };
 
+// ГЛАВНЫЙ КОМПОНЕНТ
 const ScheduleViewer = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const tableWrapperRef = useRef(null);
   
+  // Все useState
   const [toasts, setToasts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [schedules, setSchedules] = useState({});
@@ -340,7 +457,6 @@ const ScheduleViewer = () => {
   const [teacherColors, setTeacherColors] = useState({});
   const [copiedLesson, setCopiedLesson] = useState(null);
   const [dragOverCell, setDragOverCell] = useState(null);
-  const [isMoving, setIsMoving] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingLesson, setEditingLesson] = useState(null);
   const [editingCell, setEditingCell] = useState(null);
@@ -357,6 +473,8 @@ const ScheduleViewer = () => {
   const [classShifts, setClassShifts] = useState({});
   const [timeCache, setTimeCache] = useState({});
   const [shiftStartLesson, setShiftStartLesson] = useState({});
+  const [conflicts, setConflicts] = useState([]);
+  const [conflictsPanelOpen, setConflictsPanelOpen] = useState(true);
 
   const token = localStorage.getItem('token');
 
@@ -366,324 +484,17 @@ const ScheduleViewer = () => {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000);
   }, []);
 
-  const loadScheduleSettings = useCallback(async () => {
-    if (scheduleSettingsCache) {
-      setScheduleSettings(scheduleSettingsCache);
-      return;
-    }
-    
-    try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      const res = await axios.get(`${API_URL}/admin/schedule-settings`, config);
-      scheduleSettingsCache = res.data;
-      setScheduleSettings(res.data);
-    } catch (err) {
-      console.error('Error loading schedule settings:', err);
-      setScheduleSettings({
-        startTime: '08:00',
-        lessonDuration: 40,
-        maxLessonsPerDay: 7,
-        shortBreakDuration: 10,
-        breaks: [],
-        secondShift: false,
-        secondShiftStart: '14:00',
-        secondShiftLessonDuration: 40,
-        secondShiftMaxLessonsPerDay: 6,
-        secondShiftShortBreakDuration: 10,
-        secondShiftBreaks: []
-      });
-    }
-  }, [token]);
+  // Проверка конфликтов
+  const checkConflicts = useCallback(() => {
+    const foundConflicts = checkScheduleConflicts(schedules);
+    setConflicts(foundConflicts);
+    return foundConflicts;
+  }, [schedules]);
 
-  const loadClassShift = useCallback(async (className) => {
-    if (classShifts[className]) return classShifts[className];
-    
-    try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      const res = await axios.get(`${API_URL}/schedule/class-shift/${encodeURIComponent(className)}`, config);
-      const shift = res.data.shift || 1;
-      setClassShifts(prev => ({ ...prev, [className]: shift }));
-      return shift;
-    } catch (err) {
-      console.error('Error loading class shift:', err);
-      return 1;
-    }
-  }, [token, classShifts]);
-
-  const loadReferenceData = useCallback(async () => {
-    if (lessonsCache && teachersCache && roomsCache) {
-      setSubjects(lessonsCache);
-      setTeachers(teachersCache);
-      setRooms(roomsCache);
-      return;
-    }
-
-    try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      const [lessonsRes, teachersRes, roomsRes] = await Promise.all([
-        axios.get(`${API_URL}/schedule/public-lessons`, config),
-        axios.get(`${API_URL}/schedule/public-teachers`, config),
-        axios.get(`${API_URL}/schedule/public-rooms`, config)
-      ]);
-      
-      lessonsCache = lessonsRes.data || [];
-      teachersCache = teachersRes.data || [];
-      roomsCache = roomsRes.data || [];
-      
-      setSubjects(lessonsCache);
-      setTeachers(teachersCache);
-      setRooms(roomsCache);
-    } catch (err) {
-      console.error('Error loading reference data:', err);
-    }
-  }, [token]);
-
-  const loadVersions = useCallback(async () => {
-    try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      const res = await axios.get(`${API_URL}/schedule/versions`, config);
-      setVersions(res.data || []);
-    } catch (err) {
-      console.error('Error loading versions:', err);
-    }
-  }, [token]);
-
-  const loadActiveSchedule = useCallback(async () => {
-    try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      const res = await axios.get(`${API_URL}/schedule/active`, config);
-      if (res.data?.schedules) {
-        setSchedules(res.data.schedules);
-        setCurrentVersionId(res.data.version_id);
-        setIsDraft(false);
-      }
-    } catch (err) {
-      console.error('Error loading active schedule:', err);
-    }
-  }, [token]);
-
-  const loadDraftSchedule = useCallback(async () => {
-    try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      const res = await axios.get(`${API_URL}/schedule/draft`, config);
-      if (res.data?.schedules) {
-        setSchedules(res.data.schedules);
-        setCurrentVersionId(res.data.version_id);
-        setIsDraft(true);
-      } else {
-        await loadActiveSchedule();
-      }
-    } catch (err) {
-      console.error('Error loading draft:', err);
-      await loadActiveSchedule();
-    }
-  }, [token, loadActiveSchedule]);
-
-  const loadClasses = useCallback(async () => {
-    try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      const res = await axios.get(`${API_URL}/schedule/viewer/classes`, config);
-      setAllClasses(res.data || []);
-    } catch (err) {
-      console.error('Error loading classes:', err);
-    }
-  }, [token]);
-
-  const loadTeacherColors = useCallback(async () => {
-    try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      const res = await axios.get(`${API_URL}/schedule/public-teachers`, config);
-      const colorsMap = {};
-      res.data.forEach(t => { if (t.color) colorsMap[t.name] = t.color; });
-      setTeacherColors(colorsMap);
-    } catch (err) {
-      console.error('Error loading teacher colors:', err);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    const loadAll = async () => {
-      setLoading(true);
-      await Promise.all([
-        loadReferenceData(),
-        loadVersions(),
-        loadDraftSchedule(),
-        loadClasses(),
-        loadTeacherColors(),
-        loadScheduleSettings()
-      ]);
-      setLoading(false);
-    };
-    loadAll();
-  }, [loadReferenceData, loadVersions, loadDraftSchedule, loadClasses, loadTeacherColors, loadScheduleSettings]);
-
-  useEffect(() => {
-    if (allClasses.length > 0 && scheduleSettings) {
-      allClasses.forEach(async (cls) => {
-        await loadClassShift(cls.name);
-      });
-    }
-  }, [allClasses, scheduleSettings, loadClassShift]);
-
-  useEffect(() => {
-    if (scheduleSettings) {
-      const newCache = {};
-      const newStartLesson = {};
-      
-      newCache['1'] = calculateLessonTimes(scheduleSettings, 1);
-      newStartLesson['1'] = 1;
-      
-      if (scheduleSettings.secondShift) {
-        newCache['2'] = calculateLessonTimes(scheduleSettings, 2);
-        // Вторая смена начинается с 4 или 5 урока (в зависимости от настроек)
-        const firstShiftMax = scheduleSettings.maxLessonsPerDay || 7;
-        const secondShiftStart = scheduleSettings.secondShiftStart || '14:00';
-        // Определяем с какого урока начинается вторая смена в таблице
-        // Например, если первая смена заканчивается на 5 уроке, то вторая начинается с 6
-        newStartLesson['2'] = firstShiftMax - (scheduleSettings.secondShiftMaxLessonsPerDay || 6) + 1;
-        if (newStartLesson['2'] < 1) newStartLesson['2'] = 1;
-      }
-      
-      setTimeCache(newCache);
-      setShiftStartLesson(newStartLesson);
-    }
-  }, [scheduleSettings]);
-
-  const saveDraft = useCallback(async () => {
-    setSaving(true);
-    try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.post(`${API_URL}/schedule/save-draft`, { schedule: schedules }, config);
-      showToast('Черновик сохранён', 'success');
-      setHasUnsavedChanges(false);
-      await loadVersions();
-    } catch (err) {
-      console.error('Error saving draft:', err);
-      showToast('Ошибка сохранения черновика', 'error');
-    } finally {
-      setSaving(false);
-    }
-  }, [schedules, token, showToast, loadVersions]);
-
-  const publishSchedule = useCallback(async () => {
-    setSaving(true);
-    try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.post(`${API_URL}/schedule/publish`, { schedule: schedules }, config);
-      showToast('Расписание опубликовано', 'success');
-      setIsDraft(false);
-      setHasUnsavedChanges(false);
-      await loadVersions();
-      await loadActiveSchedule();
-    } catch (err) {
-      console.error('Error publishing:', err);
-      showToast('Ошибка публикации', 'error');
-    } finally {
-      setSaving(false);
-    }
-  }, [schedules, token, showToast, loadVersions, loadActiveSchedule]);
-
-  const loadVersion = useCallback(async (version) => {
-    try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      const res = await axios.get(`${API_URL}/schedule/version/${version.id}`, config);
-      if (res.data?.schedule) {
-        setSchedules(res.data.schedule);
-        setCurrentVersionId(version.id);
-        setIsDraft(version.status === 'draft');
-        setHasUnsavedChanges(false);
-        showToast(`Загружена версия ${version.name || version.version_number}`, 'success');
-        setVersionHistoryOpen(false);
-      }
-    } catch (err) {
-      console.error('Error loading version:', err);
-      showToast('Ошибка загрузки версии', 'error');
-    }
-  }, [token, showToast]);
-
-  const publishVersion = useCallback(async (version) => {
-    if (!window.confirm(`Опубликовать версию ${version.name || version.version_number}?`)) return;
-    try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.post(`${API_URL}/schedule/publish-version/${version.id}`, {}, config);
-      showToast('Версия опубликована', 'success');
-      await loadVersions();
-      await loadActiveSchedule();
-    } catch (err) {
-      console.error('Error publishing version:', err);
-      showToast('Ошибка публикации', 'error');
-    }
-  }, [token, showToast, loadVersions, loadActiveSchedule]);
-
-  const filteredClasses = useMemo(() => {
-    let filtered = [...allClasses];
-    if (classGroup === '1-4-first') filtered = filtered.filter(c => parseInt(c.number) >= 1 && parseInt(c.number) <= 4 && c.shift === 1);
-    else if (classGroup === '1-4-second') filtered = filtered.filter(c => parseInt(c.number) >= 1 && parseInt(c.number) <= 4 && c.shift === 2);
-    else if (classGroup === '5-11-first') filtered = filtered.filter(c => parseInt(c.number) >= 5 && parseInt(c.number) <= 11 && c.shift === 1);
-    if (searchTerm) filtered = filtered.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    filtered.sort((a, b) => {
-      const numA = parseInt(a.number); const numB = parseInt(b.number);
-      if (numA !== numB) return numA - numB;
-      return (a.letter || '').localeCompare(b.letter || '');
-    });
-    return filtered;
-  }, [allClasses, classGroup, searchTerm]);
-
-  const handleDragStart = (e, dragData) => {
-    if (!isEditMode) { e.preventDefault(); return false; }
-    e.dataTransfer.setData('text/plain', JSON.stringify(dragData));
-  };
-
-  const handleDrop = async (e, targetClass, targetDay, targetLessonNumber) => {
-    if (!isEditMode) return;
-    e.preventDefault();
-    setDragOverCell(null);
-    let dragData;
-    try { dragData = JSON.parse(e.dataTransfer.getData('text/plain')); } catch { return; }
-    if (!dragData?.lesson) return;
-    
-    const { lesson, lessonNumber: sourceLessonNumber, className: sourceClass, day: sourceDay } = dragData;
-    if (sourceClass === targetClass && sourceDay === targetDay && sourceLessonNumber === targetLessonNumber) return;
-    
-    setIsMoving(true);
-    
+  // Обновление урока
+  const updateLesson = useCallback((className, day, lessonNumber, lesson) => {
     setSchedules(prev => {
-      const newSchedules = JSON.parse(JSON.stringify(prev));
-      const movingLesson = newSchedules[sourceClass]?.[sourceDay]?.[sourceLessonNumber];
-      if (!movingLesson) return prev;
-      
-      const targetLessonData = newSchedules[targetClass]?.[targetDay]?.[targetLessonNumber];
-      delete newSchedules[sourceClass][sourceDay][sourceLessonNumber];
-      
-      if (targetLessonData) {
-        delete newSchedules[targetClass][targetDay][targetLessonNumber];
-        if (!newSchedules[sourceClass]) newSchedules[sourceClass] = {};
-        if (!newSchedules[sourceClass][sourceDay]) newSchedules[sourceClass][sourceDay] = {};
-        newSchedules[sourceClass][sourceDay][sourceLessonNumber] = targetLessonData;
-      }
-      
-      if (!newSchedules[targetClass]) newSchedules[targetClass] = {};
-      if (!newSchedules[targetClass][targetDay]) newSchedules[targetClass][targetDay] = {};
-      newSchedules[targetClass][targetDay][targetLessonNumber] = movingLesson;
-      setHasUnsavedChanges(true);
-      return newSchedules;
-    });
-    
-    setIsMoving(false);
-  };
-
-  const handleDragOver = (e) => { if (isEditMode) e.preventDefault(); };
-  const handleDragEnter = (e, className, day, lessonNumber) => {
-    if (isEditMode) {
-      e.preventDefault();
-      setDragOverCell(`${className}|${day}|${lessonNumber}`);
-    }
-  };
-  const handleDragLeave = () => setDragOverCell(null);
-
-  const updateLesson = (className, day, lessonNumber, lesson) => {
-    setSchedules(prev => {
-      const newSchedules = JSON.parse(JSON.stringify(prev));
+      const newSchedules = { ...prev };
       if (!newSchedules[className]) newSchedules[className] = {};
       if (!newSchedules[className][day]) newSchedules[className][day] = {};
       if (lesson) newSchedules[className][day][lessonNumber] = lesson;
@@ -692,40 +503,177 @@ const ScheduleViewer = () => {
       return newSchedules;
     });
     showToast(lesson ? `Урок "${lesson.subject}" сохранён` : 'Урок удалён', 'success');
-  };
+  }, [showToast]);
 
-  const handleCopyLesson = (lesson) => {
+  // Drag & Drop обработчики
+  const handleDragStart = useCallback((e, dragData) => {
+    if (!isEditMode) {
+      e.preventDefault();
+      return false;
+    }
+    e.dataTransfer.setData('text/plain', JSON.stringify(dragData));
+    e.dataTransfer.effectAllowed = 'move';
+  }, [isEditMode]);
+
+  const handleDrop = useCallback(async (e, targetClass, targetDay, targetLessonNumber) => {
+    if (!isEditMode) return;
+    e.preventDefault();
+    setDragOverCell(null);
+    
+    let dragData;
+    try { dragData = JSON.parse(e.dataTransfer.getData('text/plain')); } catch { return; }
+    if (!dragData?.lesson) return;
+    
+    const { lesson, lessonNumber: sourceLessonNumber, className: sourceClass, day: sourceDay } = dragData;
+    if (sourceClass === targetClass && sourceDay === targetDay && sourceLessonNumber === targetLessonNumber) return;
+    
+    setSchedules(prev => {
+      const newSchedules = { ...prev };
+      const movingLesson = newSchedules[sourceClass]?.[sourceDay]?.[sourceLessonNumber];
+      if (!movingLesson) return prev;
+      
+      const targetLessonData = newSchedules[targetClass]?.[targetDay]?.[targetLessonNumber];
+      
+      if (newSchedules[sourceClass]?.[sourceDay]) {
+        delete newSchedules[sourceClass][sourceDay][sourceLessonNumber];
+      }
+      
+      if (targetLessonData) {
+        if (!newSchedules[sourceClass]) newSchedules[sourceClass] = {};
+        if (!newSchedules[sourceClass][sourceDay]) newSchedules[sourceClass][sourceDay] = {};
+        newSchedules[sourceClass][sourceDay][sourceLessonNumber] = targetLessonData;
+      }
+      
+      if (!newSchedules[targetClass]) newSchedules[targetClass] = {};
+      if (!newSchedules[targetClass][targetDay]) newSchedules[targetClass][targetDay] = {};
+      newSchedules[targetClass][targetDay][targetLessonNumber] = movingLesson;
+      
+      setHasUnsavedChanges(true);
+      return newSchedules;
+    });
+  }, [isEditMode]);
+
+  const handleDragOver = useCallback((e) => {
+    if (isEditMode) e.preventDefault();
+  }, [isEditMode]);
+
+  const handleDragEnter = useCallback((e, className, day, lessonNumber) => {
+    if (isEditMode) {
+      e.preventDefault();
+      setDragOverCell(`${className}|${day}|${lessonNumber}`);
+    }
+  }, [isEditMode]);
+
+  const handleDragLeave = useCallback(() => setDragOverCell(null), []);
+
+  // Копирование/вставка
+  const handleCopyLesson = useCallback((lesson) => {
     setCopiedLesson(lesson);
     showToast(`Скопирован урок: ${lesson.subject}`, 'info');
-  };
+  }, [showToast]);
 
-  const handlePasteLesson = (targetClass, targetDay, targetLessonNumber) => {
-    if (!copiedLesson) { showToast('Нет скопированного урока', 'error'); return; }
+  const handlePasteLesson = useCallback((targetClass, targetDay, targetLessonNumber) => {
+    if (!copiedLesson) {
+      showToast('Нет скопированного урока', 'error');
+      return;
+    }
     updateLesson(targetClass, targetDay, targetLessonNumber, copiedLesson);
     showToast(`Вставлен урок: ${copiedLesson.subject}`, 'success');
-  };
+  }, [copiedLesson, updateLesson, showToast]);
 
-  const handleDelete = (className, day, lessonNumber) => {
+  // Удаление урока
+  const handleDeleteLesson = useCallback((className, day, lessonNumber) => {
     if (window.confirm('Удалить урок?')) {
       updateLesson(className, day, lessonNumber, null);
     }
-  };
+  }, [updateLesson]);
 
-  const handleEditLesson = (className, day, lessonNumber, lesson) => {
+  // Редактирование урока
+  const handleEditLesson = useCallback((className, day, lessonNumber, lesson) => {
     setEditingCell({ className, day, lessonNumber });
     setEditingLesson(lesson);
     setEditModalOpen(true);
-  };
+  }, []);
 
-  const handleSaveLesson = (formData) => {
-    updateLesson(editingCell.className, editingCell.day, editingCell.lessonNumber, formData);
-  };
+  const handleSaveLesson = useCallback((formData) => {
+    if (editingCell) {
+      updateLesson(editingCell.className, editingCell.day, editingCell.lessonNumber, formData);
+    }
+  }, [editingCell, updateLesson]);
 
-  const exportToExcel = () => {
-    const data = [];
-    const daysList = isDraft ? (Object.keys(schedules).length > 0 ? Object.keys(Object.values(schedules)[0] || {}) : DAYS) : DAYS;
+  // Получение урока для ячейки
+  const getLessonForCell = useCallback((className, day, lessonNumber) => {
+    return schedules[className]?.[day]?.[lessonNumber] || null;
+  }, [schedules]);
+
+  // Проверка конфликта для урока
+  const getLessonConflict = useCallback((className, day, lessonNumber, lesson) => {
+    if (!lesson || !conflicts.length) return false;
+    return conflicts.some(conflict => 
+      (conflict.details?.first?.className === className && 
+       conflict.details?.first?.day === day && 
+       conflict.details?.first?.lessonNumber === lessonNumber) ||
+      (conflict.details?.second?.className === className && 
+       conflict.details?.second?.day === day && 
+       conflict.details?.second?.lessonNumber === lessonNumber)
+    );
+  }, [conflicts]);
+
+  // Проверка показывать ли урок для класса
+  const shouldShowLessonForClass = useCallback((className, lessonNumber) => {
+    const shift = classShifts[className] || 1;
+    const startOffset = shiftStartLesson[shift] || 1;
+    const maxLessons = shift === 2 
+      ? (scheduleSettings?.secondShiftMaxLessonsPerDay || 6)
+      : (scheduleSettings?.maxLessonsPerDay || 7);
+    return lessonNumber >= startOffset && lessonNumber < startOffset + maxLessons;
+  }, [classShifts, shiftStartLesson, scheduleSettings]);
+
+  // Получение времени урока
+  const getClassLessonTime = useCallback((className, lessonNumber) => {
+    const shift = classShifts[className] || 1;
+    const times = timeCache[shift];
+    const startOffset = shiftStartLesson[shift] || 1;
+    const actualLessonNumber = lessonNumber - startOffset + 1;
+    if (times && times[actualLessonNumber]) {
+      return times[actualLessonNumber].start;
+    }
+    return shift === 2 ? "14:00" : "08:00";
+  }, [classShifts, timeCache, shiftStartLesson]);
+
+  // Фильтрация классов
+  const filteredClasses = useMemo(() => {
+    let filtered = [...allClasses];
     
-    for (const className of filteredClasses.map(c => c.name)) {
+    if (classGroup === '1-4-first') {
+      filtered = filtered.filter(c => parseInt(c.number) >= 1 && parseInt(c.number) <= 4 && (classShifts[c.name] === 1 || !classShifts[c.name]));
+    } else if (classGroup === '1-4-second') {
+      filtered = filtered.filter(c => parseInt(c.number) >= 1 && parseInt(c.number) <= 4 && classShifts[c.name] === 2);
+    } else if (classGroup === '5-11-first') {
+      filtered = filtered.filter(c => parseInt(c.number) >= 5 && parseInt(c.number) <= 11 && (classShifts[c.name] === 1 || !classShifts[c.name]));
+    }
+    
+    if (searchTerm) {
+      filtered = filtered.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+    
+    filtered.sort((a, b) => {
+      const numA = parseInt(a.number);
+      const numB = parseInt(b.number);
+      if (numA !== numB) return numA - numB;
+      return (a.letter || '').localeCompare(b.letter || '');
+    });
+    
+    return filtered;
+  }, [allClasses, classGroup, searchTerm, classShifts]);
+
+  // Экспорт в Excel
+  const exportToExcel = useCallback(() => {
+    const data = [];
+    const daysList = DAYS;
+    
+    for (const classItem of filteredClasses) {
+      const className = classItem.name;
       const classSchedule = schedules[className] || {};
       for (const day of daysList) {
         const dayLessons = classSchedule[day] || {};
@@ -742,45 +690,203 @@ const ScheduleViewer = () => {
       }
     }
     
-    if (data.length === 0) { showToast('Нет данных для экспорта', 'error'); return; }
+    if (data.length === 0) {
+      showToast('Нет данных для экспорта', 'error');
+      return;
+    }
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Расписание');
     XLSX.writeFile(wb, `raspisanie_${new Date().toLocaleDateString()}.xlsx`);
     showToast('Экспорт завершен', 'success');
-  };
+  }, [schedules, filteredClasses, showToast]);
 
-  const getLessonForCell = (className, day, lessonNumber) => {
-    return schedules[className]?.[day]?.[lessonNumber] || null;
-  };
+  // Печать
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
 
-  const getClassLessonTime = (className, lessonNumber) => {
-    const shift = classShifts[className] || 1;
-    const times = timeCache[`${shift}`];
-    const startOffset = shiftStartLesson[shift] || 1;
-    const actualLessonNumber = lessonNumber - startOffset + 1;
-    
-    if (times && times[actualLessonNumber]) {
-      const time = times[actualLessonNumber];
-      return `${time.start}–${time.end}`;
+  // Сохранение черновика
+  const saveDraft = useCallback(async () => {
+    setSaving(true);
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await axios.post(`${API_URL}/schedule/save-draft`, { schedule: schedules }, config);
+      showToast('Черновик сохранён', 'success');
+      setHasUnsavedChanges(false);
+    } catch (err) {
+      console.error('Error saving draft:', err);
+      showToast('Ошибка сохранения черновика', 'error');
+    } finally {
+      setSaving(false);
     }
-    return shift === 2 ? "14:00–14:40" : "08:00–08:40";
-  };
+  }, [schedules, token, showToast]);
 
-  const getShiftIcon = (shift) => {
-    if (shift === 2) return <FaMoon style={{ fontSize: '0.7rem', marginLeft: '4px', color: '#3b82f6' }} />;
-    return <FaSun style={{ fontSize: '0.7rem', marginLeft: '4px', color: '#f59e0b' }} />;
-  };
+  // Публикация расписания
+  const publishSchedule = useCallback(async () => {
+    setSaving(true);
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await axios.post(`${API_URL}/schedule/publish`, { schedule: schedules }, config);
+      showToast('Расписание опубликовано', 'success');
+      setIsDraft(false);
+      setHasUnsavedChanges(false);
+    } catch (err) {
+      console.error('Error publishing:', err);
+      showToast('Ошибка публикации', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }, [schedules, token, showToast]);
 
-  const shouldShowLessonForClass = (className, lessonNumber) => {
-    const shift = classShifts[className] || 1;
-    const startOffset = shiftStartLesson[shift] || 1;
-    const maxLessons = shift === 2 
-      ? (scheduleSettings?.secondShiftMaxLessonsPerDay || 6)
-      : (scheduleSettings?.maxLessonsPerDay || 7);
+  // Загрузка версии
+  const loadVersion = useCallback(async (version) => {
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const res = await axios.get(`${API_URL}/schedule/version/${version.id}`, config);
+      if (res.data?.schedule) {
+        const convertedSchedule = convertScheduleDays(res.data.schedule);
+        setSchedules(convertedSchedule);
+        setCurrentVersionId(version.id);
+        setIsDraft(version.status === 'draft');
+        setHasUnsavedChanges(false);
+        showToast(`Загружена версия ${version.name || version.version_number}`, 'success');
+        setVersionHistoryOpen(false);
+      }
+    } catch (err) {
+      console.error('Error loading version:', err);
+      showToast('Ошибка загрузки версии', 'error');
+    }
+  }, [token, showToast]);
+
+  // ЗАГРУЗКА ДАННЫХ - С КОНВЕРТАЦИЕЙ ДНЕЙ
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        
+        const [classesRes, teachersRes, roomsRes, settingsRes, lessonsRes, versionsRes] = await Promise.all([
+          axios.get(`${API_URL}/schedule/viewer/classes`, config),
+          axios.get(`${API_URL}/schedule/public-teachers`, config),
+          axios.get(`${API_URL}/schedule/public-rooms`, config),
+          axios.get(`${API_URL}/admin/schedule-settings`, config),
+          axios.get(`${API_URL}/schedule/public-lessons`, config),
+          axios.get(`${API_URL}/schedule/versions`, config)
+        ]);
+        
+        setAllClasses(classesRes.data || []);
+        setTeachers(teachersRes.data || []);
+        setRooms(roomsRes.data || []);
+        setSubjects(lessonsRes.data || []);
+        setVersions(versionsRes.data || []);
+        
+        const colorsMap = {};
+        teachersRes.data.forEach(t => { 
+          if (t.color) colorsMap[t.name] = t.color; 
+        });
+        setTeacherColors(colorsMap);
+        
+        setScheduleSettings(settingsRes.data);
+        
+        try {
+          const activeRes = await axios.get(`${API_URL}/schedule/active`, config);
+          if (activeRes.data?.schedules && Object.keys(activeRes.data.schedules).length > 0) {
+            console.log('Загружено активное расписание из БД');
+            const convertedSchedules = convertScheduleDays(activeRes.data.schedules);
+            setSchedules(convertedSchedules);
+            setCurrentVersionId(activeRes.data.version_id);
+            setIsDraft(false);
+          } else {
+            const draftRes = await axios.get(`${API_URL}/schedule/draft`, config);
+            if (draftRes.data?.schedules && Object.keys(draftRes.data.schedules).length > 0) {
+              console.log('Загружен черновик расписания');
+              const convertedSchedules = convertScheduleDays(draftRes.data.schedules);
+              setSchedules(convertedSchedules);
+              setCurrentVersionId(draftRes.data.version_id);
+              setIsDraft(true);
+            } else {
+              console.log('Расписание не найдено в БД');
+              setSchedules({});
+            }
+          }
+        } catch (err) {
+          console.log('Ошибка загрузки расписания:', err);
+          setSchedules({});
+        }
+        
+      } catch (err) {
+        console.error('Ошибка загрузки данных:', err);
+        showToast('Ошибка загрузки расписания', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    return lessonNumber >= startOffset && lessonNumber < startOffset + maxLessons;
-  };
+    if (token) {
+      loadData();
+    } else {
+      console.log('Нет токена авторизации');
+      setLoading(false);
+    }
+  }, [token, showToast]);
+
+  // Расчет времени уроков
+  useEffect(() => {
+    if (scheduleSettings) {
+      const newCache = {};
+      const newStartLesson = {};
+      
+      newCache[1] = calculateLessonTimes(scheduleSettings, 1);
+      newStartLesson[1] = 1;
+      
+      if (scheduleSettings.secondShift) {
+        newCache[2] = calculateLessonTimes(scheduleSettings, 2);
+        const firstShiftMax = scheduleSettings.maxLessonsPerDay || 7;
+        newStartLesson[2] = firstShiftMax - (scheduleSettings.secondShiftMaxLessonsPerDay || 6) + 1;
+        if (newStartLesson[2] < 1) newStartLesson[2] = 1;
+      }
+      
+      setTimeCache(newCache);
+      setShiftStartLesson(newStartLesson);
+    }
+  }, [scheduleSettings]);
+
+  // Загрузка смен для классов
+  useEffect(() => {
+    if (allClasses.length > 0) {
+      const fetchShifts = async () => {
+        const shifts = {};
+        for (const cls of allClasses) {
+          try {
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            const res = await axios.get(`${API_URL}/schedule/class-shift/${encodeURIComponent(cls.name)}`, config);
+            shifts[cls.name] = res.data.shift || 1;
+          } catch {
+            shifts[cls.name] = 1;
+          }
+        }
+        setClassShifts(shifts);
+      };
+      fetchShifts();
+    }
+  }, [allClasses, token]);
+
+  // Проверка конфликтов
+  useEffect(() => {
+    if (!loading && Object.keys(schedules).length > 0) {
+      checkConflicts();
+    }
+  }, [schedules, loading, checkConflicts]);
+
+  // Вычисление максимального количества уроков
+  const maxTotalLessons = useMemo(() => {
+    return Math.max(
+      scheduleSettings?.maxLessonsPerDay || 7,
+      (scheduleSettings?.secondShiftMaxLessonsPerDay || 6) + (shiftStartLesson[2] || 4) - 1,
+      8
+    );
+  }, [scheduleSettings, shiftStartLesson]);
 
   if (loading) return (
     <div className="loading-container">
@@ -789,13 +895,7 @@ const ScheduleViewer = () => {
     </div>
   );
 
-  const daysList = isDraft ? (Object.keys(schedules).length > 0 ? Object.keys(Object.values(schedules)[0] || {}) : DAYS) : DAYS;
-  
-  const maxTotalLessons = Math.max(
-    scheduleSettings?.maxLessonsPerDay || 7,
-    (scheduleSettings?.secondShiftMaxLessonsPerDay || 6) + (shiftStartLesson[2] || 4) - 1,
-    8
-  );
+  const daysList = DAYS;
 
   return (
     <div className={`schedule-viewer-page ${isEditMode ? 'edit-mode-active' : ''}`}>
@@ -803,13 +903,22 @@ const ScheduleViewer = () => {
       {!isEditMode && <BackButton />}
       {!isEditMode && <Header />}
       
-      <div className="schedule-viewer-container">
+      <div className="schedule-viewer-container full-width">
+        {/* Панель управления */}
         <div className="top-controls-panel">
           <div className="filter-buttons">
-            <button className={`filter-btn ${classGroup === 'all' ? 'active' : ''}`} onClick={() => setClassGroup('all')}>Все классы</button>
-            <button className={`filter-btn ${classGroup === '1-4-first' ? 'active' : ''}`} onClick={() => setClassGroup('1-4-first')}>1-4 класс (1 смена)</button>
-            <button className={`filter-btn ${classGroup === '1-4-second' ? 'active' : ''}`} onClick={() => setClassGroup('1-4-second')}>1-4 класс (2 смена)</button>
-            <button className={`filter-btn ${classGroup === '5-11-first' ? 'active' : ''}`} onClick={() => setClassGroup('5-11-first')}>5-11 класс (1 смена)</button>
+            <button className={`filter-btn ${classGroup === 'all' ? 'active' : ''}`} onClick={() => setClassGroup('all')}>
+              Все классы
+            </button>
+            <button className={`filter-btn ${classGroup === '1-4-first' ? 'active' : ''}`} onClick={() => setClassGroup('1-4-first')}>
+              1-4 класс (1 смена)
+            </button>
+            <button className={`filter-btn ${classGroup === '1-4-second' ? 'active' : ''}`} onClick={() => setClassGroup('1-4-second')}>
+              1-4 класс (2 смена)
+            </button>
+            <button className={`filter-btn ${classGroup === '5-11-first' ? 'active' : ''}`} onClick={() => setClassGroup('5-11-first')}>
+              5-11 класс (1 смена)
+            </button>
             <button className={`edit-mode-btn ${isEditMode ? 'active' : ''}`} onClick={() => setIsEditMode(!isEditMode)}>
               <FaEdit /> {isEditMode ? 'Выйти из редактирования' : 'Режим редактирования'}
             </button>
@@ -831,24 +940,41 @@ const ScheduleViewer = () => {
           <div className="action-buttons">
             <div className="search-wrapper">
               <FaSearch />
-              <input type="text" placeholder="Поиск класса..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+              <input 
+                type="text" 
+                placeholder="Поиск класса..." 
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} 
+              />
             </div>
             <button className="action-btn" onClick={exportToExcel}><FaFileExcel /> Экспорт</button>
-            <button className="action-btn" onClick={() => window.print()}><FaPrint /> Печать</button>
+            <button className="action-btn" onClick={handlePrint}><FaPrint /> Печать</button>
           </div>
         </div>
+
+        {/* Панель конфликтов */}
+        {isEditMode && (
+          <ConflictsPanel 
+            conflicts={conflicts}
+            onFixConflict={() => {}}
+            onNavigateToLesson={() => {}}
+            isEditMode={isEditMode}
+            isOpen={conflictsPanelOpen}
+            onToggle={() => setConflictsPanelOpen(!conflictsPanelOpen)}
+          />
+        )}
         
-        <div ref={tableWrapperRef} className="schedule-table-wrapper">
-          <table className="unified-schedule-table">
+        {/* Таблица расписания */}
+        <div ref={tableWrapperRef} className="schedule-table-wrapper full-width-table">
+          <table className="unified-schedule-table full-width">
             <thead>
               <tr>
-                <th className="day-col-header">День недели</th>
+                <th className="day-col-header">День</th>
                 <th className="lesson-num-header">№</th>
                 <th className="time-col-header">Время</th>
                 {filteredClasses.map(c => (
                   <th key={c.name} className="class-col">
                     {c.name}
-                    {getShiftIcon(classShifts[c.name] || 1)}
                   </th>
                 ))}
               </tr>
@@ -858,31 +984,20 @@ const ScheduleViewer = () => {
                 return [...Array(maxTotalLessons)].map((_, slotIdx) => {
                   const lessonNumber = slotIdx + 1;
                   const isFirstRow = slotIdx === 0;
-                  
-                  // Получаем время для первого класса (как пример для колонки времени)
-                  let firstClassTime = "—";
-                  const firstClass = filteredClasses[0];
-                  if (firstClass && shouldShowLessonForClass(firstClass.name, lessonNumber)) {
-                    firstClassTime = getClassLessonTime(firstClass.name, lessonNumber);
-                  } else if (firstClass && classShifts[firstClass.name] === 2) {
-                    const startOffset = shiftStartLesson[2] || 4;
-                    if (lessonNumber >= startOffset && lessonNumber < startOffset + (scheduleSettings?.secondShiftMaxLessonsPerDay || 6)) {
-                      firstClassTime = getClassLessonTime(firstClass.name, lessonNumber);
-                    }
-                  }
+                  const time = getClassLessonTime(filteredClasses[0]?.name || '', lessonNumber);
                   
                   return (
                     <tr key={`${day}-${lessonNumber}`}>
                       {isFirstRow && (
                         <td className="day-cell" rowSpan={maxTotalLessons}>
                           <div className="day-name-wrapper">
-                            <span className="day-full-name">{day}</span>
-                            <span className="day-short-name">{day.substring(0, 2)}</span>
+                            <span className="day-full-name">{FULL_DAYS[dayIndex]}</span>
+                            <span className="day-short-name">{day}</span>
                           </div>
                         </td>
                       )}
                       <td className="lesson-number-cell">{lessonNumber}</td>
-                      <td className="lesson-time-cell">{firstClassTime}</td>
+                      <td className="lesson-time-cell">{time || (lessonNumber === 1 ? "08:00" : time)}</td>
                       {filteredClasses.map(classItem => {
                         const shift = classShifts[classItem.name] || 1;
                         const startOffset = shiftStartLesson[shift] || 1;
@@ -895,12 +1010,16 @@ const ScheduleViewer = () => {
                         const actualLessonNumber = lessonNumber - startOffset + 1;
                         const lesson = getLessonForCell(classItem.name, day, actualLessonNumber);
                         const isDragOver = dragOverCell === `${classItem.name}|${day}|${actualLessonNumber}`;
-                        const teacherColor = lesson?.teacherColor || (lesson ? teacherColors[lesson.teacher] : null);
+                        const teacherColor = lesson?.teacherColor || (lesson?.teacher ? teacherColors[lesson.teacher] : null);
+                        const hasConflict = lesson ? getLessonConflict(classItem.name, day, actualLessonNumber, lesson) : false;
                         
                         return (
                           <td 
                             key={`${classItem.name}-${day}-${lessonNumber}`} 
                             className={`lesson-cell ${isDragOver ? 'drag-over' : ''}`}
+                            data-class={classItem.name}
+                            data-day={day}
+                            data-lesson={actualLessonNumber}
                             onDragOver={handleDragOver}
                             onDragEnter={(e) => handleDragEnter(e, classItem.name, day, actualLessonNumber)}
                             onDragLeave={handleDragLeave}
@@ -911,16 +1030,15 @@ const ScheduleViewer = () => {
                                 lesson={lesson} 
                                 teacherColor={teacherColor}
                                 onEdit={() => handleEditLesson(classItem.name, day, actualLessonNumber, lesson)}
-                                onDelete={() => handleDelete(classItem.name, day, actualLessonNumber)}
+                                onDelete={() => handleDeleteLesson(classItem.name, day, actualLessonNumber)}
                                 isDraggable={isEditMode}
-                                onDragStart={handleDragStart}
-                                onDragEnd={() => setDragOverCell(null)}
                                 lessonNumber={actualLessonNumber}
                                 className={classItem.name}
                                 day={day}
                                 onCopy={handleCopyLesson}
                                 onPaste={() => handlePasteLesson(classItem.name, day, actualLessonNumber)}
                                 canPaste={!!copiedLesson}
+                                hasConflict={hasConflict}
                               />
                             ) : (
                               <div className={`empty-slot-add ${!isEditMode ? 'disabled' : ''}`} onClick={() => {
@@ -929,7 +1047,7 @@ const ScheduleViewer = () => {
                                 {isEditMode && <FaPlus />}
                               </div>
                             )}
-                           </td>
+                          </td>
                         );
                       })}
                     </tr>
@@ -940,12 +1058,16 @@ const ScheduleViewer = () => {
           </table>
         </div>
         
+        {/* Подсказки */}
         <div className="tips-footer">
           {isEditMode ? (
             <>
               <div className="tip"><FaGripVertical /> Перетащите карточку для перемещения</div>
               <div className="tip"><FaCopy /> Копируйте и вставляйте уроки</div>
               <div className="tip"><FaSave /> Сохраняйте черновики перед публикацией</div>
+              {conflicts.length > 0 && (
+                <div className="tip"><FaExclamationTriangle /> Обнаружено {conflicts.length} конфликтов. Исправьте их!</div>
+              )}
             </>
           ) : (
             <div className="tip"><FaInfoCircle /> Включите режим редактирования для изменения расписания</div>
@@ -955,6 +1077,7 @@ const ScheduleViewer = () => {
       
       {!isEditMode && <Footer />}
       
+      {/* Модальные окна */}
       <EditLessonModal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
@@ -970,10 +1093,11 @@ const ScheduleViewer = () => {
         onClose={() => setVersionHistoryOpen(false)}
         versions={versions}
         onLoadVersion={loadVersion}
-        onPublishVersion={publishVersion}
+        onPublishVersion={() => {}}
         currentVersionId={currentVersionId}
       />
       
+      {/* Уведомления */}
       <div className="toast-container">
         {toasts.map(toast => (
           <ToastNotification 

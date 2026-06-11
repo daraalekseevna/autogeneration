@@ -1,19 +1,23 @@
 // AdminsTab.jsx
 import React, { useState } from 'react';
-import { FaUserPlus, FaUsers, FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
+import { 
+    FaUserPlus, FaUsers, FaEdit, FaTrash, FaSave, FaTimes, 
+    FaCheck, FaExclamationTriangle, FaUserCog
+} from 'react-icons/fa';
 import axios from 'axios';
-
+import '../styles/AdminsTab.css';
+import '../styles/SuperAdmin.css';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const AdminsTab = ({ admins, token, onDataChange }) => {
     const [newAdmin, setNewAdmin] = useState({ login: '', password: '', name: '' });
     const [editAdminModalOpen, setEditAdminModalOpen] = useState(false);
     const [editingAdmin, setEditingAdmin] = useState(null);
-    const [notification, setNotification] = useState('');
+    const [notification, setNotification] = useState({ message: '', type: 'success' });
 
-    const showNotification = (message) => {
-        setNotification(message);
-        setTimeout(() => setNotification(''), 3000);
+    const showNotification = (message, type = 'success') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification({ message: '', type: '' }), 3000);
     };
 
     const clearAdminForm = () => setNewAdmin({ login: '', password: '', name: '' });
@@ -21,7 +25,7 @@ const AdminsTab = ({ admins, token, onDataChange }) => {
     const handleAddAdmin = async (e) => {
         e.preventDefault();
         if (!newAdmin.login || !newAdmin.password || !newAdmin.name) {
-            showNotification('Заполните все поля');
+            showNotification('Заполните все поля', 'error');
             return;
         }
         try {
@@ -33,7 +37,7 @@ const AdminsTab = ({ admins, token, onDataChange }) => {
             onDataChange();
         } catch (err) {
             console.error('Add admin error:', err);
-            showNotification(err.response?.data?.message || 'Ошибка');
+            showNotification(err.response?.data?.message || 'Ошибка', 'error');
         }
     };
 
@@ -47,7 +51,7 @@ const AdminsTab = ({ admins, token, onDataChange }) => {
             onDataChange();
         } catch (err) {
             console.error('Delete admin error:', err);
-            showNotification('Ошибка удаления');
+            showNotification('Ошибка удаления', 'error');
         }
     };
 
@@ -62,11 +66,12 @@ const AdminsTab = ({ admins, token, onDataChange }) => {
             setEditingAdmin(null);
         } catch (err) {
             console.error('Update admin error:', err);
-            showNotification(err.response?.data?.message || 'Ошибка обновления');
+            showNotification(err.response?.data?.message || 'Ошибка обновления', 'error');
             throw err;
         }
     };
 
+    // Модалка редактирования
     const EditAdminModal = ({ isOpen, onClose, onSave, admin }) => {
         const [formData, setFormData] = useState({ name: '', login: '' });
         const [saving, setSaving] = useState(false);
@@ -81,7 +86,7 @@ const AdminsTab = ({ admins, token, onDataChange }) => {
             e.preventDefault();
             if (saving) return;
             if (!formData.name) {
-                alert('Заполните ФИО');
+                showNotification('Заполните ФИО', 'error');
                 return;
             }
             setSaving(true);
@@ -98,27 +103,44 @@ const AdminsTab = ({ admins, token, onDataChange }) => {
         if (!isOpen) return null;
 
         return (
-            <div className="subject-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget && !saving) onClose(); }}>
-                <div className="subject-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px' }}>
-                    <div className="subject-modal-header">
-                        <h3><FaEdit /> Редактировать администратора</h3>
-                        <button className="subject-modal-close" onClick={() => !saving && onClose()} disabled={saving}><FaTimes /></button>
+            <div className="admins-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget && !saving) onClose(); }}>
+                <div className="admins-modal-content">
+                    <div className="admins-modal-header">
+                        <FaEdit />
+                        <h3>Редактировать администратора</h3>
+                        <button className="admins-modal-close" onClick={() => !saving && onClose()} disabled={saving}>
+                            <FaTimes />
+                        </button>
                     </div>
                     <form onSubmit={handleSubmit}>
-                        <div className="room-modal-body">
-                            <div className="form-group">
+                        <div className="admins-modal-body">
+                            <div className="admins-modal-form-group">
                                 <label>ФИО *</label>
-                                <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} disabled={saving} />
+                                <input 
+                                    type="text" 
+                                    value={formData.name} 
+                                    onChange={e => setFormData({...formData, name: e.target.value})} 
+                                    disabled={saving} 
+                                    placeholder="Иванов Иван Иванович"
+                                />
                             </div>
-                            <div className="form-group">
+                            <div className="admins-modal-form-group">
                                 <label>Логин</label>
-                                <input type="text" value={formData.login} disabled style={{ background: '#f0f0f0' }} />
+                                <input 
+                                    type="text" 
+                                    value={formData.login} 
+                                    disabled 
+                                />
                                 <small>Логин нельзя изменить</small>
                             </div>
                         </div>
-                        <div className="room-modal-footer">
-                            <button type="button" className="btn-cancel" onClick={() => !saving && onClose()} disabled={saving}>Отмена</button>
-                            <button type="submit" className="btn-save" disabled={saving}><FaSave /> {saving ? 'Сохранение...' : 'Сохранить'}</button>
+                        <div className="admins-modal-footer">
+                            <button type="button" className="admins-modal-cancel" onClick={() => !saving && onClose()} disabled={saving}>
+                                Отмена
+                            </button>
+                            <button type="submit" className="admins-modal-save" disabled={saving}>
+                                <FaSave /> {saving ? 'Сохранение...' : 'Сохранить'}
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -126,55 +148,131 @@ const AdminsTab = ({ admins, token, onDataChange }) => {
         );
     };
 
+    const adminsArray = Array.isArray(admins) ? admins : [];
+
     return (
         <>
-            {notification && <div className="notification">{notification}</div>}
-            <div className="content-grid">
-                <div className="form-container">
-                    <h3 className="form-title"><FaUserPlus /> Новый администратор</h3>
-                    <form onSubmit={handleAddAdmin}>
-                        <div className="form-group">
-                            <label>Логин *</label>
-                            <input type="text" value={newAdmin.login} onChange={(e) => setNewAdmin({...newAdmin, login: e.target.value})} required />
-                        </div>
-                        <div className="form-group">
-                            <label>Пароль *</label>
-                            <input type="password" value={newAdmin.password} onChange={(e) => setNewAdmin({...newAdmin, password: e.target.value})} required />
-                        </div>
-                        <div className="form-group">
-                            <label>ФИО *</label>
-                            <input type="text" value={newAdmin.name} onChange={(e) => setNewAdmin({...newAdmin, name: e.target.value})} required />
-                        </div>
-                        <button type="submit" className="submit-button">Добавить администратора</button>
-                    </form>
+            {notification.message && (
+                <div className={`admins-notification ${notification.type}`}>
+                    {notification.type === 'success' ? <FaCheck size={14} /> : <FaExclamationTriangle size={14} />}
+                    <span>{notification.message}</span>
                 </div>
-                <div className="table-container">
-                    <h3 className="table-title"><FaUsers /> Список администраторов ({admins.length})</h3>
-                    <div className="table-responsive">
-                        <table className="data-table">
-                            <thead>
-                                <tr><th>Логин</th><th>ФИО</th><th>Действия</th></tr>
-                            </thead>
-                            <tbody>
-                                {admins.map(a => (
-                                    <tr key={a.id}>
-                                        <td>{a.login}</td>
-                                        <td>{a.name}</td>
-                                        <td className="action-cell">
-                                            <button onClick={() => { setEditingAdmin(a); setEditAdminModalOpen(true); }} className="action-button edit-button"><FaEdit /></button>
-                                            <button onClick={() => handleDeleteAdmin(a.id)} className="action-button delete-button" style={{ background: '#dc2626' }}><FaTrash /></button>
-                                        </td>
+            )}
+            
+            <div className="admins-container-modern">
+                <div className="admins-content-grid">
+                    {/* Форма добавления администратора */}
+                    <div className="admins-form-card">
+                        <div className="admins-form-header">
+                            <FaUserPlus size={18} />
+                            <h3>Новый администратор</h3>
+                        </div>
+                        <div className="admins-form-body">
+                            <form onSubmit={handleAddAdmin}>
+                                <div className="admins-form-group">
+                                    <label>Логин *</label>
+                                    <input 
+                                        type="text" 
+                                        value={newAdmin.login} 
+                                        onChange={(e) => setNewAdmin({...newAdmin, login: e.target.value})} 
+                                        required 
+                                        placeholder="Введите логин"
+                                    />
+                                </div>
+                                <div className="admins-form-group">
+                                    <label>Пароль *</label>
+                                    <input 
+                                        type="password" 
+                                        value={newAdmin.password} 
+                                        onChange={(e) => setNewAdmin({...newAdmin, password: e.target.value})} 
+                                        required 
+                                        placeholder="Введите пароль"
+                                    />
+                                </div>
+                                <div className="admins-form-group">
+                                    <label>ФИО *</label>
+                                    <input 
+                                        type="text" 
+                                        value={newAdmin.name} 
+                                        onChange={(e) => setNewAdmin({...newAdmin, name: e.target.value})} 
+                                        required 
+                                        placeholder="Иванов Иван Иванович"
+                                    />
+                                </div>
+                                <button type="submit" className="admins-submit-btn">
+                                    <FaUserPlus size={14} /> Добавить администратора
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    {/* Таблица администраторов */}
+                    <div className="admins-table-card">
+                        <div className="admins-table-header">
+                            <div className="admins-table-title">
+                                <FaUsers size={18} />
+                                <h3>Список администраторов</h3>
+                                <span className="admins-count-badge">{adminsArray.length}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="admins-table-wrapper">
+                            <table className="admins-table">
+                                <thead>
+                                    <tr>
+                                        <th>Логин</th>
+                                        <th>ФИО</th>
+                                        <th style={{ width: '100px' }}>Действия</th>
                                     </tr>
-                                ))}
-                                {admins.length === 0 && (
-                                    <tr><td colSpan="3" className="empty-row"><FaUsers /><p>Нет администраторов</p></td></tr>
-                                )}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {adminsArray.length > 0 ? adminsArray.map(a => (
+                                        <tr key={a.id} className="admins-row">
+                                            <td className="admins-login">{a.login}</td>
+                                            <td className="admins-name">{a.name}</td>
+                                            <td className="admins-actions-cell">
+                                                <button 
+                                                    onClick={() => { setEditingAdmin(a); setEditAdminModalOpen(true); }} 
+                                                    className="admins-action-icon edit" 
+                                                    title="Редактировать"
+                                                >
+                                                    <FaEdit size={14} />
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDeleteAdmin(a.id)} 
+                                                    className="admins-action-icon delete" 
+                                                    title="Удалить"
+                                                >
+                                                    <FaTrash size={14} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    )) : (
+                                        <tr className="admins-empty-row">
+                                            <td colSpan="3">
+                                                <div className="admins-empty-state">
+                                                    <div className="admins-empty-icon">
+                                                        <FaUsers size={48} />
+                                                    </div>
+                                                    <h4>Нет администраторов</h4>
+                                                    <p>Добавьте первого администратора, заполнив форму слева</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-            <EditAdminModal isOpen={editAdminModalOpen} onClose={() => setEditAdminModalOpen(false)} onSave={handleUpdateAdmin} admin={editingAdmin} />
+            
+            <EditAdminModal 
+                isOpen={editAdminModalOpen} 
+                onClose={() => setEditAdminModalOpen(false)} 
+                onSave={handleUpdateAdmin} 
+                admin={editingAdmin} 
+            />
         </>
     );
 };

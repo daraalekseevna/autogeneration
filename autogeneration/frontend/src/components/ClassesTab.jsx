@@ -1,26 +1,38 @@
 // components/tabs/ClassesTab.jsx
 import React, { useState, useEffect } from 'react';
-import { FaUserPlus, FaSchool, FaEdit, FaTrash, FaSync, FaGraduationCap, FaSave, FaTimes, FaUserEdit, FaSpinner } from 'react-icons/fa';
+import { 
+    FaUserPlus, FaSchool, FaEdit, FaTrash, FaSync, FaGraduationCap, 
+    FaSave, FaTimes, FaUserEdit, FaCopy, FaEye, FaEyeSlash, FaInfoCircle,
+    FaCheck, FaExclamationTriangle, FaSun, FaMoon, FaClock
+} from 'react-icons/fa';
 import axios from 'axios';
+import styles from '../styles/ClassesTab.module.css';
+import '../styles/SuperAdmin.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// ОБЩИЙ ЛОГИН ДЛЯ ВСЕХ КЛАССОВ
-const COMMON_LOGIN = 'soch20';
-
 const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
-    const [newClass, setNewClass] = useState({ number: '', letter: '', shift: 1, teacherId: '', password: '' });
+    const [newClass, setNewClass] = useState({ 
+        number: '', 
+        letter: '', 
+        shift: 1, 
+        teacherId: '', 
+        login: '',
+        password: '',
+        maxLessonsPerDay: ''
+    });
     const [editClassModalOpen, setEditClassModalOpen] = useState(false);
     const [editingClass, setEditingClass] = useState(null);
-    const [notification, setNotification] = useState('');
+    const [notification, setNotification] = useState({ message: '', type: 'success' });
     const [teachersList, setTeachersList] = useState([]);
     const [loadingTeachers, setLoadingTeachers] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswords, setShowPasswords] = useState({});
+    const [copySuccess, setCopySuccess] = useState('');
 
-    // Загружаем учителей при монтировании и при изменении пропса teachers
     useEffect(() => {
         const loadTeachers = async () => {
             if (teachers && teachers.length > 0) {
-                console.log('Учителя из пропсов:', teachers);
                 setTeachersList(teachers);
                 return;
             }
@@ -29,11 +41,9 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
             
             setLoadingTeachers(true);
             try {
-                console.log('Загрузка учителей через API...');
                 const response = await axios.get(`${API_URL}/superadmin/teachers`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                console.log('Загружено учителей:', response.data?.length || 0);
                 setTeachersList(response.data || []);
             } catch (err) {
                 console.error('Error loading teachers:', err);
@@ -46,22 +56,57 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
         loadTeachers();
     }, [teachers, token]);
 
-    const showNotification = (message) => {
-        setNotification(message);
-        setTimeout(() => setNotification(''), 3000);
+    const showNotification = (message, type = 'success') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification({ message: '', type: '' }), 4000);
     };
 
-    const clearClassForm = () => setNewClass({ number: '', letter: '', shift: 1, teacherId: '', password: '' });
+    const clearClassForm = () => {
+        setNewClass({ 
+            number: '', 
+            letter: '', 
+            shift: 1, 
+            teacherId: '', 
+            login: '',
+            password: '',
+            maxLessonsPerDay: ''
+        });
+        setShowPassword(false);
+    };
+
+    const handleCopyToClipboard = (text, type) => {
+        navigator.clipboard.writeText(text);
+        setCopySuccess(`${type} скопирован!`);
+        setTimeout(() => setCopySuccess(''), 2000);
+    };
+
+    const toggleShowPassword = (classId) => {
+        setShowPasswords(prev => ({
+            ...prev,
+            [classId]: !prev[classId]
+        }));
+    };
 
     const handleAddClass = async (e) => {
         e.preventDefault();
         
-        console.log('=== НАЧАЛО ДОБАВЛЕНИЯ КЛАССА ===');
-        console.log('newClass:', newClass);
+        if (!newClass.number || !newClass.letter) {
+            showNotification('Заполните номер и букву класса', 'error');
+            return;
+        }
         
-        if (!newClass.number || !newClass.letter || !newClass.password) {
-            console.log('Ошибка: не все поля заполнены');
-            showNotification('Заполните номер, букву и пароль');
+        if (!newClass.login || !newClass.password) {
+            showNotification('Заполните логин и пароль', 'error');
+            return;
+        }
+        
+        const existingClass = classes.find(c => 
+            parseInt(c.number) === parseInt(newClass.number) && 
+            c.letter === newClass.letter.toUpperCase()
+        );
+        
+        if (existingClass) {
+            showNotification(`Класс ${newClass.number}${newClass.letter.toUpperCase()} уже существует!`, 'error');
             return;
         }
         
@@ -71,44 +116,23 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
                 letter: newClass.letter.toUpperCase(),
                 shift: parseInt(newClass.shift),
                 teacherId: newClass.teacherId || null,
-                login: COMMON_LOGIN,
-                password: newClass.password
+                login: newClass.login.trim(),
+                password: newClass.password,
+                maxLessonsPerDay: newClass.maxLessonsPerDay ? parseInt(newClass.maxLessonsPerDay) : null
             };
             
-            console.log('📤 Отправляем данные на сервер:', JSON.stringify(classData, null, 2));
-            console.log('URL:', `${API_URL}/superadmin/classes`);
-            console.log('Token:', token ? 'есть' : 'нет');
-            
-            const response = await axios.post(`${API_URL}/superadmin/classes`, classData, {
+            await axios.post(`${API_URL}/superadmin/classes`, classData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
-            console.log('✅ Успешный ответ:', response.data);
-            showNotification('Класс добавлен');
+            showNotification(`Класс ${newClass.number}${newClass.letter.toUpperCase()} добавлен!`, 'success');
             clearClassForm();
             onDataChange();
             
         } catch (err) {
-            console.error('❌ ОШИБКА ПРИ ДОБАВЛЕНИИ КЛАССА');
-            console.error('Тип ошибки:', err.name);
-            console.error('Сообщение:', err.message);
-            console.error('Статус:', err.response?.status);
-            console.error('Данные ответа сервера:', err.response?.data);
-            console.error('Полный объект ошибки:', err);
-            
-            let errorMessage = 'Ошибка при добавлении класса';
-            if (err.response?.data?.message) {
-                errorMessage = err.response.data.message;
-            } else if (err.response?.data?.error) {
-                errorMessage = err.response.data.error;
-            } else if (err.message) {
-                errorMessage = err.message;
-            }
-            
-            showNotification(`Ошибка: ${errorMessage}`);
+            console.error('Ошибка:', err.response?.data || err.message);
+            showNotification(err.response?.data?.message || 'Ошибка при добавлении класса', 'error');
         }
-        
-        console.log('=== КОНЕЦ ДОБАВЛЕНИЯ КЛАССА ===');
     };
 
     const handleUpdateClass = async (classData) => {
@@ -116,22 +140,27 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
             const updateData = {
                 shift: classData.shift,
                 teacherId: classData.teacherId,
+                maxLessonsPerDay: classData.maxLessonsPerDay
             };
             
-            console.log('📤 Обновляем класс:', updateData);
+            if (classData.login && classData.login !== classData.oldLogin) {
+                updateData.login = classData.login;
+            }
+            if (classData.password) {
+                updateData.password = classData.password;
+            }
             
             await axios.put(`${API_URL}/superadmin/classes/${classData.id}`, updateData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            showNotification('Класс обновлен');
+            
+            showNotification('Класс обновлен', 'success');
             onDataChange();
             setEditClassModalOpen(false);
             setEditingClass(null);
         } catch (err) {
-            console.error('Update class error:', err);
-            console.error('Ответ сервера:', err.response?.data);
-            showNotification(err.response?.data?.message || 'Ошибка обновления');
-            throw err;
+            console.error('Update error:', err);
+            showNotification(err.response?.data?.message || 'Ошибка обновления', 'error');
         }
     };
 
@@ -141,25 +170,23 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
             await axios.put(`${API_URL}/superadmin/classes/${classId}`, { shift: newShift }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            showNotification('Смена изменена');
+            showNotification(`Смена изменена на ${newShift}`, 'success');
             onDataChange();
         } catch (err) {
-            console.error('Change shift error:', err);
-            showNotification('Ошибка');
+            showNotification('Ошибка изменения смены', 'error');
         }
     };
 
-    const handleDeleteClass = async (id) => {
-        if (!window.confirm('Удалить класс?')) return;
+    const handleDeleteClass = async (id, className) => {
+        if (!window.confirm(`Удалить класс ${className}?`)) return;
         try {
             await axios.delete(`${API_URL}/superadmin/classes/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            showNotification('Класс удалён');
+            showNotification(`Класс ${className} удалён`, 'success');
             onDataChange();
         } catch (err) {
-            console.error('Delete class error:', err);
-            showNotification('Ошибка удаления');
+            showNotification('Ошибка удаления класса', 'error');
         }
     };
 
@@ -169,45 +196,45 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
         classesWithoutTeacher: Array.isArray(classes) ? classes.filter(c => !c.teacher_name).length : 0
     };
 
+    // Модалка редактирования
     const EditClassModal = ({ isOpen, onClose, onSave, classData }) => {
-        const [formData, setFormData] = useState({ shift: 1, teacherId: '' });
+        const [formData, setFormData] = useState({ 
+            shift: 1, 
+            teacherId: '', 
+            maxLessonsPerDay: '',
+            login: '',
+            password: ''
+        });
         const [saving, setSaving] = useState(false);
         const [localTeachers, setLocalTeachers] = useState([]);
-        const [loadingLocalTeachers, setLoadingLocalTeachers] = useState(false);
+        const [showEditPassword, setShowEditPassword] = useState(false);
 
         useEffect(() => {
-            const fetchTeachers = async () => {
-                if (!isOpen) return;
-                
-                if (teachersList.length > 0) {
-                    setLocalTeachers(teachersList);
-                    return;
-                }
-                
-                if (!token) return;
-                
-                setLoadingLocalTeachers(true);
-                try {
-                    const response = await axios.get(`${API_URL}/superadmin/teachers`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
-                    setLocalTeachers(response.data || []);
-                } catch (err) {
-                    console.error('Error fetching teachers for modal:', err);
-                    setLocalTeachers([]);
-                } finally {
-                    setLoadingLocalTeachers(false);
-                }
-            };
-            
-            fetchTeachers();
+            if (isOpen && teachersList.length > 0) {
+                setLocalTeachers(teachersList);
+            } else if (isOpen && token) {
+                const fetchTeachers = async () => {
+                    try {
+                        const response = await axios.get(`${API_URL}/superadmin/teachers`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        setLocalTeachers(response.data || []);
+                    } catch (err) {
+                        console.error('Error fetching teachers:', err);
+                    }
+                };
+                fetchTeachers();
+            }
         }, [isOpen, token, teachersList]);
 
         useEffect(() => {
             if (classData && isOpen) {
                 setFormData({ 
                     shift: classData.shift || 1, 
-                    teacherId: classData.teacher_id || classData.teacherId || '' 
+                    teacherId: classData.teacher_id || classData.teacherId || '',
+                    maxLessonsPerDay: classData.max_lessons_per_day || '',
+                    login: classData.login || '',
+                    password: ''
                 });
             }
         }, [classData, isOpen]);
@@ -217,7 +244,13 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
             if (saving) return;
             setSaving(true);
             try {
-                await onSave({ ...formData, id: classData?.id });
+                await onSave({ 
+                    ...formData, 
+                    id: classData?.id,
+                    maxLessonsPerDay: formData.maxLessonsPerDay ? parseInt(formData.maxLessonsPerDay) : null,
+                    oldLogin: classData?.login,
+                    password: formData.password || undefined
+                });
                 onClose();
             } catch (err) {
                 console.error('Save error:', err);
@@ -229,22 +262,83 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
         if (!isOpen) return null;
 
         return (
-            <div className="modal-overlay-fixed" onClick={(e) => { if (e.target === e.currentTarget && !saving) onClose(); }}>
-                <div className="modal-content-fixed" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px' }}>
-                    <div className="modal-header-fixed">
-                        <h3><FaUserEdit /> Редактировать класс {classData?.name}</h3>
-                        <button className="modal-close-fixed" onClick={() => !saving && onClose()} disabled={saving}><FaTimes /></button>
+            <div className={styles.modalOverlay} onClick={(e) => { if (e.target === e.currentTarget && !saving) onClose(); }}>
+                <div className={styles.modalContent}>
+                    <div className={styles.modalHeader}>
+                        <FaUserEdit />
+                        <h3>Редактировать класс {classData?.name}</h3>
+                        <button className={styles.modalClose} onClick={() => !saving && onClose()} disabled={saving}>
+                            <FaTimes />
+                        </button>
                     </div>
                     <form onSubmit={handleSubmit}>
-                        <div className="modal-body-fixed">
-                            <div className="form-group">
-                                <label>Смена</label>
-                                <select value={formData.shift} onChange={e => setFormData({...formData, shift: parseInt(e.target.value)})} disabled={saving}>
-                                    <option value="1">1 смена</option>
-                                    <option value="2">2 смена</option>
-                                </select>
+                        <div className={styles.modalBody}>
+                            <div className={styles.formGroup}>
+                                <label>Логин для входа</label>
+                                <input 
+                                    type="text"
+                                    value={formData.login}
+                                    onChange={e => setFormData({...formData, login: e.target.value})}
+                                    placeholder="Введите логин"
+                                    disabled={saving}
+                                />
+                                <small>Логин для входа в систему</small>
                             </div>
-                            <div className="form-group">
+                            <div className={styles.formGroup}>
+                                <label>Пароль (оставьте пустым, чтобы не менять)</label>
+                                <div className={styles.passwordInputWrapper}>
+                                    <input 
+                                        type={showEditPassword ? "text" : "password"}
+                                        value={formData.password}
+                                        onChange={e => setFormData({...formData, password: e.target.value})}
+                                        placeholder="Новый пароль"
+                                        disabled={saving}
+                                    />
+                                    <button 
+                                        type="button"
+                                        onClick={() => setShowEditPassword(!showEditPassword)}
+                                        className={styles.togglePasswordBtn}
+                                        title={showEditPassword ? "Скрыть пароль" : "Показать пароль"}
+                                    >
+                                        {showEditPassword ? <FaEyeSlash /> : <FaEye />}
+                                    </button>
+                                </div>
+                                <small>Если оставить пустым, пароль не изменится</small>
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label>Смена</label>
+                                <div className={styles.shiftToggle}>
+                                    <button
+                                        type="button"
+                                        className={`${styles.shiftToggleBtn} ${formData.shift === 1 ? styles.active : ''}`}
+                                        onClick={() => setFormData({...formData, shift: 1})}
+                                        disabled={saving}
+                                    >
+                                        <div className={styles.shiftToggleIcon}>
+                                            <FaSun size={18} />
+                                        </div>
+                                        <div className={styles.shiftToggleText}>
+                                            <span className={styles.shiftToggleTitle}>1 смена</span>
+                                            <span className={styles.shiftToggleDesc}>Утром</span>
+                                        </div>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`${styles.shiftToggleBtn} ${formData.shift === 2 ? styles.active : ''}`}
+                                        onClick={() => setFormData({...formData, shift: 2})}
+                                        disabled={saving}
+                                    >
+                                        <div className={styles.shiftToggleIcon}>
+                                            <FaMoon size={18} />
+                                        </div>
+                                        <div className={styles.shiftToggleText}>
+                                            <span className={styles.shiftToggleTitle}>2 смена</span>
+                                            <span className={styles.shiftToggleDesc}>Днём</span>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                            <div className={styles.formGroup}>
                                 <label>Классный руководитель</label>
                                 <select value={formData.teacherId} onChange={e => setFormData({...formData, teacherId: e.target.value})} disabled={saving}>
                                     <option value="">Не назначен</option>
@@ -252,15 +346,28 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
                                         <option key={t.id} value={t.id}>{t.name || `${t.last_name} ${t.first_name}`}</option>
                                     ))}
                                 </select>
-                                {loadingLocalTeachers && <small style={{ color: '#94a3b8' }}>Загрузка учителей...</small>}
-                                {!loadingLocalTeachers && localTeachers.length === 0 && (
-                                    <small style={{ color: '#ef4444' }}>Нет доступных учителей</small>
-                                )}
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label>Максимум уроков в день</label>
+                                <input 
+                                    type="number" 
+                                    min="1" 
+                                    max="8"
+                                    value={formData.maxLessonsPerDay} 
+                                    onChange={e => setFormData({...formData, maxLessonsPerDay: e.target.value})}
+                                    placeholder="По умолчанию из настроек"
+                                    disabled={saving}
+                                />
+                                <small>Оставьте пустым для использования общих настроек</small>
                             </div>
                         </div>
-                        <div className="modal-footer-fixed">
-                            <button type="button" className="btn-cancel-modal" onClick={() => !saving && onClose()} disabled={saving}>Отмена</button>
-                            <button type="submit" className="btn-save-modal" disabled={saving}><FaSave /> {saving ? 'Сохранение...' : 'Сохранить'}</button>
+                        <div className={styles.modalFooter}>
+                            <button type="button" className={styles.modalCancel} onClick={() => !saving && onClose()} disabled={saving}>
+                                Отмена
+                            </button>
+                            <button type="submit" className={styles.modalSave} disabled={saving}>
+                                <FaSave /> {saving ? 'Сохранение...' : 'Сохранить'}
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -270,139 +377,317 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
 
     const classesArray = Array.isArray(classes) ? classes : [];
 
-    if (loadingTeachers && teachersList.length === 0) {
-        return (
-            <div className="loading-container" style={{ padding: '2rem', textAlign: 'center' }}>
-                <FaSpinner className="spinner" style={{ fontSize: '2rem', color: 'var(--primary)' }} />
-                <p>Загрузка данных...</p>
-            </div>
-        );
-    }
-
     return (
-        <>
-            {notification && <div className="notification">{notification}</div>}
-            <div className="content-grid">
-                <div className="form-container">
-                    <h3 className="form-title"><FaUserPlus /> Новый класс</h3>
-                    <form onSubmit={handleAddClass}>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Номер *</label>
-                                <input 
-                                    type="number" 
-                                    min="1" 
-                                    max="11" 
-                                    value={newClass.number} 
-                                    onChange={e => setNewClass({...newClass, number: e.target.value})} 
-                                    required 
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Буква *</label>
-                                <input 
-                                    type="text" 
-                                    maxLength="1" 
-                                    value={newClass.letter} 
-                                    onChange={e => setNewClass({...newClass, letter: e.target.value.toUpperCase()})} 
-                                    required 
-                                />
-                            </div>
-                        </div>
-                        
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Логин</label>
-                                <input 
-                                    type="text" 
-                                    value={COMMON_LOGIN} 
-                                    disabled 
-                                    style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Пароль *</label>
-                                <input 
-                                    type="password" 
-                                    value={newClass.password} 
-                                    onChange={e => setNewClass({...newClass, password: e.target.value})} 
-                                    required 
-                                />
-                            </div>
-                        </div>
-                        
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Смена</label>
-                                <select value={newClass.shift} onChange={e => setNewClass({...newClass, shift: parseInt(e.target.value)})}>
-                                    <option value="1">1 смена</option>
-                                    <option value="2">2 смена</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Руководитель</label>
-                                <select value={newClass.teacherId} onChange={e => setNewClass({...newClass, teacherId: e.target.value})}>
-                                    <option value="">Не назначен</option>
-                                    {teachersList.map(t => (
-                                        <option key={t.id} value={t.id}>{t.name || `${t.last_name} ${t.first_name}`}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                        <button type="submit" className="submit-button">Добавить класс</button>
-                    </form>
+        <div className={styles.tabWrapper}>
+            {notification.message && (
+                <div className={`${styles.notification} ${styles[notification.type]}`}>
+                    {notification.type === 'success' ? <FaCheck size={14} /> : <FaExclamationTriangle size={14} />}
+                    <span>{notification.message}</span>
                 </div>
-                <div className="table-container">
-                    <h3 className="table-title"><FaSchool /> Список классов ({classesArray.length})</h3>
-                    <div className="table-responsive">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Класс</th>
-                                    <th>Смена</th>
-                                    <th>Руководитель</th>
-                                    <th>Действия</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {classesArray.map(c => (
-                                    <tr key={c.id}>
-                                        <td><FaGraduationCap style={{ marginRight: '8px', color: 'var(--primary)' }} /> {c.name}</td>
-                                        <td><span className={`shift-badge shift-${c.shift}`}>{c.shift} смена</span></td>
-                                        <td>{c.teacher_name || 'Не назначен'}</td>
-                                        <td className="action-cell">
-                                            <button onClick={() => { setEditingClass(c); setEditClassModalOpen(true); }} className="action-button edit-button"><FaEdit /></button>
-                                            <button onClick={() => handleChangeShift(c.id, c.shift)} className="action-button shift-button"><FaSync /></button>
-                                            <button onClick={() => handleDeleteClass(c.id)} className="action-button delete-button" style={{ background: '#ef4444' }}><FaTrash /></button>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {classesArray.length === 0 && (
-                                    <tr>
-                                        <td colSpan="4" className="empty-row"><FaSchool /><p>Нет классов</p><button onClick={() => document.querySelector('.form-container input')?.focus()}>Добавить класс</button></td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className="shift-stats">
-                        <div className="shift-stat"><div className="shift-stat-number shift-stat-1">{stats.shift1}</div><div>1 смена</div></div>
-                        <div className="shift-stat"><div className="shift-stat-number shift-stat-2">{stats.shift2}</div><div>2 смена</div></div>
-                    </div>
-                    {stats.classesWithoutTeacher > 0 && (
-                        <div className="warning-box">
-                            <strong>Внимание!</strong> {stats.classesWithoutTeacher} класс(ов) без руководителя
+            )}
+            
+            {copySuccess && (
+                <div className={styles.copySuccess}>
+                    {copySuccess}
+                </div>
+            )}
+            
+            <div className={styles.container}>
+                <div className={styles.contentGrid}>
+                    {/* ============= ФОРМА ДОБАВЛЕНИЯ КЛАССА ============= */}
+                    <div className={styles.formCard}>
+                        <div className={styles.formHeader}>
+                            <FaUserPlus size={18} />
+                            <h3>Добавить новый класс</h3>
                         </div>
-                    )}
+                        <div className={styles.formBody}>
+                            <form onSubmit={handleAddClass}>
+                                <div className={styles.formRow}>
+                                    <div className={styles.formGroup}>
+                                        <label>Номер класса *</label>
+                                        <input 
+                                            type="number" 
+                                            min="1" 
+                                            max="11" 
+                                            value={newClass.number} 
+                                            onChange={e => setNewClass({...newClass, number: e.target.value})} 
+                                            required 
+                                            placeholder="1"
+                                        />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Буква *</label>
+                                        <input 
+                                            type="text" 
+                                            maxLength="1" 
+                                            value={newClass.letter} 
+                                            onChange={e => setNewClass({...newClass, letter: e.target.value.toUpperCase()})} 
+                                            required 
+                                            placeholder="А"
+                                        />
+                                    </div>
+                                </div>
+                                
+                                <div className={styles.formGroup}>
+                                    <label>Логин для входа *</label>
+                                    <input 
+                                        type="text" 
+                                        value={newClass.login} 
+                                        onChange={e => setNewClass({...newClass, login: e.target.value})} 
+                                        required 
+                                        placeholder="Введите логин (например: 1a_class)"
+                                    />
+                                    <small>Логин для входа в систему</small>
+                                </div>
+                                
+                                <div className={styles.formGroup}>
+                                    <label>Пароль для входа *</label>
+                                    <div className={styles.passwordInputWrapper}>
+                                        <input 
+                                            type={showPassword ? "text" : "password"} 
+                                            value={newClass.password} 
+                                            onChange={e => setNewClass({...newClass, password: e.target.value})} 
+                                            required 
+                                            placeholder="Введите пароль"
+                                        />
+                                        <button 
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className={styles.togglePasswordBtn}
+                                            title={showPassword ? "Скрыть пароль" : "Показать пароль"}
+                                        >
+                                            {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                                        </button>
+                                    </div>
+                                    <small>Сохраните этот пароль! Он понадобится для входа.</small>
+                                </div>
+                                
+                                {/* КРАСИВЫЙ ПЕРЕКЛЮЧАТЕЛЬ СМЕН */}
+                                <div className={styles.formGroup}>
+                                    <label>Смена</label>
+                                    <div className={styles.shiftToggle}>
+                                        <button
+                                            type="button"
+                                            className={`${styles.shiftToggleBtn} ${newClass.shift === 1 ? styles.active : ''}`}
+                                            onClick={() => setNewClass({...newClass, shift: 1})}
+                                        >
+                                            <div className={styles.shiftToggleIcon}>
+                                                <FaSun size={18} />
+                                            </div>
+                                            <div className={styles.shiftToggleText}>
+                                                <span className={styles.shiftToggleTitle}>1 смена</span>
+                                                <span className={styles.shiftToggleDesc}>Утром</span>
+                                            </div>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`${styles.shiftToggleBtn} ${newClass.shift === 2 ? styles.active : ''}`}
+                                            onClick={() => setNewClass({...newClass, shift: 2})}
+                                        >
+                                            <div className={styles.shiftToggleIcon}>
+                                                <FaMoon size={18} />
+                                            </div>
+                                            <div className={styles.shiftToggleText}>
+                                                <span className={styles.shiftToggleTitle}>2 смена</span>
+                                                <span className={styles.shiftToggleDesc}>Днём</span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div className={styles.formGroup}>
+                                    <label>Классный руководитель</label>
+                                    <select value={newClass.teacherId} onChange={e => setNewClass({...newClass, teacherId: e.target.value})}>
+                                        <option value="">Не назначен</option>
+                                        {teachersList.map(t => (
+                                            <option key={t.id} value={t.id}>{t.name || `${t.last_name} ${t.first_name}`}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                
+                                <div className={styles.formGroup}>
+                                    <label>Максимум уроков в день (опционально)</label>
+                                    <input 
+                                        type="number" 
+                                        min="1" 
+                                        max="8"
+                                        value={newClass.maxLessonsPerDay} 
+                                        onChange={e => setNewClass({...newClass, maxLessonsPerDay: e.target.value})}
+                                        placeholder="Оставьте пустым для использования общих настроек"
+                                    />
+                                </div>
+                                
+                                <button type="submit" className={styles.submitBtn}>
+                                    <FaUserPlus size={14} /> Добавить класс
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    {/* ============= ТАБЛИЦА КЛАССОВ ============= */}
+                    <div className={styles.tableCard}>
+                        <div className={styles.tableHeader}>
+                            <div className={styles.tableTitle}>
+                                <FaSchool size={18} />
+                                <h3>Список классов</h3>
+                            </div>
+                        </div>
+                        
+                        <div className={styles.tableWrapper}>
+                            <table className={styles.table}>
+                                <thead>
+                                    <tr>
+                                        <th>Класс</th>
+                                        <th>Смена</th>
+                                        <th>Руководитель</th>
+                                        <th>Логин</th>
+                                        <th>Пароль</th>
+                                        <th>Макс. уроков</th>
+                                        <th style={{ width: '140px' }}>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {classesArray.length > 0 ? (
+                                        classesArray.map(c => (
+                                            <tr key={c.id} className={styles.row}>
+                                                <td className={styles.classNameCell}>
+                                                    <FaGraduationCap size={14} /> 
+                                                    <strong>{c.name}</strong>
+                                                </td>
+                                                
+                                                {/* КРАСИВЫЙ БЕЙДЖ СМЕНЫ В ТАБЛИЦЕ */}
+                                                <td>
+                                                    <div className={`${styles.shiftBadgeModern} ${c.shift === 1 ? styles.shiftBadgeMorning : styles.shiftBadgeEvening}`}>
+                                                        {c.shift === 1 ? (
+                                                            <>
+                                                                <span>1 </span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span>2 </span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                
+                                                <td>{c.teacher_name || '—'}</td>
+                                                <td className={styles.loginCell}>
+                                                    <code>{c.login || '—'}</code>
+                                                    {c.login && (
+                                                        <button 
+                                                            onClick={() => handleCopyToClipboard(c.login, 'Логин')}
+                                                            className={styles.copyMiniBtn}
+                                                            title="Скопировать логин"
+                                                        >
+                                                            <FaCopy size={12} />
+                                                        </button>
+                                                    )}
+                                                </td>
+                                                <td className={styles.passwordCell}>
+                                                    {c.password ? (
+                                                        <>
+                                                            <span>
+                                                                {showPasswords[c.id] ? c.password : '••••••••'}
+                                                            </span>
+                                                            <button 
+                                                                onClick={() => toggleShowPassword(c.id)}
+                                                                className={styles.togglePasswordMiniBtn}
+                                                                title={showPasswords[c.id] ? "Скрыть пароль" : "Показать пароль"}
+                                                            >
+                                                                {showPasswords[c.id] ? <FaEyeSlash size={12} /> : <FaEye size={12} />}
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleCopyToClipboard(c.password, 'Пароль')}
+                                                                className={styles.copyMiniBtn}
+                                                                title="Скопировать пароль"
+                                                            >
+                                                                <FaCopy size={12} />
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <span style={{ color: '#94a3b8' }}>—</span>
+                                                    )}
+                                                </td>
+                                                <td className={styles.textCenter}>{c.max_lessons_per_day || '—'}</td>
+                                                
+                                                {/* ОБНОВЛЁННАЯ КНОПКА СМЕНЫ */}
+                                                <td className={styles.actionsCell}>
+                                                    <button 
+                                                        onClick={() => { setEditingClass(c); setEditClassModalOpen(true); }} 
+                                                        className={`${styles.actionIcon} ${styles.edit}`} 
+                                                        title="Редактировать класс"
+                                                    >
+                                                        <FaEdit size={14} />
+                                                        <span>Изменить</span>
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleChangeShift(c.id, c.shift)} 
+                                                        className={`${styles.actionIcon} ${styles.shiftToggleAction}`} 
+                                                        title={c.shift === 1 ? "Перевести во 2 смену" : "Перевести в 1 смену"}
+                                                    >
+                                                        <FaSync size={14} />
+                                                        <span>Смена</span>
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDeleteClass(c.id, c.name)} 
+                                                        className={`${styles.actionIcon} ${styles.delete}`} 
+                                                        title="Удалить класс"
+                                                    >
+                                                        <FaTrash size={14} />
+                                                        <span>Удалить</span>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr className={styles.emptyRow}>
+                                            <td colSpan="7">
+                                                <div className={styles.emptyState}>
+                                                    <div className={styles.emptyIcon}>
+                                                        <FaSchool size={48} />
+                                                    </div>
+                                                    <h4>Нет добавленных классов</h4>
+                                                    <p>Добавьте первый класс, заполнив форму слева</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        {/* Статистика */}
+                        <div className={styles.statsContainer}>
+                            <div className={styles.statsGrid}>
+                                <div className={styles.statItem}>
+                                    <div className={styles.statValue}>{classesArray.length}</div>
+                                    <div className={styles.statLabel}>Всего классов</div>
+                                </div>
+                                <div className={styles.statItem}>
+                                    <div className={styles.statValue}>{stats.shift1}</div>
+                                    <div className={styles.statLabel}>1 смена</div>
+                                </div>
+                                <div className={styles.statItem}>
+                                    <div className={styles.statValue}>{stats.shift2}</div>
+                                    <div className={styles.statLabel}>2 смена</div>
+                                </div>
+                                <div className={styles.statItem}>
+                                    <div className={styles.statValue}>{stats.classesWithoutTeacher}</div>
+                                    <div className={styles.statLabel}>Без руководителя</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+            
             <EditClassModal 
                 isOpen={editClassModalOpen} 
                 onClose={() => setEditClassModalOpen(false)} 
                 onSave={handleUpdateClass} 
                 classData={editingClass}
             />
-        </>
+        </div>
     );
 };
 

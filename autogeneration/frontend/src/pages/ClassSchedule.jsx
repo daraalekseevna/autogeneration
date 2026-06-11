@@ -20,33 +20,67 @@ import styles from '../styles/ClassSchedule.module.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const getSubjectColor = (subject) => {
-    const colors = {
-        'Математика': '#f59e0b',
-        'Русский язык': '#10b981',
-        'Литература': '#10b981',
-        'Физика': '#3b82f6',
-        'Химия': '#8b5cf6',
-        'Биология': '#06b6d4',
-        'История': '#ef4444',
-        'География': '#84cc16',
-        'Английский язык': '#ec4899',
-        'Информатика': '#6366f1'
-    };
-    return colors[subject] || '#21435A';
-};
-
-const timeSlots = [
-    { number: 1, time: '08:00-08:40' },
-    { number: 2, time: '08:50-09:30' },
-    { number: 3, time: '09:50-10:30' },
-    { number: 4, time: '10:50-11:30' },
-    { number: 5, time: '11:50-12:30' },
-    { number: 6, time: '12:50-13:30' },
-    { number: 7, time: '13:40-14:20' }
-];
-
 const weekDays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+
+// Функция для расчета времени уроков на основе настроек
+const calculateTimeSlots = (settings, shift = 1) => {
+  if (!settings) return [];
+  
+  const lessonDuration = shift === 2 && settings.secondShift 
+    ? settings.secondShiftLessonDuration 
+    : settings.lessonDuration;
+  
+  const startTime = shift === 2 && settings.secondShift 
+    ? settings.secondShiftStart 
+    : settings.startTime;
+  
+  const breaks = shift === 2 && settings.secondShift 
+    ? (settings.secondShiftBreaks || []) 
+    : (settings.breaks || []);
+  
+  const shortBreakDuration = shift === 2 && settings.secondShift 
+    ? (settings.secondShiftShortBreakDuration || 10) 
+    : (settings.shortBreakDuration || 10);
+  
+  const maxLessons = shift === 2 && settings.secondShift 
+    ? (settings.secondShiftMaxLessonsPerDay || 6) 
+    : (settings.maxLessonsPerDay || 7);
+  
+  const timeSlots = [];
+  let currentTime = startTime;
+  
+  const parseTime = (timeStr) => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+  
+  const formatTime = (minutes) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  };
+  
+  for (let lessonNum = 1; lessonNum <= maxLessons; lessonNum++) {
+    const startMinutes = parseTime(currentTime);
+    const endMinutes = startMinutes + lessonDuration;
+    const endTime = formatTime(endMinutes);
+    
+    timeSlots.push({
+      number: lessonNum,
+      time: `${currentTime}-${endTime}`
+    });
+    
+    const breakConfig = breaks.find(b => b.afterLesson === lessonNum);
+    let breakDuration = shortBreakDuration;
+    if (breakConfig) {
+      breakDuration = breakConfig.duration;
+    }
+    
+    currentTime = formatTime(endMinutes + breakDuration);
+  }
+  
+  return timeSlots;
+};
 
 const ClassSchedule = () => {
     const navigate = useNavigate();
@@ -55,11 +89,14 @@ const ClassSchedule = () => {
     const [schedule, setSchedule] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [scheduleSettings, setScheduleSettings] = useState(null);
+    const [classShift, setClassShift] = useState(1);
+    const [timeSlots, setTimeSlots] = useState([]);
     
-    const user = JSON.parse(localStorage.getItem('user'));
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
 
     useEffect(() => {
-        if (!user) {
+        if (!user || !user.id) {
             navigate('/login');
             return;
         }
@@ -84,6 +121,8 @@ const ClassSchedule = () => {
     useEffect(() => {
         if (className && className !== 'Класс') {
             loadSchedule();
+            loadSettings();
+            loadClassShift();
         }
     }, [className]);
 
@@ -99,6 +138,47 @@ const ClassSchedule = () => {
         setCurrentDate(dateString.charAt(0).toUpperCase() + dateString.slice(1));
     };
 
+    const loadClassShift = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${API_URL}/schedule/class-shift/${className}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setClassShift(response.data.shift || 1);
+        } catch (err) {
+            console.error('Error loading class shift:', err);
+            setClassShift(1);
+        }
+    };
+
+const loadSettings = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        // ИСПРАВЛЕНО: используем публичный эндпоинт
+        const response = await axios.get(`${API_URL}/schedule/public-settings`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('Settings loaded:', response.data);
+        setScheduleSettings(response.data);
+    } catch (err) {
+        console.error('Error loading settings:', err);
+        // Настройки по умолчанию
+        setScheduleSettings({
+            startTime: '08:00',
+            lessonDuration: 40,
+            maxLessonsPerDay: 7,
+            shortBreakDuration: 10,
+            breaks: [],
+            secondShift: false,
+            secondShiftStart: '14:00',
+            secondShiftLessonDuration: 40,
+            secondShiftMaxLessonsPerDay: 6,
+            secondShiftShortBreakDuration: 10,
+            secondShiftBreaks: []
+        });
+    }
+};;
+
     const loadSchedule = async () => {
         setLoading(true);
         setError(null);
@@ -108,26 +188,38 @@ const ClassSchedule = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
+            console.log('Schedule response:', response.data);
+            
             if (response.data.success) {
-                setSchedule(response.data.schedule);
+                setSchedule(response.data.schedule || {});
             } else {
+                setSchedule({});
                 setError('Не удалось загрузить расписание');
             }
         } catch (err) {
             console.error('Error loading schedule:', err);
             setError(err.response?.data?.message || 'Ошибка загрузки расписания');
+            setSchedule({});
         } finally {
             setLoading(false);
         }
     };
+
+    // Обновляем timeSlots при изменении настроек или смены
+    useEffect(() => {
+        if (scheduleSettings) {
+            const slots = calculateTimeSlots(scheduleSettings, classShift);
+            setTimeSlots(slots);
+        }
+    }, [scheduleSettings, classShift]);
 
     const handleExtracurricularClick = () => {
         navigate('/class/extracurricular');
     };
 
     const DayScheduleTable = ({ dayName }) => {
-        const lessons = schedule[dayName] || [];
-
+        const daySchedule = schedule[dayName] || {};
+        
         return (
             <div className={styles.dayTableWrapper}>
                 <div className={styles.dayTableHeader}>
@@ -151,26 +243,27 @@ const ClassSchedule = () => {
                         </thead>
                         <tbody>
                             {timeSlots.map((slot) => {
-                                const lesson = lessons.find(l => l.number === slot.number);
+                                const lesson = daySchedule[slot.number];
+                                const teacherColor = (lesson && lesson.teacherColor) ? lesson.teacherColor : '#21435A';
                                 
                                 return (
                                     <tr key={slot.number} className={styles.scheduleRow}>
                                         <td className={styles.lessonNumCell}>
                                             <div className={styles.lessonNumber}>{slot.number}</div>
-                                         </td>
+                                        </td>
                                         <td className={styles.lessonTimeCell}>
                                             <div className={styles.lessonTime}>
                                                 <FaClock />
                                                 <span>{slot.time}</span>
                                             </div>
-                                         </td>
+                                        </td>
                                         <td className={styles.lessonContentCell}>
                                             {lesson && lesson.subject ? (
                                                 <div 
                                                     className={styles.lessonItem}
                                                     style={{ 
-                                                        borderLeftColor: getSubjectColor(lesson.subject),
-                                                        backgroundColor: `${getSubjectColor(lesson.subject)}10`
+                                                        borderLeftColor: teacherColor,
+                                                        backgroundColor: `${teacherColor}10`
                                                     }}
                                                 >
                                                     <div className={styles.lessonInfo}>
@@ -191,8 +284,8 @@ const ClassSchedule = () => {
                                             ) : (
                                                 <div className={styles.emptySlot}>—</div>
                                             )}
-                                         </td>
-                                     </tr>
+                                        </td>
+                                    </tr>
                                 );
                             })}
                         </tbody>
@@ -207,14 +300,6 @@ const ClassSchedule = () => {
             <div className="main-content-page">
                 <ThemeToggle />
                 <BackButton fallbackPath="/" />
-
-                {/* <div className="animated-bg">
-                    {[...Array(10)].map((_, i) => (
-                        <div key={i} className="glass-circle"></div>
-                    ))}
-
-                </div> */}
-
                 <Header />
                 <main className={styles.container}>
                     <div className={styles.loader}>
@@ -232,11 +317,6 @@ const ClassSchedule = () => {
             <div className="main-content-page">
                 <ThemeToggle />
                 <BackButton fallbackPath="/" />
-                {/* <div className="animated-bg">
-                    {[...Array(10)].map((_, i) => (
-                        <div key={i} className="glass-circle"></div>
-                    ))}
-                </div> */}
                 <Header />
                 <main className={styles.container}>
                     <div className={styles.errorContainer}>
@@ -256,12 +336,6 @@ const ClassSchedule = () => {
         <div className="main-content-page">
             <ThemeToggle />
             <BackButton fallbackPath="/" />
-            
-            {/* <div className="animated-bg">
-                {[...Array(10)].map((_, i) => (
-                    <div key={i} className="glass-circle"></div>
-                ))}
-            </div> */}
             
             <Header />
             

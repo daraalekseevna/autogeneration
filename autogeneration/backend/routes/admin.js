@@ -257,6 +257,8 @@ router.get('/schedule', async (req, res) => {
 
 // ============= ЕДИНЫЙ ЭНДПОИНТ ДЛЯ ГЕНЕРАТОРА =============
 
+// ============= ЕДИНЫЙ ЭНДПОИНТ ДЛЯ ГЕНЕРАТОРА =============
+
 router.get('/generation-rules', async (req, res) => {
     try {
         const classesResult = await db.query(`
@@ -290,8 +292,6 @@ router.get('/generation-rules', async (req, res) => {
         
         const settingsResult = await db.query('SELECT * FROM schedule_settings LIMIT 1');
         const settings = settingsResult.rows[0] || {};
-
-        console.log(`📊 Данные для генератора: классы=${classesResult.rows.length}, учителя=${teachersResult.rows.length}, предметы=${lessonsResult.rows.length}, часы=${hoursResult.rows.length}`);
 
         res.json({
             classes: classesResult.rows,
@@ -329,8 +329,6 @@ router.get('/generation-rules', async (req, res) => {
     }
 });
 
-// ============= ГЕНЕРАЦИЯ РАСПИСАНИЯ (ЧЕРЕЗ C# МИКРОСЕРВИС) =============
-
 router.post('/generate-schedule', async (req, res) => {
     console.log('\n🚀 ========== ЗАПУСК ГЕНЕРАЦИИ РАСПИСАНИЯ ==========\n');
     
@@ -344,7 +342,6 @@ router.post('/generate-schedule', async (req, res) => {
         
         console.log(`🔍 Проверка доступности C# генератора на ${generatorUrl}...`);
         
-        // Проверяем доступность генератора
         try {
             const healthCheck = await axios.get(`${generatorUrl}/health`, { timeout: 3000 });
             console.log('✅ C# генератор доступен');
@@ -356,10 +353,9 @@ router.post('/generate-schedule', async (req, res) => {
             });
         }
         
-        const rulesUrl = `http://localhost:5000/api/admin/generation-rules`;
-        console.log(`📡 URL правил: ${rulesUrl}`);
-        
-        console.log(`📤 Отправка запроса к C# генератору...`);
+        const rulesUrl = `${req.protocol}://${req.get('host')}/api/admin/generation-rules`;
+        console.log(`📡 Отправка запроса к C# генератору: ${generatorUrl}/api/generate`);
+        console.log(`📋 URL правил: ${rulesUrl}`);
         
         const response = await axios.post(`${generatorUrl}/api/generate`, {
             rulesUrl: rulesUrl,
@@ -369,7 +365,7 @@ router.post('/generate-schedule', async (req, res) => {
             timeout: 300000
         });
         
-        console.log(`📥 Ответ от генератора:`, JSON.stringify(response.data, null, 2));
+        console.log('📦 Ответ от C# генератора:', JSON.stringify(response.data, null, 2).substring(0, 500));
         
         if (!response.data?.success) {
             throw new Error(response.data?.error || 'Ошибка генерации');
@@ -383,7 +379,6 @@ router.post('/generate-schedule', async (req, res) => {
         console.log(`📊 Получено расписание для ${Object.keys(schedule).length} классов`);
         console.log(`📚 Всего уроков: ${response.data.totalLessons || 'неизвестно'}`);
         
-        // Сохраняем в БД
         const client = await db.getClient();
         try {
             await client.query('BEGIN');
@@ -393,40 +388,89 @@ router.post('/generate-schedule', async (req, res) => {
             const dayMap = { 'Понедельник': 1, 'Вторник': 2, 'Среда': 3, 'Четверг': 4, 'Пятница': 5 };
             
             for (const [className, days] of Object.entries(schedule)) {
-                const classResult = await client.query(`SELECT id FROM classes WHERE CONCAT(number, letter) = $1`, [className]);
+                console.log(`📝 Обработка класса ${className}`);
+                
+                // ИСПРАВЛЕННЫЙ ЗАПРОС - только CONCAT(number, letter)
+                const classResult = await client.query(`
+                    SELECT id FROM classes 
+                    WHERE CONCAT(number, letter) = $1
+                `, [className]);
+                
                 if (classResult.rows.length === 0) {
-                    console.log(`⚠️ Класс ${className} не найден`);
+                    console.log(`⚠️ Класс ${className} не найден в БД`);
                     continue;
                 }
                 const classId = classResult.rows[0].id;
                 
                 for (const [dayName, lessons] of Object.entries(days)) {
                     const dayNumber = dayMap[dayName];
-                    if (!dayNumber) continue;
+                    if (!dayNumber) {
+                        console.log(`⚠️ Неизвестный день: ${dayName}`);
+                        continue;
+                    }
+                    
+                    if (!Array.isArray(lessons)) {
+                        console.log(`⚠️ День ${dayName} не содержит массив уроков`);
+                        continue;
+                    }
                     
                     for (const lesson of lessons) {
-                        const subjectResult = await client.query('SELECT id FROM lessons WHERE name = $1', [lesson.subject]);
+                        // Извлекаем данные из словаря
+                        const subjectName = lesson.subject || lesson.Subject;
+                        const teacherName = lesson.teacher || lesson.Teacher;
+                        const room = lesson.office || lesson.Room || lesson.office;
+                        const lessonNumber = lesson.lessonNumber || lesson.LessonNumber || 1;
+                        
+                        if (!subjectName) {
+                            console.log(`⚠️ Не удалось получить название предмета из урока:`, lesson);
+                            continue;
+                        }
+                        
+                        console.log(`   ➕ Урок: ${subjectName}, учитель: ${teacherName}, кабинет: ${room}, номер: ${lessonNumber}`);
+                        
+                        // Ищем предмет
+                        const subjectResult = await client.query('SELECT id FROM lessons WHERE LOWER(name) = LOWER($1)', [subjectName]);
                         if (subjectResult.rows.length === 0) {
-                            console.log(`⚠️ Предмет "${lesson.subject}" не найден`);
+                            console.log(`⚠️ Предмет "${subjectName}" не найден в БД`);
                             continue;
                         }
                         const subjectId = subjectResult.rows[0].id;
                         
-                        const nameParts = lesson.teacher.split(' ');
-                        const teacherResult = await client.query(
-                            'SELECT id FROM teachers WHERE last_name = $1 AND first_name LIKE $2',
-                            [nameParts[0] || '', '%' + (nameParts[1] || '') + '%']
-                        );
-                        if (teacherResult.rows.length === 0) {
-                            console.log(`⚠️ Учитель "${lesson.teacher}" не найден`);
+                        // Ищем учителя
+                        let teacherId = null;
+                        if (teacherName && teacherName.trim()) {
+                            const nameParts = teacherName.trim().split(' ');
+                            if (nameParts.length >= 1) {
+                                const lastName = nameParts[0];
+                                const firstName = nameParts.length > 1 ? nameParts[1] : '';
+                                
+                                let query = 'SELECT id FROM teachers WHERE last_name = $1';
+                                let params = [lastName];
+                                
+                                if (firstName) {
+                                    query += ' AND first_name LIKE $2';
+                                    params.push(firstName + '%');
+                                }
+                                
+                                const teacherResult = await client.query(query, params);
+                                if (teacherResult.rows.length > 0) {
+                                    teacherId = teacherResult.rows[0].id;
+                                } else {
+                                    console.log(`⚠️ Учитель "${teacherName}" не найден`);
+                                    continue;
+                                }
+                            }
+                        }
+                        
+                        if (!teacherId) {
+                            console.log(`⚠️ Нет учителя для урока ${subjectName}`);
                             continue;
                         }
-                        const teacherId = teacherResult.rows[0].id;
                         
                         await client.query(`
                             INSERT INTO lesson_schedule (class_id, subject_id, teacher_id, day_of_week, lesson_number, room)
                             VALUES ($1, $2, $3, $4, $5, $6)
-                        `, [classId, subjectId, teacherId, dayNumber, lesson.lessonNumber, lesson.office]);
+                        `, [classId, subjectId, teacherId, dayNumber, lessonNumber, room || '']);
                         totalLessons++;
                     }
                 }
@@ -445,7 +489,6 @@ router.post('/generate-schedule', async (req, res) => {
             
         } catch (err) {
             await client.query('ROLLBACK');
-            console.error('❌ Ошибка при сохранении в БД:', err);
             throw err;
         } finally {
             client.release();
@@ -453,15 +496,11 @@ router.post('/generate-schedule', async (req, res) => {
         
     } catch (error) {
         console.error('❌ Ошибка генерации:', error);
-        
-        if (error.response) {
-            console.error('Ответ сервера:', error.response.data);
-        }
-        
+        console.error(error.stack);
         res.status(500).json({ 
             success: false, 
             message: error.message,
-            details: error.response?.data || error.toString()
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });

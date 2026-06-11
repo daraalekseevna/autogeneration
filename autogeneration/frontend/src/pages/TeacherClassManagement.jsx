@@ -1,4 +1,4 @@
-// TeacherClassManagement.jsx - удалено isDarkTheme и toggleTheme
+// TeacherClassManagement.jsx
 import React, { useState, useEffect } from 'react';
 import { 
     FaUsers, 
@@ -45,6 +45,7 @@ const TeacherClassManagement = () => {
                 setMyClass(classResponse.data.classData);
                 
                 const scheduleResponse = await axios.get(`${API_URL}/teacher/my-class/schedule`, getAuthHeaders());
+                console.log('Schedule response:', scheduleResponse.data);
                 setSchedule(scheduleResponse.data.schedule || {});
             } else {
                 setMyClass(null);
@@ -56,22 +57,11 @@ const TeacherClassManagement = () => {
         }
     };
 
-    const getSubjectColor = (subject) => {
-        const colors = {
-            'Математика': '#2196F3',
-            'Русский язык': '#4CAF50',
-            'Литература': '#8BC34A',
-            'Английский язык': '#FF9800',
-            'История': '#9C27B0',
-            'Обществознание': '#673AB7',
-            'География': '#00BCD4',
-            'Биология': '#4CAF50',
-            'Физика': '#3F51B5',
-            'Химия': '#FF5722',
-            'Физкультура': '#795548',
-            'Информатика': '#607D8B'
-        };
-        return colors[subject] || '#9E9E9E';
+    // Функция для получения цвета учителя
+    const getTeacherColor = (lesson) => {
+        if (lesson && lesson.color) return lesson.color;
+        if (lesson && lesson.teacherColor) return lesson.teacherColor;
+        return '#21435A'; // цвет по умолчанию
     };
 
     const weekDays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
@@ -115,6 +105,7 @@ const TeacherClassManagement = () => {
                         <tbody>
                             {timeSlots.map((slot) => {
                                 const lesson = dayLessons.find(l => l.number === slot.number);
+                                const teacherColor = getTeacherColor(lesson);
                                 
                                 return (
                                     <tr key={slot.number} className={styles.scheduleRow}>
@@ -132,8 +123,8 @@ const TeacherClassManagement = () => {
                                                 <div 
                                                     className={styles.lessonItem}
                                                     style={{ 
-                                                        borderLeftColor: getSubjectColor(lesson.subject),
-                                                        backgroundColor: `${getSubjectColor(lesson.subject)}10`
+                                                        borderLeftColor: teacherColor,
+                                                        backgroundColor: `${teacherColor}10`
                                                     }}
                                                 >
                                                     <div className={styles.lessonInfo}>
@@ -170,11 +161,6 @@ const TeacherClassManagement = () => {
             <div className={styles.page}>
                 <ThemeToggle />
                 <BackButton fallbackPath="/teacher" />
-                {/* <div className="animated-bg">
-                    {[...Array(10)].map((_, i) => (
-                        <div key={i} className="glass-circle"></div>
-                    ))}
-                </div> */}
                 <Header />
                 <main className={styles.container}>
                     <div className={styles.loader}>
@@ -192,11 +178,6 @@ const TeacherClassManagement = () => {
             <div className={styles.page}>
                 <ThemeToggle />
                 <BackButton fallbackPath="/teacher" />
-                {/* <div className="animated-bg">
-                    {[...Array(10)].map((_, i) => (
-                        <div key={i} className="glass-circle"></div>
-                    ))}
-                </div> */}
                 <Header />
                 <main className={styles.container}>
                     <div className={styles.disabledCard}>
@@ -217,12 +198,6 @@ const TeacherClassManagement = () => {
         <div className={styles.page}>
             <ThemeToggle />
             <BackButton fallbackPath="/teacher" />
-            
-            {/* <div className="animated-bg">
-                {[...Array(10)].map((_, i) => (
-                    <div key={i} className="glass-circle"></div>
-                ))}
-            </div> */}
 
             <Header />
 

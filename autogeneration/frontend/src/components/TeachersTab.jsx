@@ -1,11 +1,17 @@
 // components/tabs/TeachersTab.jsx
 import React, { useState, useEffect } from 'react';
-import { FaUserPlus, FaChalkboardTeacher, FaEdit, FaTrash, FaBook, FaChevronDown, FaSave, FaTimes, FaSearch, FaCheck, FaUserEdit, FaSchool, FaGraduationCap, FaSpinner, FaPlus, FaPalette, FaBan, FaClock } from 'react-icons/fa';
+import { 
+    FaUserPlus, FaChalkboardTeacher, FaEdit, FaTrash, FaBook, FaChevronDown, 
+    FaSave, FaTimes, FaSearch, FaCheck, FaUserEdit, FaSchool, FaGraduationCap, 
+    FaSpinner, FaPlus, FaPalette, FaBan, FaClock, FaExclamationTriangle
+} from 'react-icons/fa';
 import axios from 'axios';
+import styles from '../styles/TeachersTab.module.css';
+import '../styles/SuperAdmin.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// 60 уникальных цветов для учителей
+// Цвета для учителей
 const TEACHER_COLORS = [
     { name: 'Розовая пудра', value: '#fbc4c4' },
     { name: 'Мятная свежесть', value: '#b8f2e2' },
@@ -96,7 +102,7 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
     const [tempClassIds, setTempClassIds] = useState([]);
     const [classes, setClasses] = useState([]);
     const [loadingClasses, setLoadingClasses] = useState(false);
-    const [notification, setNotification] = useState('');
+    const [notification, setNotification] = useState({ message: '', type: 'success' });
     const [colorPickerModalOpen, setColorPickerModalOpen] = useState(false);
     const [tempColor, setTempColor] = useState('#b8e2ff');
     const [colorPickerTarget, setColorPickerTarget] = useState(null);
@@ -120,9 +126,9 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
         loadClasses();
     }, [token]);
 
-    const showNotification = (message) => {
-        setNotification(message);
-        setTimeout(() => setNotification(''), 3000);
+    const showNotification = (message, type = 'success') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification({ message: '', type: '' }), 3000);
     };
 
     const clearTeacherForm = () => setNewTeacher({ 
@@ -136,7 +142,7 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
     const handleAddTeacher = async (e) => {
         e.preventDefault();
         if (!newTeacher.lastName || !newTeacher.firstName || !newTeacher.login || !newTeacher.password) {
-            showNotification('Заполните фамилию, имя, логин и пароль');
+            showNotification('Заполните фамилию, имя, логин и пароль', 'error');
             return;
         }
         try {
@@ -159,7 +165,7 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
             onDataChange();
         } catch (err) {
             console.error('Add teacher error:', err);
-            showNotification(err.response?.data?.message || 'Ошибка');
+            showNotification(err.response?.data?.message || 'Ошибка', 'error');
         }
     };
 
@@ -173,7 +179,7 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
             onDataChange();
         } catch (err) {
             console.error('Delete teacher error:', err);
-            showNotification('Ошибка удаления');
+            showNotification('Ошибка удаления', 'error');
         }
     };
 
@@ -193,7 +199,7 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
             setEditingTeacher(null);
         } catch (err) {
             console.error('Update error:', err);
-            showNotification(err.response?.data?.message || 'Ошибка обновления');
+            showNotification(err.response?.data?.message || 'Ошибка обновления', 'error');
             throw err;
         }
     };
@@ -207,12 +213,11 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
             onDataChange();
         } catch (err) {
             console.error('Update color error:', err);
-            showNotification('Ошибка обновления цвета');
+            showNotification('Ошибка обновления цвета', 'error');
             throw err;
         }
     };
 
-    // Сохранение предметов
     const handleSaveLessons = async (selectedIds) => {
         if (currentTeacher) {
             try {
@@ -223,7 +228,7 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
                 onDataChange();
             } catch (err) {
                 console.error('Update lessons error:', err);
-                showNotification('Ошибка обновления предметов');
+                showNotification('Ошибка обновления предметов', 'error');
                 throw err;
             }
         } else {
@@ -232,7 +237,6 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
         setLessonSelectorModalOpen(false);
     };
 
-    // Сохранение классов для учителя
     const handleSaveClassAssignments = async (selectedClassIds) => {
         if (currentTeacher) {
             try {
@@ -245,7 +249,7 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
                 onDataChange();
             } catch (err) {
                 console.error('Update class assignments error:', err);
-                showNotification('Ошибка назначения классов');
+                showNotification('Ошибка назначения классов', 'error');
                 throw err;
             }
         } else {
@@ -254,7 +258,6 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
         setClassSelectorModalOpen(false);
     };
 
-    // Открыть модалку выбора предметов
     const openLessonSelectorModal = (teacher = null) => {
         if (teacher) {
             setCurrentTeacher(teacher);
@@ -266,7 +269,6 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
         setLessonSelectorModalOpen(true);
     };
 
-    // Открыть модалку выбора классов
     const openClassSelectorModal = (teacher = null) => {
         if (teacher) {
             setCurrentTeacher(teacher);
@@ -278,7 +280,6 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
         setClassSelectorModalOpen(true);
     };
 
-    // Загрузить классы для учителя
     const loadTeacherClassAssignments = async (teacherId) => {
         try {
             const response = await axios.get(`${API_URL}/superadmin/teachers/${teacherId}/class-assignments`, {
@@ -291,7 +292,6 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
         }
     };
 
-    // Открыть палитру цветов
     const openColorPicker = (teacher = null) => {
         if (teacher) {
             setColorPickerTarget({ type: 'existing', id: teacher.id, currentColor: teacher.color || '#b8e2ff' });
@@ -303,7 +303,6 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
         setColorPickerModalOpen(true);
     };
 
-    // Сохранить выбранный цвет
     const saveColor = async () => {
         if (colorPickerTarget?.type === 'existing') {
             await handleUpdateTeacherColor(colorPickerTarget.id, tempColor);
@@ -315,177 +314,41 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
         setColorPickerTarget(null);
     };
 
-    // Компонент модальной палитры цветов
-    const ColorPickerModal = ({ isOpen, onClose, onSave, currentColor, onColorChange }) => {
-        const [selectedColor, setSelectedColor] = useState(currentColor || '#b8e2ff');
-
-        useEffect(() => {
-            if (isOpen) {
-                setSelectedColor(currentColor || '#b8e2ff');
-                document.body.style.overflow = 'hidden';
-            }
-            return () => {
-                document.body.style.overflow = 'unset';
-            };
-        }, [isOpen, currentColor]);
-
-        const handleColorSelect = (colorValue) => {
-            setSelectedColor(colorValue);
-            onColorChange(colorValue);
-        };
-
-        const handleSave = () => {
-            onSave();
-            onClose();
-        };
-
-        if (!isOpen) return null;
+    // Палитра цветов
+    const ColorPickerModal = () => {
+        if (!colorPickerModalOpen) return null;
 
         return (
-            <div 
-                style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 99999
-                }}
-                onClick={(e) => {
-                    if (e.target === e.currentTarget) {
-                        onClose();
-                    }
-                }}
-            >
-                <div 
-                    style={{
-                        backgroundColor: '#fff',
-                        borderRadius: '16px',
-                        width: '400px',
-                        maxWidth: '90%',
-                        maxHeight: '80vh',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-                        overflow: 'hidden'
-                    }}
-                >
-                    <div style={{
-                        padding: '12px 16px',
-                        borderBottom: '1px solid #e2e8f0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        background: '#21435A',
-                        color: 'white'
-                    }}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <FaPalette size={14} /> Выбор цвета
-                        </span>
-                        <button 
-                            onClick={onClose} 
-                            type="button"
-                            style={{
-                                background: 'rgba(255,255,255,0.15)',
-                                border: 'none',
-                                width: '28px',
-                                height: '28px',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                color: 'white',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            <FaTimes size={12} />
+            <div className={styles.paletteOverlay} onClick={() => setColorPickerModalOpen(false)}>
+                <div className={styles.paletteContent}>
+                    <div className={styles.paletteHeader}>
+                        <span><FaPalette /> Выбор цвета</span>
+                        <button className={styles.modalClose} onClick={() => setColorPickerModalOpen(false)}>
+                            <FaTimes />
                         </button>
                     </div>
-                    <div style={{ padding: '16px', overflowY: 'auto', flex: 1 }}>
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(8, 1fr)',
-                            gap: '10px',
-                            justifyItems: 'center'
-                        }}>
-                            {TEACHER_COLORS.map((color) => (
-                                <div 
-                                    key={color.value}
-                                    onClick={() => handleColorSelect(color.value)}
-                                    style={{
-                                        width: '32px',
-                                        height: '32px',
-                                        borderRadius: '50%',
-                                        backgroundColor: color.value,
-                                        cursor: 'pointer',
-                                        border: selectedColor === color.value ? '3px solid #21435A' : '2px solid transparent',
-                                        boxShadow: selectedColor === color.value ? '0 0 0 2px white, 0 0 0 4px #21435A' : '0 1px 3px rgba(0,0,0,0.1)',
-                                        transition: 'all 0.15s ease'
-                                    }}
-                                    title={color.name}
-                                />
-                            ))}
-                        </div>
+                    <div className={styles.paletteGrid}>
+                        {TEACHER_COLORS.map((color) => (
+                            <div
+                                key={color.value}
+                                className={styles.paletteColor}
+                                onClick={() => setTempColor(color.value)}
+                                style={{
+                                    backgroundColor: color.value,
+                                    border: tempColor === color.value ? '3px solid #21435A' : '2px solid white',
+                                }}
+                                title={color.name}
+                            />
+                        ))}
                     </div>
-                    <div style={{
-                        padding: '10px 16px',
-                        borderTop: '1px solid #e2e8f0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        background: '#f8fafc'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '50%',
-                                backgroundColor: selectedColor,
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                                border: '2px solid white'
-                            }}></div>
-                            <span style={{ fontSize: '0.7rem', color: '#475569' }}>{selectedColor}</span>
+                    <div className={styles.paletteFooter}>
+                        <div className={styles.paletteSelected}>
+                            <div className={styles.paletteSelectedBox} style={{ backgroundColor: tempColor }} />
+                            <span>{tempColor}</span>
                         </div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <button 
-                                onClick={onClose} 
-                                type="button"
-                                style={{
-                                    padding: '6px 14px',
-                                    background: 'transparent',
-                                    border: '1px solid #cbd5e1',
-                                    borderRadius: '6px',
-                                    cursor: 'pointer',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 500,
-                                    color: '#475569'
-                                }}
-                            >
-                                Отмена
-                            </button>
-                            <button 
-                                onClick={handleSave} 
-                                type="button"
-                                style={{
-                                    padding: '6px 16px',
-                                    background: '#21435A',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    cursor: 'pointer',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 500,
-                                    color: 'white',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '6px'
-                                }}
-                            >
-                                <FaCheck size={10} /> OK
-                            </button>
+                        <div className={styles.selectorActions}>
+                            <button className={styles.modalCancel} onClick={() => setColorPickerModalOpen(false)}>Отмена</button>
+                            <button className={styles.modalSave} onClick={saveColor}><FaCheck /> OK</button>
                         </div>
                     </div>
                 </div>
@@ -494,31 +357,24 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
     };
 
     // Модалка выбора предметов
-    const LessonSelectorModal = ({ isOpen, onClose, lessonsList = [], selectedIds, onSave, teacherName }) => {
-        const [tempSelectedIds, setTempSelectedIds] = useState(selectedIds || []);
-        const [searchTerm, setSearchTerm] = useState('');
+    const LessonSelectorModal = () => {
         const [saving, setSaving] = useState(false);
-
-        React.useEffect(() => {
-            if (isOpen) {
-                setTempSelectedIds(selectedIds || []);
-                setSearchTerm('');
-            }
-        }, [isOpen, selectedIds]);
-
-        const lessonsArray = Array.isArray(lessonsList) ? lessonsList : [];
+        const [searchTerm, setSearchTerm] = useState('');
+        
+        const lessonsArray = Array.isArray(lessons) ? lessons : [];
         const filteredLessons = lessonsArray.filter(l => l && l.name && l.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
         const toggleLesson = (lessonId) => {
-            setTempSelectedIds(prev => prev.includes(lessonId) ? prev.filter(id => id !== lessonId) : [...prev, lessonId]);
+            setTempLessonIds(prev => 
+                prev.includes(lessonId) ? prev.filter(id => id !== lessonId) : [...prev, lessonId]
+            );
         };
 
         const handleSave = async () => {
             if (saving) return;
             setSaving(true);
             try {
-                await onSave(tempSelectedIds);
-                onClose();
+                await handleSaveLessons(tempLessonIds);
             } catch (err) {
                 console.error('Save error:', err);
             } finally {
@@ -526,39 +382,52 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
             }
         };
 
-        if (!isOpen) return null;
+        if (!lessonSelectorModalOpen) return null;
+
+        const teacherName = currentTeacher ? 
+            `${currentTeacher.lastName} ${currentTeacher.firstName}` : 
+            'нового учителя';
 
         return (
-            <div className="subject-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget && !saving) onClose(); }}>
-                <div className="subject-modal-content" onClick={(e) => e.stopPropagation()}>
-                    <div className="subject-modal-header">
-                        <h3><FaBook /> Выбор предметов для {teacherName}</h3>
-                        <button className="subject-modal-close" onClick={() => !saving && onClose()} disabled={saving}><FaTimes /></button>
+            <div className={styles.modalOverlay} onClick={(e) => { if (e.target === e.currentTarget && !saving) setLessonSelectorModalOpen(false); }}>
+                <div className={styles.modalContent} style={{ maxWidth: '550px' }}>
+                    <div className={styles.modalHeader}>
+                        <FaBook />
+                        <h3>Выбор предметов для {teacherName}</h3>
+                        <button className={styles.modalClose} onClick={() => !saving && setLessonSelectorModalOpen(false)} disabled={saving}>
+                            <FaTimes />
+                        </button>
                     </div>
-                    <div className="subject-modal-search">
-                        <FaSearch className="search-icon" />
-                        <input type="text" placeholder="Поиск предметов..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} disabled={saving} />
-                    </div>
-                    <div className="subject-modal-list">
-                        {filteredLessons.length === 0 ? (
-                            <div className="subject-modal-empty"><FaBook /><p>Нет загруженных уроков</p></div>
-                        ) : (
-                            filteredLessons.map((lesson) => (
-                                <div key={lesson.id} className="subject-modal-item">
-                                    <input type="checkbox" id={`lesson-${lesson.id}`} checked={tempSelectedIds.includes(lesson.id)} onChange={() => toggleLesson(lesson.id)} disabled={saving} />
-                                    <label htmlFor={`lesson-${lesson.id}`} className="subject-modal-item-name">
-                                        {lesson.name}
-                                        {lesson.shortName && <span className="lesson-short-name-hint"> ({lesson.shortName})</span>}
-                                    </label>
+                    <div className={styles.modalBody}>
+                        <div className={styles.selectorSearch}>
+                            <FaSearch />
+                            <input type="text" placeholder="Поиск предметов..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} disabled={saving} />
+                        </div>
+                        <div className={styles.selectorList}>
+                            {filteredLessons.length === 0 ? (
+                                <div className={styles.noData} style={{ textAlign: 'center', padding: '1rem' }}>
+                                    <FaBook /> Нет загруженных уроков
                                 </div>
-                            ))
-                        )}
+                            ) : (
+                                filteredLessons.map((lesson) => (
+                                    <div key={lesson.id} className={styles.selectorItem}>
+                                        <input type="checkbox" id={`lesson-${lesson.id}`} checked={tempLessonIds.includes(lesson.id)} onChange={() => toggleLesson(lesson.id)} disabled={saving} />
+                                        <label htmlFor={`lesson-${lesson.id}`}>
+                                            {lesson.name}
+                                            {lesson.shortName && <small> ({lesson.shortName})</small>}
+                                        </label>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
-                    <div className="subject-modal-footer">
-                        <div className="subject-modal-selected-count">Выбрано: {tempSelectedIds.length}</div>
-                        <div className="subject-modal-actions">
-                            <button className="subject-modal-cancel" onClick={() => !saving && onClose()} disabled={saving}>Отмена</button>
-                            <button className="subject-modal-save" onClick={handleSave} disabled={filteredLessons.length === 0 || saving}><FaCheck /> {saving ? 'Сохранение...' : 'Сохранить'}</button>
+                    <div className={styles.selectorFooter}>
+                        <div className={styles.selectorCount}>Выбрано: {tempLessonIds.length}</div>
+                        <div className={styles.selectorActions}>
+                            <button className={styles.modalCancel} onClick={() => !saving && setLessonSelectorModalOpen(false)} disabled={saving}>Отмена</button>
+                            <button className={styles.modalSave} onClick={handleSave} disabled={filteredLessons.length === 0 || saving}>
+                                <FaCheck /> {saving ? 'Сохранение...' : 'Сохранить'}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -566,34 +435,25 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
         );
     };
 
-    // Модалка выбора классов для учителя
-    const ClassSelectorModal = ({ isOpen, onClose, classesList = [], selectedIds = [], onSave, teacherName }) => {
-        const [tempSelectedIds, setTempSelectedIds] = useState(selectedIds || []);
-        const [searchTerm, setSearchTerm] = useState('');
+    // Модалка выбора классов
+    const ClassSelectorModal = () => {
         const [saving, setSaving] = useState(false);
-
-        React.useEffect(() => {
-            if (isOpen) {
-                setTempSelectedIds(selectedIds || []);
-                setSearchTerm('');
-            }
-        }, [isOpen, selectedIds]);
-
-        const classesArray = Array.isArray(classesList) ? classesList : [];
-        const filteredClasses = classesArray.filter(c => 
-            c && c.name && c.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        const [searchTerm, setSearchTerm] = useState('');
+        
+        const classesArray = Array.isArray(classes) ? classes : [];
+        const filteredClasses = classesArray.filter(c => c && c.name && c.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
         const toggleClass = (classId) => {
-            setTempSelectedIds(prev => prev.includes(classId) ? prev.filter(id => id !== classId) : [...prev, classId]);
+            setTempClassIds(prev => 
+                prev.includes(classId) ? prev.filter(id => id !== classId) : [...prev, classId]
+            );
         };
 
         const handleSave = async () => {
             if (saving) return;
             setSaving(true);
             try {
-                await onSave(tempSelectedIds);
-                onClose();
+                await handleSaveClassAssignments(tempClassIds);
             } catch (err) {
                 console.error('Save error:', err);
             } finally {
@@ -601,47 +461,52 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
             }
         };
 
-        if (!isOpen) return null;
+        if (!classSelectorModalOpen) return null;
+
+        const teacherName = currentTeacher ? 
+            `${currentTeacher.lastName} ${currentTeacher.firstName}` : 
+            'нового учителя';
 
         return (
-            <div className="subject-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget && !saving) onClose(); }}>
-                <div className="subject-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '550px' }}>
-                    <div className="subject-modal-header">
-                        <h3><FaSchool /> Назначение классов для {teacherName}</h3>
-                        <button className="subject-modal-close" onClick={() => !saving && onClose()} disabled={saving}><FaTimes /></button>
+            <div className={styles.modalOverlay} onClick={(e) => { if (e.target === e.currentTarget && !saving) setClassSelectorModalOpen(false); }}>
+                <div className={styles.modalContent} style={{ maxWidth: '550px' }}>
+                    <div className={styles.modalHeader}>
+                        <FaSchool />
+                        <h3>Назначение классов для {teacherName}</h3>
+                        <button className={styles.modalClose} onClick={() => !saving && setClassSelectorModalOpen(false)} disabled={saving}>
+                            <FaTimes />
+                        </button>
                     </div>
-                    <div className="subject-modal-search">
-                        <FaSearch className="search-icon" />
-                        <input type="text" placeholder="Поиск классов..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} disabled={saving} />
-                    </div>
-                    <div className="subject-modal-list" style={{ maxHeight: '400px' }}>
-                        {filteredClasses.length === 0 ? (
-                            <div className="subject-modal-empty"><FaSchool /><p>Нет загруженных классов</p></div>
-                        ) : (
-                            filteredClasses.map((cls) => (
-                                <div key={cls.id} className="subject-modal-item">
-                                    <input 
-                                        type="checkbox" 
-                                        id={`class-${cls.id}`} 
-                                        checked={tempSelectedIds.includes(cls.id)} 
-                                        onChange={() => toggleClass(cls.id)} 
-                                        disabled={saving} 
-                                    />
-                                    <label htmlFor={`class-${cls.id}`} className="subject-modal-item-name">
-                                        {cls.name} класс
-                                        {cls.teacher_name && <small style={{ marginLeft: '8px', color: '#94a3b8' }}>(рук. {cls.teacher_name})</small>}
-                                    </label>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                    <div className="subject-modal-footer">
-                        <div className="subject-modal-selected-count">
-                            <FaSchool /> Выбрано классов: {tempSelectedIds.length}
+                    <div className={styles.modalBody}>
+                        <div className={styles.selectorSearch}>
+                            <FaSearch />
+                            <input type="text" placeholder="Поиск классов..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} disabled={saving} />
                         </div>
-                        <div className="subject-modal-actions">
-                            <button className="subject-modal-cancel" onClick={() => !saving && onClose()} disabled={saving}>Отмена</button>
-                            <button className="subject-modal-save" onClick={handleSave} disabled={saving}>
+                        <div className={styles.selectorList} style={{ maxHeight: '350px' }}>
+                            {filteredClasses.length === 0 ? (
+                                <div className={styles.noData} style={{ textAlign: 'center', padding: '1rem' }}>
+                                    <FaSchool /> Нет загруженных классов
+                                </div>
+                            ) : (
+                                filteredClasses.map((cls) => (
+                                    <div key={cls.id} className={styles.selectorItem}>
+                                        <input type="checkbox" id={`class-${cls.id}`} checked={tempClassIds.includes(cls.id)} onChange={() => toggleClass(cls.id)} disabled={saving} />
+                                        <label htmlFor={`class-${cls.id}`}>
+                                            {cls.name} класс
+                                            {cls.teacher_name && <small> (рук. {cls.teacher_name})</small>}
+                                        </label>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                    <div className={styles.selectorFooter}>
+                        <div className={styles.selectorCount}>
+                            <FaSchool /> Выбрано классов: {tempClassIds.length}
+                        </div>
+                        <div className={styles.selectorActions}>
+                            <button className={styles.modalCancel} onClick={() => !saving && setClassSelectorModalOpen(false)} disabled={saving}>Отмена</button>
+                            <button className={styles.modalSave} onClick={handleSave} disabled={saving}>
                                 <FaCheck /> {saving ? 'Сохранение...' : 'Сохранить'}
                             </button>
                         </div>
@@ -652,7 +517,7 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
     };
 
     // Модалка редактирования учителя
-    const EditTeacherModal = ({ isOpen, onClose, onSave, teacher }) => {
+    const EditTeacherModal = () => {
         const [formData, setFormData] = useState({ 
             lastName: '', firstName: '', middleName: '', color: '#b8e2ff',
             maxConsecutiveLessons: 5,
@@ -660,19 +525,18 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
         });
         const [saving, setSaving] = useState(false);
 
-        React.useEffect(() => {
-            if (teacher && isOpen) {
-                const parts = teacher.name?.split(' ') || [];
+        useEffect(() => {
+            if (editingTeacher) {
                 setFormData({
-                    lastName: parts[0] || '',
-                    firstName: parts[1] || '',
-                    middleName: parts.slice(2).join(' ') || '',
-                    color: teacher.color || '#b8e2ff',
-                    maxConsecutiveLessons: teacher.maxConsecutiveLessons || 5,
-                    unavailableDays: teacher.unavailableDays || []
+                    lastName: editingTeacher.lastName || '',
+                    firstName: editingTeacher.firstName || '',
+                    middleName: editingTeacher.middleName || '',
+                    color: editingTeacher.color || '#b8e2ff',
+                    maxConsecutiveLessons: editingTeacher.maxConsecutiveLessons || 5,
+                    unavailableDays: editingTeacher.unavailableDays || []
                 });
             }
-        }, [teacher, isOpen]);
+        }, [editingTeacher]);
 
         const handleDayToggle = (day) => {
             setFormData(prev => ({
@@ -687,13 +551,12 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
             e.preventDefault();
             if (saving) return;
             if (!formData.lastName || !formData.firstName) {
-                alert('Заполните фамилию и имя');
+                showNotification('Заполните фамилию и имя', 'error');
                 return;
             }
             setSaving(true);
             try {
-                await onSave({ ...formData, id: teacher?.id });
-                onClose();
+                await handleUpdateTeacher({ ...formData, id: editingTeacher?.id });
             } catch (err) {
                 console.error('Save error:', err);
             } finally {
@@ -701,53 +564,56 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
             }
         };
 
-        if (!isOpen) return null;
+        if (!editTeacherModalOpen) return null;
 
         return (
-            <div className="subject-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget && !saving) onClose(); }}>
-                <div className="subject-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-                    <div className="subject-modal-header">
-                        <h3><FaUserEdit /> Редактировать учителя</h3>
-                        <button className="subject-modal-close" onClick={() => !saving && onClose()} disabled={saving}><FaTimes /></button>
+            <div className={styles.modalOverlay} onClick={(e) => { if (e.target === e.currentTarget && !saving) setEditTeacherModalOpen(false); }}>
+                <div className={styles.modalContent} style={{ maxWidth: '500px' }}>
+                    <div className={`${styles.modalHeader} ${styles.modalHeaderEdit}`}>
+                        <FaUserEdit />
+                        <h3>Редактировать учителя</h3>
+                        <button className={styles.modalClose} onClick={() => !saving && setEditTeacherModalOpen(false)} disabled={saving}>
+                            <FaTimes />
+                        </button>
                     </div>
                     <form onSubmit={handleSubmit}>
-                        <div className="room-modal-body">
-                            <div className="form-row">
-                                <div className="form-group">
+                        <div className={styles.modalBody}>
+                            <div className={styles.formRow}>
+                                <div className={styles.formGroup}>
                                     <label>Фамилия *</label>
                                     <input type="text" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} disabled={saving} />
                                 </div>
-                                <div className="form-group">
+                                <div className={styles.formGroup}>
                                     <label>Имя *</label>
                                     <input type="text" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} disabled={saving} />
                                 </div>
                             </div>
-                            <div className="form-group">
+                            <div className={styles.formGroup}>
                                 <label>Отчество</label>
                                 <input type="text" value={formData.middleName} onChange={e => setFormData({...formData, middleName: e.target.value})} disabled={saving} />
                             </div>
-                            <div className="form-group">
+                            <div className={styles.formGroup}>
                                 <label>Цвет уроков</label>
-                                <div className="color-selector-wrapper">
+                                <div className={styles.colorSelector}>
                                     <div 
-                                        className="color-preview" 
-                                        style={{ background: formData.color, cursor: 'pointer' }}
-                                        onClick={() => openColorPicker({ id: teacher?.id, color: formData.color })}
-                                    ></div>
+                                        className={styles.colorPreview} 
+                                        style={{ background: formData.color }}
+                                        onClick={() => openColorPicker({ id: editingTeacher?.id, color: formData.color })}
+                                    />
                                     <button 
                                         type="button"
-                                        className="color-picker-button"
-                                        onClick={() => openColorPicker({ id: teacher?.id, color: formData.color })}
+                                        className={styles.colorBtn}
+                                        onClick={() => openColorPicker({ id: editingTeacher?.id, color: formData.color })}
                                     >
                                         <FaPalette /> Выбрать цвет
                                     </button>
                                 </div>
                             </div>
-                            <div className="form-group">
-                                <label><FaBan style={{ marginRight: '5px' }} /> Дни, в которые не ставить уроки</label>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '5px' }}>
+                            <div className={styles.formGroup}>
+                                <label><FaBan /> Дни, в которые не ставить уроки</label>
+                                <div className={styles.daysGroup}>
                                     {['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].map(day => (
-                                        <label key={day} style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                                        <label key={day} className={styles.day}>
                                             <input 
                                                 type="checkbox" 
                                                 checked={formData.unavailableDays.includes(day)}
@@ -758,10 +624,10 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
                                         </label>
                                     ))}
                                 </div>
-                                <small style={{ color: '#64748b' }}>В выбранные дни учитель не будет вести уроки</small>
+                                <small>В выбранные дни учитель не будет вести уроки</small>
                             </div>
-                            <div className="form-group">
-                                <label><FaClock style={{ marginRight: '5px' }} /> Максимум уроков подряд</label>
+                            <div className={styles.formGroup}>
+                                <label><FaClock /> Максимум уроков подряд</label>
                                 <input 
                                     type="number" 
                                     min="1" 
@@ -773,9 +639,13 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
                                 <small>Сколько уроков подряд может вести учитель (по умолчанию 5)</small>
                             </div>
                         </div>
-                        <div className="room-modal-footer">
-                            <button type="button" className="btn-cancel" onClick={() => !saving && onClose()} disabled={saving}>Отмена</button>
-                            <button type="submit" className="btn-save" disabled={saving}><FaSave /> {saving ? 'Сохранение...' : 'Сохранить'}</button>
+                        <div className={styles.modalFooter}>
+                            <button type="button" className={styles.modalCancel} onClick={() => !saving && setEditTeacherModalOpen(false)} disabled={saving}>
+                                Отмена
+                            </button>
+                            <button type="submit" className={styles.modalSave} disabled={saving}>
+                                <FaSave /> {saving ? 'Сохранение...' : 'Сохранить'}
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -790,72 +660,59 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
         
         if (teacherClasses.length === 0) {
             return (
-                <button 
-                    className="add-classes-btn"
-                    onClick={() => openClassSelectorModal(teacher)}
-                >
+                <button className={styles.editBtn} onClick={() => openClassSelectorModal(teacher)}>
                     <FaPlus size={10} /> Добавить классы
                 </button>
             );
         }
         
         return (
-            <div className="subjects-tags">
+            <div className={styles.tags}>
                 {teacherClasses.slice(0, 2).map((cls, i) => (
-                    <span key={i} className="class-tag">
+                    <span key={i} className={`${styles.tag} ${styles.tagClass}`}>
                         {cls.name}
                     </span>
                 ))}
-                {teacherClasses.length > 2 && <span className="more-tag">+{teacherClasses.length - 2}</span>}
-                <button 
-                    className="edit-classes-btn"
-                    onClick={() => openClassSelectorModal(teacher)}
-                >
+                {teacherClasses.length > 2 && <span className={`${styles.tag} ${styles.tagMore}`}>+{teacherClasses.length - 2}</span>}
+                <button className={styles.editBtn} onClick={() => openClassSelectorModal(teacher)}>
                     <FaEdit size={10} /> Изменить
                 </button>
             </div>
         );
     };
 
-const getTeacherConstraintsDisplay = (teacher) => {
-    // Используем правильные имена полей из API (с подчёркиванием)
-    const days = teacher.unavailable_days || [];
-    const maxConsecutive = teacher.max_consecutive_lessons || 5;
-    
-    // Отладка - проверяем что приходит
-    console.log('Teacher:', teacher.name, 'unavailable_days:', days, 'max_consecutive:', maxConsecutive);
-    
-    // Если нет ограничений
-    if (days.length === 0 && maxConsecutive === 5) {
-        return <span className="no-subjects">—</span>;
-    }
-    
-    return (
-        <div style={{ fontSize: '0.7rem' }}>
-            {days.length > 0 && (
-                <div style={{ marginBottom: '4px' }}>
-                    <FaBan style={{ color: '#ef4444', marginRight: '4px' }} />
-                    <span style={{ color: '#ef4444' }}>
-                        Выходные: {days.map(d => DAYS_RU[d] || d).join(', ')}
-                    </span>
-                </div>
-            )}
-            {maxConsecutive !== 5 && (
-                <div>
-                    <FaClock style={{ color: '#f59e0b', marginRight: '4px' }} />
-                    <span>Макс. {maxConsecutive} урока(ов) подряд</span>
-                </div>
-            )}
-        </div>
-    );
-};
+    // Отображение ограничений учителя
+    const getTeacherConstraintsDisplay = (teacher) => {
+        const days = teacher.unavailableDays || [];
+        const maxConsecutive = teacher.maxConsecutiveLessons || 5;
+        
+        if (days.length === 0 && maxConsecutive === 5) {
+            return <span className={styles.noData}>—</span>;
+        }
+        
+        return (
+            <div className={styles.constraints}>
+                {days.length > 0 && (
+                    <div className={`${styles.constraint} ${styles.constraintDays}`}>
+                        <FaBan size={10} /> Выходные: {days.map(d => DAYS_RU[d] || d).join(', ')}
+                    </div>
+                )}
+                {maxConsecutive !== 5 && (
+                    <div className={`${styles.constraint} ${styles.constraintMax}`}>
+                        <FaClock size={10} /> Макс. {maxConsecutive} урока(ов) подряд
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     const teachersArray = Array.isArray(teachers) ? teachers : [];
     const lessonsArray = Array.isArray(lessons) ? lessons : [];
 
     if (loadingClasses) {
         return (
-            <div style={{ padding: '2rem', textAlign: 'center' }}>
-                <FaSpinner className="spinner" style={{ fontSize: '2rem', color: '#21435A', animation: 'spin 1s linear infinite' }} />
+            <div className={styles.loading}>
+                <div className={styles.spinner}></div>
                 <p>Загрузка данных...</p>
             </div>
         );
@@ -863,207 +720,231 @@ const getTeacherConstraintsDisplay = (teacher) => {
 
     return (
         <>
-            {notification && <div className="notification">{notification}</div>}
-            <div className="content-grid">
-                {/* Форма добавления нового учителя */}
-                <div className="form-container">
-                    <h3 className="form-title"><FaUserPlus /> Новый учитель</h3>
-                    <form onSubmit={handleAddTeacher}>
-                        <div className="form-row">
-                            <div className="form-group"><label>Фамилия *</label><input type="text" value={newTeacher.lastName} onChange={e => setNewTeacher({...newTeacher, lastName: e.target.value})} required /></div>
-                            <div className="form-group"><label>Имя *</label><input type="text" value={newTeacher.firstName} onChange={e => setNewTeacher({...newTeacher, firstName: e.target.value})} required /></div>
+            {notification.message && (
+                <div className={`${styles.notification} ${notification.type === 'success' ? styles.notificationSuccess : styles.notificationError}`}>
+                    {notification.type === 'success' ? <FaCheck size={14} /> : <FaExclamationTriangle size={14} />}
+                    <span>{notification.message}</span>
+                </div>
+            )}
+            
+            <div className={styles.containerModern}>
+                <div className={styles.contentGrid}>
+                    {/* Форма добавления нового учителя */}
+                    <div className={styles.formCard}>
+                        <div className={styles.formHeader}>
+                            <FaUserPlus size={18} />
+                            <h3>Новый учитель</h3>
                         </div>
-                        <div className="form-group"><label>Отчество</label><input type="text" value={newTeacher.middleName} onChange={e => setNewTeacher({...newTeacher, middleName: e.target.value})} /></div>
-                        <div className="form-row">
-                            <div className="form-group"><label>Логин *</label><input type="text" value={newTeacher.login} onChange={e => setNewTeacher({...newTeacher, login: e.target.value})} required /></div>
-                            <div className="form-group"><label>Пароль *</label><input type="password" value={newTeacher.password} onChange={e => setNewTeacher({...newTeacher, password: e.target.value})} required /></div>
-                        </div>
-                        <div className="form-group">
-                            <label>Цвет уроков</label>
-                            <div className="color-selector-wrapper">
-                                <div 
-                                    className="color-preview" 
-                                    style={{ background: newTeacher.color, cursor: 'pointer' }}
-                                    onClick={() => openColorPicker()}
-                                ></div>
-                                <button 
-                                    type="button"
-                                    className="color-picker-button"
-                                    onClick={() => openColorPicker()}
-                                >
-                                    <FaPalette /> Выбрать цвет
-                                </button>
-                            </div>
-                        </div>
-                        <div className="form-group">
-                            <label><FaBan style={{ marginRight: '5px' }} /> Дни, в которые не ставить уроки</label>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '5px' }}>
-                                {['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].map(day => (
-                                    <label key={day} style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-                                        <input 
-                                            type="checkbox" 
-                                            checked={newTeacher.unavailableDays.includes(day)}
-                                            onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setNewTeacher({...newTeacher, unavailableDays: [...newTeacher.unavailableDays, day]});
-                                                } else {
-                                                    setNewTeacher({...newTeacher, unavailableDays: newTeacher.unavailableDays.filter(d => d !== day)});
-                                                }
-                                            }}
+                        <div className={styles.formBody}>
+                            <form onSubmit={handleAddTeacher}>
+                                <div className={styles.formRow}>
+                                    <div className={styles.formGroup}>
+                                        <label>Фамилия *</label>
+                                        <input type="text" value={newTeacher.lastName} onChange={e => setNewTeacher({...newTeacher, lastName: e.target.value})} required placeholder="Иванов" />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Имя *</label>
+                                        <input type="text" value={newTeacher.firstName} onChange={e => setNewTeacher({...newTeacher, firstName: e.target.value})} required placeholder="Иван" />
+                                    </div>
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Отчество</label>
+                                    <input type="text" value={newTeacher.middleName} onChange={e => setNewTeacher({...newTeacher, middleName: e.target.value})} placeholder="Иванович" />
+                                </div>
+                                <div className={styles.formRow}>
+                                    <div className={styles.formGroup}>
+                                        <label>Логин *</label>
+                                        <input type="text" value={newTeacher.login} onChange={e => setNewTeacher({...newTeacher, login: e.target.value})} required placeholder="ivanov_i" />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Пароль *</label>
+                                        <input type="password" value={newTeacher.password} onChange={e => setNewTeacher({...newTeacher, password: e.target.value})} required placeholder="••••••••" />
+                                    </div>
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Цвет уроков</label>
+                                    <div className={styles.colorSelector}>
+                                        <div 
+                                            className={styles.colorPreview} 
+                                            style={{ background: newTeacher.color }}
+                                            onClick={() => openColorPicker()}
                                         />
-                                        {DAYS_RU[day]}
-                                    </label>
-                                ))}
-                            </div>
-                            <small style={{ color: '#64748b' }}>В выбранные дни учитель не будет вести уроки</small>
-                        </div>
-                        <div className="form-group">
-                            <label><FaClock style={{ marginRight: '5px' }} /> Максимум уроков подряд</label>
-                            <input 
-                                type="number" 
-                                min="1" 
-                                max="7" 
-                                value={newTeacher.maxConsecutiveLessons} 
-                                onChange={e => setNewTeacher({...newTeacher, maxConsecutiveLessons: parseInt(e.target.value) || 5})}
-                            />
-                            <small>Сколько уроков подряд может вести учитель (по умолчанию 5)</small>
-                        </div>
-                        <div className="form-group">
-                            <label>Предметы</label>
-                            <div className="subject-selector-button" onClick={() => openLessonSelectorModal(null)}>
-                                <div className="subject-selector-content"><FaBook /><span>{newTeacher.lessonIds.length === 0 ? 'Выберите предметы...' : `Выбрано: ${newTeacher.lessonIds.length}`}</span></div>
-                                <FaChevronDown />
-                            </div>
-                            {newTeacher.lessonIds.length > 0 && (
-                                <div className="subject-preview">
-                                    {newTeacher.lessonIds.map(id => {
-                                        const lesson = lessonsArray.find(l => l.id === id);
-                                        return lesson ? <span key={id} className="subject-preview-tag">{lesson.name}</span> : null;
-                                    })}
+                                        <button 
+                                            type="button"
+                                            className={styles.colorBtn}
+                                            onClick={() => openColorPicker()}
+                                        >
+                                            <FaPalette /> Выбрать цвет
+                                        </button>
+                                    </div>
                                 </div>
-                            )}
-                        </div>
-                        <div className="form-group">
-                            <label>Классы</label>
-                            <div className="subject-selector-button" onClick={() => openClassSelectorModal(null)}>
-                                <div className="subject-selector-content"><FaSchool /><span>{newTeacher.classIds.length === 0 ? 'Выберите классы...' : `Выбрано: ${newTeacher.classIds.length}`}</span></div>
-                                <FaChevronDown />
-                            </div>
-                            {newTeacher.classIds.length > 0 && (
-                                <div className="subject-preview">
-                                    {newTeacher.classIds.map(id => {
-                                        const cls = classes.find(c => c.id === id);
-                                        return cls ? <span key={id} className="subject-preview-tag" style={{ background: '#10b981' }}>{cls.name}</span> : null;
-                                    })}
+                                <div className={styles.formGroup}>
+                                    <label><FaBan /> Дни, в которые не ставить уроки</label>
+                                    <div className={styles.daysGroup}>
+                                        {['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].map(day => (
+                                            <label key={day} className={styles.day}>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={newTeacher.unavailableDays.includes(day)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setNewTeacher({...newTeacher, unavailableDays: [...newTeacher.unavailableDays, day]});
+                                                        } else {
+                                                            setNewTeacher({...newTeacher, unavailableDays: newTeacher.unavailableDays.filter(d => d !== day)});
+                                                        }
+                                                    }}
+                                                />
+                                                {DAYS_RU[day]}
+                                            </label>
+                                        ))}
+                                    </div>
+                                    <small>В выбранные дни учитель не будет вести уроки</small>
                                 </div>
-                            )}
+                                <div className={styles.formGroup}>
+                                    <label><FaClock /> Максимум уроков подряд</label>
+                                    <input 
+                                        type="number" 
+                                        min="1" 
+                                        max="7" 
+                                        value={newTeacher.maxConsecutiveLessons} 
+                                        onChange={e => setNewTeacher({...newTeacher, maxConsecutiveLessons: parseInt(e.target.value) || 5})}
+                                    />
+                                    <small>Сколько уроков подряд может вести учитель (по умолчанию 5)</small>
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Предметы</label>
+                                    <div className={styles.selectorBtn} onClick={() => openLessonSelectorModal(null)}>
+                                        <div className={styles.selectorContent}>
+                                            <FaBook />
+                                            <span>{newTeacher.lessonIds.length === 0 ? 'Выберите предметы...' : `Выбрано: ${newTeacher.lessonIds.length}`}</span>
+                                        </div>
+                                        <FaChevronDown />
+                                    </div>
+                                    {newTeacher.lessonIds.length > 0 && (
+                                        <div className={styles.previewTags}>
+                                            {newTeacher.lessonIds.map(id => {
+                                                const lesson = lessonsArray.find(l => l.id === id);
+                                                return lesson ? <span key={id} className={styles.previewTag}>{lesson.name}</span> : null;
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Классы</label>
+                                    <div className={styles.selectorBtn} onClick={() => openClassSelectorModal(null)}>
+                                        <div className={styles.selectorContent}>
+                                            <FaSchool />
+                                            <span>{newTeacher.classIds.length === 0 ? 'Выберите классы...' : `Выбрано: ${newTeacher.classIds.length}`}</span>
+                                        </div>
+                                        <FaChevronDown />
+                                    </div>
+                                    {newTeacher.classIds.length > 0 && (
+                                        <div className={styles.previewTags}>
+                                            {newTeacher.classIds.map(id => {
+                                                const cls = classes.find(c => c.id === id);
+                                                return cls ? <span key={id} className={`${styles.previewTag} ${styles.previewTagGreen}`}>{cls.name}</span> : null;
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                                <button type="submit" className={styles.submitBtn}>
+                                    <FaUserPlus size={14} /> Добавить учителя
+                                </button>
+                            </form>
                         </div>
-                        <button type="submit" className="submit-button">Добавить учителя</button>
-                    </form>
-                </div>
-                
-                {/* Таблица учителей */}
-                <div className="table-container">
-                    <h3 className="table-title"><FaChalkboardTeacher /> Список учителей ({teachersArray.length})</h3>
-                    <div className="table-responsive">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>ФИО</th>
-                                    <th>Цвет</th>
-                                    <th>Предметы</th>
-                                    <th>Классы</th>
-                                    <th>Ограничения</th>
-                                    <th>Действия</th>
-                                </tr>
-                            </thead>
-<tbody>
-    {teachersArray.map(teacher => (
-        <tr key={teacher.id}>
-            <td><strong>{teacher.name}</strong></td>
-            <td>
-                <div 
-                    className="color-cell" 
-                    style={{ 
-                        width: '40px', 
-                        height: '40px', 
-                        borderRadius: '10px', 
-                        background: teacher.color || '#b8e2ff', 
-                        margin: '0 auto',
-                        cursor: 'pointer',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                        transition: 'transform 0.2s'
-                    }}
-                    onClick={() => openColorPicker(teacher)}
-                    title="Нажмите чтобы изменить цвет"
-                ></div>
-            </td>
-            <td>
-                <div className="subjects-tags">
-                    {teacher.lessons?.length > 0 ? teacher.lessons.map((l, i) => <span key={i} className="subject-tag">{l.name}</span>) :
-                     teacher.lessonIds?.length > 0 ? teacher.lessonIds.map(id => {
-                        const lesson = lessonsArray.find(l => l.id === id);
-                        return lesson ? <span key={id} className="subject-tag">{lesson.name}</span> : null;
-                    }) : <span className="no-subjects">Нет предметов</span>}
-                    <button className="edit-subjects-btn" onClick={() => openLessonSelectorModal(teacher)}><FaEdit /> Изменить</button>
-                </div>
-            </td>
-            <td>{getTeacherClassesDisplay(teacher)}</td>
-            <td>{getTeacherConstraintsDisplay(teacher)}</td>
-            <td className="action-cell">
-                <button onClick={() => { setEditingTeacher(teacher); setEditTeacherModalOpen(true); }} className="action-button edit-button"><FaEdit /></button>
-                <button onClick={() => handleDeleteTeacher(teacher.id)} className="action-button delete-button" style={{ background: '#dc2626' }}><FaTrash /></button>
-            </td>
-        </tr>
-    ))}
-    {teachersArray.length === 0 && (
-        <tr className="empty-row">
-            <td colSpan="6">
-                <FaChalkboardTeacher />
-                <p>Нет учителей</p>
-                <button onClick={() => document.querySelector('.form-container input')?.focus()}>Добавить учителя</button>
-            </td>
-        </tr>
-    )}
-</tbody>
-                        </table>
+                    </div>
+                    
+                    {/* Таблица учителей */}
+                    <div className={styles.tableCard}>
+                        <div className={styles.tableHeader}>
+                            <div className={styles.tableTitle}>
+                                <FaChalkboardTeacher size={18} />
+                                <h3>Список учителей</h3>
+                                <span className={styles.count}>{teachersArray.length}</span>
+                            </div>
+                        </div>
+                        
+                        <div className={styles.tableWrapper}>
+                            <table className={styles.table}>
+                                <thead>
+                                    <tr>
+                                        <th>ФИО</th>
+                                        <th>Цвет</th>
+                                        <th>Предметы</th>
+                                        <th>Классы</th>
+                                        <th>Ограничения</th>
+                                        <th style={{ width: '100px' }}>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {teachersArray.length > 0 ? teachersArray.map(teacher => (
+                                        <tr key={teacher.id} className={styles.row}>
+                                            <td><strong>{teacher.name}</strong></td>
+                                            <td>
+                                                <div 
+                                                    className={styles.colorCell} 
+                                                    style={{ background: teacher.color || '#b8e2ff' }}
+                                                    onClick={() => openColorPicker(teacher)}
+                                                    title="Нажмите чтобы изменить цвет"
+                                                />
+                                            </td>
+                                            <td>
+                                                <div className={styles.tags}>
+                                                    {teacher.lessons?.length > 0 ? teacher.lessons.map((l, i) => (
+                                                        <span key={i} className={`${styles.tag} ${styles.tagSubject}`}>{l.name}</span>
+                                                    )) : teacher.lessonIds?.length > 0 ? teacher.lessonIds.map(id => {
+                                                        const lesson = lessonsArray.find(l => l.id === id);
+                                                        return lesson ? <span key={id} className={`${styles.tag} ${styles.tagSubject}`}>{lesson.name}</span> : null;
+                                                    }) : <span className={styles.noData}>Нет предметов</span>}
+                                                    <button className={styles.editBtn} onClick={() => openLessonSelectorModal(teacher)}>
+                                                        <FaEdit size={10} /> Изменить
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td>{getTeacherClassesDisplay(teacher)}</td>
+                                            <td>{getTeacherConstraintsDisplay(teacher)}</td>
+                                            <td className={styles.actions}>
+                                                <button 
+                                                    onClick={() => { setEditingTeacher(teacher); setEditTeacherModalOpen(true); }} 
+                                                    className={`${styles.action} ${styles.actionEdit}`} 
+                                                    title="Редактировать"
+                                                >
+                                                    <FaEdit size={14} />
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDeleteTeacher(teacher.id)} 
+                                                    className={`${styles.action} ${styles.actionDelete}`} 
+                                                    title="Удалить"
+                                                >
+                                                    <FaTrash size={14} />
+                                                </button>
+                                              </td>
+                                         </tr>
+                                    )) : (
+                                        <tr className={styles.emptyRow}>
+                                            <td colSpan="6">
+                                                <div className={styles.emptyState}>
+                                                    <div className={styles.emptyIcon}>
+                                                        <FaChalkboardTeacher size={48} />
+                                                    </div>
+                                                    <h4>Нет учителей</h4>
+                                                    <p>Добавьте первого учителя, заполнив форму слева</p>
+                                                </div>
+                                              </td>
+                                         </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
             
             {/* Модалки */}
-            <LessonSelectorModal 
-                isOpen={lessonSelectorModalOpen} 
-                onClose={() => setLessonSelectorModalOpen(false)} 
-                lessonsList={lessonsArray} 
-                selectedIds={tempLessonIds} 
-                onSave={handleSaveLessons} 
-                teacherName={currentTeacher?.name || 'нового учителя'} 
-            />
-            
-            <ClassSelectorModal 
-                isOpen={classSelectorModalOpen} 
-                onClose={() => setClassSelectorModalOpen(false)} 
-                classesList={classes} 
-                selectedIds={tempClassIds} 
-                onSave={handleSaveClassAssignments} 
-                teacherName={currentTeacher?.name || 'нового учителя'} 
-            />
-            
-            <EditTeacherModal 
-                isOpen={editTeacherModalOpen} 
-                onClose={() => setEditTeacherModalOpen(false)} 
-                onSave={handleUpdateTeacher} 
-                teacher={editingTeacher} 
-            />
-
-            <ColorPickerModal
-                isOpen={colorPickerModalOpen}
-                onClose={() => setColorPickerModalOpen(false)}
-                onSave={saveColor}
-                currentColor={tempColor}
-                onColorChange={setTempColor}
-            />
+            <LessonSelectorModal />
+            <ClassSelectorModal />
+            <EditTeacherModal />
+            <ColorPickerModal />
         </>
     );
 };

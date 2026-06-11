@@ -20,14 +20,17 @@ import styles from '../styles/TeacherMySchedule.module.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// ИСПРАВЛЕННЫЙ КОМПОНЕНТ КАРТОЧКИ УРОКА с отображением класса
+// ИСПРАВЛЕННЫЙ КОМПОНЕНТ КАРТОЧКИ УРОКА
 const LessonCard = ({ lesson }) => {
-    const cardColor = lesson.color || '#21435A';
+    // Используем цвет учителя или дефолтный синий
+    const cardColor = lesson.color || lesson.teacherColor || '#3b82f6';
     
     const cardStyle = {
         borderLeftColor: cardColor,
         backgroundColor: `${cardColor}10`
     };
+
+    console.log('LessonCard color:', cardColor, 'for:', lesson.title);
 
     return (
         <div className={styles.lessonCard} style={cardStyle}>
@@ -36,7 +39,6 @@ const LessonCard = ({ lesson }) => {
                 <span>{lesson.title}</span>
             </div>
             <div className={styles.lessonCardClass}>
-                <FaUsers />
                 <span>{lesson.className || '—'}</span>
             </div>
             <div className={styles.lessonCardRoom}>
@@ -185,11 +187,16 @@ const TeacherMySchedule = () => {
             
             const scheduleResponse = await axios.get(`${API_URL}/teacher/my-schedule?_=${timestamp}`, getAuthHeaders());
             
+            console.log('=== SCHEDULE RESPONSE ===');
+            console.log('Full response:', scheduleResponse.data);
+            
             const scheduleData = scheduleResponse.data.schedule || {};
             const formattedLessons = [];
             
             Object.keys(scheduleData).forEach(day => {
+                console.log(`Day ${day}:`, scheduleData[day]);
                 scheduleData[day].forEach(lesson => {
+                    console.log(`Lesson in ${day}:`, lesson);
                     formattedLessons.push({
                         id: lesson.id,
                         title: lesson.subject,
@@ -197,11 +204,14 @@ const TeacherMySchedule = () => {
                         number: lesson.number,
                         days: [day],
                         className: lesson.className,
-                        color: lesson.color || '#21435A'
+                        // Важно: сохраняем цвет из ответа сервера
+                        color: lesson.color || lesson.teacherColor || '#3b82f6',
+                        teacherColor: lesson.color || lesson.teacherColor || '#3b82f6'
                     });
                 });
             });
             
+            console.log('Formatted lessons with colors:', formattedLessons);
             setLessons(formattedLessons);
             
             const activitiesResponse = await axios.get(`${API_URL}/teacher/my-extracurricular?_=${timestamp}`, getAuthHeaders());

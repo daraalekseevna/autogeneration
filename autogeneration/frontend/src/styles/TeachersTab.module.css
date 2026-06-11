@@ -1,0 +1,1065 @@
+/* TeachersTab.module.css - CSS Modules стили для вкладки Учителя школы */
+
+/* ============= ОСНОВНЫЕ КОНТЕЙНЕРЫ ============= */
+.containerModern {
+  padding: 0;
+}
+
+/* ============= СЕТКА ДЛЯ ФОРМЫ И ТАБЛИЦЫ ============= */
+.contentGrid {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============= ФОРМА ДОБАВЛЕНИЯ УЧИТЕЛЯ ============= */
+.formCard {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.formCard:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.formHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #21435A 0%, #2c5a7a 100%);
+  color: white;
+}
+
+.formHeader svg {
+  font-size: 1.2rem;
+}
+
+.formHeader h3 {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.formBody {
+  padding: 1.5rem;
+}
+
+/* Группа полей формы */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.formGroup label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.formGroup input,
+.formGroup select {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  background: #ffffff;
+  color: #1e293b;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  outline: none;
+  border-color: #21435A;
+  box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
+}
+
+.formGroup input::placeholder {
+  color: #94a3b8;
+}
+
+.formGroup small {
+  font-size: 0.65rem;
+  color: #64748b;
+  margin-top: 0.2rem;
+}
+
+/* Две колонки в строке */
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+@media (max-width: 480px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============= ВЫБОР ЦВЕТА ============= */
+.colorSelector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.colorPreview {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.colorPreview:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.colorBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #475569;
+  transition: all 0.2s;
+}
+
+.colorBtn:hover {
+  background: #e2e8f0;
+  border-color: #21435A;
+  color: #21435A;
+}
+
+/* ============= ВЫБОР ПРЕДМЕТОВ/КЛАССОВ ============= */
+.selectorBtn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #ffffff;
+  width: 100%;
+}
+
+.selectorBtn:hover {
+  border-color: #21435A;
+  background: #f8fafc;
+}
+
+.selectorContent {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #1e293b;
+}
+
+.previewTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.previewTag {
+  padding: 0.25rem 0.7rem;
+  background: #e2e8f0;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.previewTagGreen {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* ============= КНОПКА ОТПРАВКИ ============= */
+.submitBtn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #21435A 0%, #2c5a7a 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  margin-top: 0.5rem;
+}
+
+.submitBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(33, 67, 90, 0.3);
+}
+
+.submitBtn:active {
+  transform: translateY(0);
+}
+
+/* ============= КАРТОЧКА ТАБЛИЦЫ ============= */
+.tableCard {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.tableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tableTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tableTitle svg {
+  color: #21435A;
+}
+
+.tableTitle h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1e293b;
+}
+
+.count {
+  font-size: 0.7rem;
+  background: #e2e8f0;
+  color: #475569;
+  padding: 0.2rem 0.7rem;
+  border-radius: 30px;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+/* ============= ТАБЛИЦА ============= */
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.table thead tr {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table th {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+
+.table td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.85rem;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.row {
+  transition: background 0.2s ease;
+}
+
+.row:hover {
+  background: #f8fafc;
+}
+
+/* Цветовая ячейка */
+.colorCell {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border: 2px solid white;
+}
+
+.colorCell:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ============= ТЕГИ ============= */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.tagSubject {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+}
+
+.tagClass {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+}
+
+.tagMore {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.editBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.7rem;
+  background: #21435A;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.65rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.editBtn:hover {
+  background: #2c5a7a;
+  transform: translateY(-1px);
+}
+
+.noData {
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-style: italic;
+}
+
+/* ============= ОГРАНИЧЕНИЯ ============= */
+.constraints {
+  font-size: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.constraint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  width: fit-content;
+}
+
+.constraintDays {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.constraintMax {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+/* ============= КНОПКИ ДЕЙСТВИЙ ============= */
+.actions {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actionEdit {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.actionEdit:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+  border-color: transparent;
+}
+
+.actionDelete {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.actionDelete:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+  border-color: transparent;
+}
+
+.action:active {
+  transform: translateY(0);
+}
+
+/* ============= ПУСТОЕ СОСТОЯНИЕ ============= */
+.emptyRow td {
+  text-align: center;
+  padding: 3rem !important;
+}
+
+.emptyState {
+  text-align: center;
+}
+
+.emptyIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: rgba(33, 67, 90, 0.05);
+  border-radius: 50%;
+  margin-bottom: 1rem;
+  color: #94a3b8;
+}
+
+.emptyState h4 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem 0;
+  color: #1e293b;
+}
+
+.emptyState p {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 1rem;
+}
+
+/* ============= МОДАЛЬНЫЕ ОКНА ============= */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+}
+
+.modalContent {
+  background: #ffffff;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 580px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalSlideIn 0.3s ease;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #21435A 0%, #2c5a7a 100%);
+  color: white;
+}
+
+.modalHeaderEdit {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.modalHeader svg {
+  font-size: 1.2rem;
+}
+
+.modalHeader h3 {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.modalClose {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.modalClose:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.modalBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.modalCancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.modalCancel:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: white;
+}
+
+.modalSave {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #21435A;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.modalSave:hover:not(:disabled) {
+  background: #2c5a7a;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(33, 67, 90, 0.3);
+}
+
+.modalSave:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============= МОДАЛКА ВЫБОРА ПРЕДМЕТОВ/КЛАССОВ ============= */
+.selectorSearch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  margin-bottom: 0.75rem;
+  background: #ffffff;
+}
+
+.selectorSearch svg {
+  color: #94a3b8;
+}
+
+.selectorSearch input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.85rem;
+  background: transparent;
+  color: #1e293b;
+}
+
+.selectorList {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.5rem;
+}
+
+.selectorItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.selectorItem:hover {
+  background: #f8fafc;
+}
+
+.selectorItem input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #21435A;
+}
+
+.selectorItem label {
+  flex: 1;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #1e293b;
+}
+
+.selectorFooter {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.selectorCount {
+  font-size: 0.7rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.selectorActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ============= ДНИ НЕДЕЛИ ============= */
+.daysGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.day {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  padding: 0.4rem 0.9rem;
+  background: #f1f5f9;
+  border-radius: 30px;
+  font-size: 0.7rem;
+  transition: all 0.2s;
+}
+
+.day:hover {
+  background: #e2e8f0;
+}
+
+.day input {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: #21435A;
+}
+
+/* ============= ПАЛИТРА ЦВЕТОВ ============= */
+.paletteOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10002;
+}
+
+.paletteContent {
+  background: #ffffff;
+  border-radius: 20px;
+  width: 460px;
+  max-width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalSlideIn 0.3s ease;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.paletteHeader {
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #21435A 0%, #2c5a7a 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.paletteHeader span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.paletteGrid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 10px;
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+
+.paletteColor {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.paletteColor:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.paletteFooter {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+}
+
+.paletteSelected {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.paletteSelectedBox {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ============= УВЕДОМЛЕНИЯ ============= */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  z-index: 10000;
+  animation: slideInRight 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.notificationSuccess {
+  background: #10b981;
+  color: white;
+}
+
+.notificationError {
+  background: #ef4444;
+  color: white;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ============= ЗАГРУЗКА ============= */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #21435A;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============= АДАПТИВНОСТЬ ============= */
+@media (max-width: 768px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .formCard {
+    position: static;
+  }
+  
+  .table th,
+  .table td {
+    padding: 0.6rem;
+  }
+  
+  .formRow {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .actions {
+    flex-direction: column;
+  }
+  
+  .action {
+    width: 100%;
+  }
+  
+  .daysGroup {
+    gap: 0.3rem;
+  }
+  
+  .day {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.65rem;
+  }
+}
+
+/* ============= ТЁМНАЯ ТЕМА ============= */
+[data-theme="dark"] .formCard,
+[data-theme="dark"] .tableCard,
+[data-theme="dark"] .modalContent,
+[data-theme="dark"] .paletteContent {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .formHeader,
+[data-theme="dark"] .tableHeader,
+[data-theme="dark"] .modalFooter,
+[data-theme="dark"] .paletteFooter {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .formGroup input,
+[data-theme="dark"] .formGroup select,
+[data-theme="dark"] .selectorBtn,
+[data-theme="dark"] .selectorSearch {
+  background: #334155;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .formGroup input::placeholder {
+  color: #64748b;
+}
+
+[data-theme="dark"] .formGroup label,
+[data-theme="dark"] .formGroup small,
+[data-theme="dark"] .selectorCount {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .table thead tr {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .table td {
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .row:hover {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .selectorContent,
+[data-theme="dark"] .selectorItem label,
+[data-theme="dark"] .selectorSearch input {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .previewTag {
+  background: #475569;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .previewTagGreen {
+  background: #065f46;
+  color: #d1fae5;
+}
+
+[data-theme="dark"] .day {
+  background: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .day:hover {
+  background: #475569;
+}
+
+[data-theme="dark"] .selectorItem:hover {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .emptyIcon {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .emptyState h4 {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .emptyState p {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .paletteHeader {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+[data-theme="dark"] .colorBtn {
+  background: #334155;
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .colorBtn:hover {
+  background: #475569;
+  color: #93c5fd;
+}

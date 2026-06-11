@@ -90,7 +90,6 @@ router.delete('/admins/:id', async (req, res) => {
 
 // ============= УЧИТЕЛЯ =============
 
-// Получить всех учителей (с предметами, классами и ограничениями)
 router.get('/teachers', async (req, res) => {
     try {
         const result = await db.query(`
@@ -132,16 +131,6 @@ router.get('/teachers', async (req, res) => {
             WHERE u.role = 'teacher'
             ORDER BY t.last_name, t.first_name
         `);
-        
-        // Логирование для отладки
-        console.log('Teachers loaded:', result.rows.length);
-        if (result.rows.length > 0) {
-            console.log('Sample teacher constraints:', {
-                max_consecutive_lessons: result.rows[0].max_consecutive_lessons,
-                unavailable_days: result.rows[0].unavailable_days
-            });
-        }
-        
         res.json(result.rows || []);
     } catch (err) {
         console.error('GET /teachers error:', err);
@@ -232,9 +221,6 @@ router.put('/teachers/:id', async (req, res) => {
         maxConsecutiveLessons, unavailableDays, preferredStartTime, preferredEndTime 
     } = req.body;
     
-    console.log('=== UPDATE TEACHER ===');
-    console.log('ID:', id);
-    
     const client = await db.getClient();
     
     try {
@@ -252,7 +238,6 @@ router.put('/teachers/:id', async (req, res) => {
                 maxConsecutiveLessons || 5, JSON.stringify(unavailableDays || []),
                 preferredStartTime || null, preferredEndTime || null, id
             ]);
-            console.log('Updated name, color, room and constraints');
         } else {
             let updateFields = [];
             let values = [];
@@ -268,7 +253,6 @@ router.put('/teachers/:id', async (req, res) => {
             if (updateFields.length > 0) {
                 values.push(id);
                 await client.query(`UPDATE teachers SET ${updateFields.join(', ')} WHERE id = $${paramIndex}`, values);
-                console.log('Updated constraints only');
             }
         }
         
@@ -282,7 +266,6 @@ router.put('/teachers/:id', async (req, res) => {
                     );
                 }
             }
-            console.log('Updated lessons');
         }
         
         if (classIds !== undefined) {
@@ -295,7 +278,6 @@ router.put('/teachers/:id', async (req, res) => {
                     );
                 }
             }
-            console.log('Updated class assignments');
         }
         
         await client.query('COMMIT');
@@ -333,7 +315,177 @@ router.delete('/teachers/:id', async (req, res) => {
     }
 });
 
+// ============= ПЕДАГОГИ ДОПОЛНИТЕЛЬНОГО ОБРАЗОВАНИЯ =============
+
+router.get('/extended-teachers', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                et.id,
+                et.last_name,
+                et.first_name,
+                et.middle_name,
+                et.section_name,
+                et.section_color,
+                et.school_teacher_id,
+                et.created_at,
+                CONCAT(et.last_name, ' ', et.first_name, ' ', COALESCE(et.middle_name, '')) as name,
+                COALESCE(t.color, et.section_color) as color
+            FROM extended_teachers et
+            LEFT JOIN teachers t ON et.school_teacher_id = t.id
+            ORDER BY et.last_name, et.first_name
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('GET /extended-teachers error:', err);
+        res.status(500).json({ message: 'Ошибка загрузки педагогов доп. образования' });
+    }
+});
+
+router.post('/extended-teachers', async (req, res) => {
+    const { lastName, firstName, middleName, sectionName, sectionColor, schoolTeacherId } = req.body;
+    
+    if (!sectionName) {
+        return res.status(400).json({ message: 'Название секции обязательно' });
+    }
+    
+    if (schoolTeacherId) {
+        const teacherExists = await db.query('SELECT id FROM teachers WHERE id = $1', [schoolTeacherId]);
+        if (teacherExists.rows.length === 0) {
+            return res.status(400).json({ message: 'Указанный учитель не найден' });
+        }
+    } else {
+        if (!lastName || !firstName) {
+            return res.status(400).json({ message: 'Фамилия и имя обязательны для внешнего педагога' });
+        }
+    }
+    
+    const client = await db.getClient();
+    try {
+        await client.query('BEGIN');
+        
+        let finalLastName = lastName;
+        let finalFirstName = firstName;
+        let finalMiddleName = middleName || null;
+        let finalSectionColor = sectionColor || '#ff6b6b';
+        
+        if (schoolTeacherId) {
+            const teacherResult = await client.query(
+                'SELECT last_name, first_name, middle_name, color FROM teachers WHERE id = $1',
+                [schoolTeacherId]
+            );
+            
+            if (teacherResult.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ message: 'Указанный учитель не найден' });
+            }
+            
+            const teacherData = teacherResult.rows[0];
+            finalLastName = teacherData.last_name;
+            finalFirstName = teacherData.first_name;
+            finalMiddleName = teacherData.middle_name;
+            finalSectionColor = teacherData.color;
+        }
+        
+        const result = await client.query(`
+            INSERT INTO extended_teachers (last_name, first_name, middle_name, section_name, section_color, school_teacher_id)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id
+        `, [finalLastName, finalFirstName, finalMiddleName, sectionName, finalSectionColor, schoolTeacherId || null]);
+        
+        await client.query('COMMIT');
+        
+        res.status(201).json({ 
+            message: schoolTeacherId ? 'Секция назначена учителю' : 'Педагог доп. образования добавлен',
+            id: result.rows[0].id
+        });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('POST /extended-teachers error:', err);
+        res.status(500).json({ message: 'Ошибка создания: ' + err.message });
+    } finally {
+        client.release();
+    }
+});
+
+router.put('/extended-teachers/:id', async (req, res) => {
+    const { id } = req.params;
+    const { lastName, firstName, middleName, sectionName, sectionColor, schoolTeacherId } = req.body;
+    
+    const client = await db.getClient();
+    try {
+        await client.query('BEGIN');
+        
+        const existing = await client.query('SELECT id FROM extended_teachers WHERE id = $1', [id]);
+        if (existing.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ message: 'Запись не найдена' });
+        }
+        
+        let finalLastName = lastName;
+        let finalFirstName = firstName;
+        let finalMiddleName = middleName || null;
+        let finalSectionColor = sectionColor || '#ff6b6b';
+        
+        if (schoolTeacherId) {
+            const teacherResult = await client.query(
+                'SELECT last_name, first_name, middle_name, color FROM teachers WHERE id = $1',
+                [schoolTeacherId]
+            );
+            
+            if (teacherResult.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ message: 'Указанный учитель не найден' });
+            }
+            
+            const teacherData = teacherResult.rows[0];
+            finalLastName = teacherData.last_name;
+            finalFirstName = teacherData.first_name;
+            finalMiddleName = teacherData.middle_name;
+            finalSectionColor = teacherData.color;
+        } else {
+            if (!finalLastName || !finalFirstName) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ message: 'Фамилия и имя обязательны для внешнего педагога' });
+            }
+        }
+        
+        await client.query(`
+            UPDATE extended_teachers 
+            SET last_name = $1, first_name = $2, middle_name = $3, 
+                section_name = $4, section_color = $5, school_teacher_id = $6
+            WHERE id = $7
+        `, [finalLastName, finalFirstName, finalMiddleName, sectionName, finalSectionColor, schoolTeacherId || null, id]);
+        
+        await client.query('COMMIT');
+        
+        res.json({ message: 'Данные обновлены' });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('PUT /extended-teachers error:', err);
+        res.status(500).json({ message: 'Ошибка обновления: ' + err.message });
+    } finally {
+        client.release();
+    }
+});
+
+router.delete('/extended-teachers/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await db.query('DELETE FROM extended_teachers WHERE id = $1 RETURNING id', [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Запись не найдена' });
+        }
+        res.json({ message: 'Педагог удален' });
+    } catch (err) {
+        console.error('DELETE /extended-teachers error:', err);
+        res.status(500).json({ message: 'Ошибка удаления: ' + err.message });
+    }
+});
+
 // ============= КЛАССЫ =============
+
+// В файле backend/routes/superadmin.js, обновите GET /classes
 
 router.get('/classes', async (req, res) => {
     try {
@@ -347,25 +499,39 @@ router.get('/classes', async (req, res) => {
                 c.max_lessons_per_day,
                 c.teacher_id,
                 CONCAT(t.last_name, ' ', t.first_name, ' ', COALESCE(t.middle_name, '')) as teacher_name,
-                u.login
+                u.login,
+                u.password_hash as password,
+                u.created_at
             FROM classes c
             LEFT JOIN teachers t ON c.teacher_id = t.id
-            JOIN users u ON c.user_id = u.id
+            LEFT JOIN users u ON c.user_id = u.id
             WHERE u.role = 'class'
             ORDER BY c.number, c.letter
         `);
-        res.json(result.rows || []);
+        
+        // Не возвращаем реальный хеш пароля, а показываем заглушку
+        const classes = result.rows.map(row => ({
+            ...row,
+            password: '********' // Заглушка вместо реального хеша
+        }));
+        
+        res.json(classes);
     } catch (err) {
         console.error('GET /classes error:', err);
-        res.json([]);
+        res.status(500).json({ message: 'Ошибка загрузки классов' });
     }
 });
+// В файле backend/routes/superadmin.js, найдите и замените метод POST /classes
 
 router.post('/classes', async (req, res) => {
     const { number, letter, shift, teacherId, login, password, maxLessonsPerDay } = req.body;
 
+    // Валидация
     if (!number || !letter || !login || !password) {
-        return res.status(400).json({ message: 'Номер, буква, логин и пароль обязательны' });
+        return res.status(400).json({ 
+            message: 'Номер, буква, логин и пароль обязательны',
+            fields: { number: !!number, letter: !!letter, login: !!login, password: !!password }
+        });
     }
 
     const client = await db.getClient();
@@ -378,6 +544,7 @@ router.post('/classes', async (req, res) => {
         const classShift = shift ? parseInt(shift) : 1;
         const classTeacherId = teacherId ? parseInt(teacherId) : null;
         
+        // 1. Проверяем существование класса
         const existingClass = await client.query(
             'SELECT id FROM classes WHERE number = $1 AND letter = $2',
             [classNumber, classLetter]
@@ -385,54 +552,158 @@ router.post('/classes', async (req, res) => {
         
         if (existingClass.rows.length > 0) {
             await client.query('ROLLBACK');
-            return res.status(400).json({ message: 'Класс с таким номером и буквой уже существует' });
+            return res.status(400).json({ 
+                message: `Класс ${classNumber}${classLetter} уже существует!`,
+                error: 'CLASS_EXISTS'
+            });
         }
         
+        // 2. Проверяем существование пользователя с таким логином
+        const existingUser = await client.query(
+            'SELECT id, role FROM users WHERE login = $1',
+            [login]
+        );
+        
+        if (existingUser.rows.length > 0) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ 
+                message: `Логин "${login}" уже занят. Пожалуйста, выберите другой логин.`,
+                error: 'LOGIN_EXISTS'
+            });
+        }
+        
+        // 3. Хешируем пароль
         const passwordHash = await bcrypt.hash(password, 10);
         
+        // 4. Создаем пользователя
         const userResult = await client.query(
-            'INSERT INTO users (login, password_hash, role) VALUES ($1, $2, $3) RETURNING id',
+            `INSERT INTO users (login, password_hash, role, created_at) 
+             VALUES ($1, $2, $3, NOW()) RETURNING id`,
             [login, passwordHash, 'class']
         );
         
         const userId = userResult.rows[0].id;
         
-        await client.query(`
-            INSERT INTO classes (number, letter, shift, teacher_id, user_id, max_lessons_per_day) 
-            VALUES ($1, $2, $3, $4, $5, $6)
+        // 5. Создаем класс
+        const classResult = await client.query(`
+            INSERT INTO classes (number, letter, shift, teacher_id, user_id, max_lessons_per_day, created_at) 
+            VALUES ($1, $2, $3, $4, $5, $6, NOW())
+            RETURNING id, number, letter
         `, [classNumber, classLetter, classShift, classTeacherId, userId, maxLessonsPerDay || null]);
         
         await client.query('COMMIT');
         
-        res.status(201).json({ message: 'Класс создан' });
+        // Логируем успешное создание
+        await logActivity(
+            req.user.id,
+            req.user.login,
+            req.user.role,
+            'create_class',
+            `Создан класс ${classNumber}${classLetter} с логином ${login}`,
+            JSON.stringify({ classId: classResult.rows[0].id, login, role: 'class' })
+        );
+        
+        // Возвращаем успешный ответ
+        res.status(201).json({ 
+            success: true,
+            message: `Класс ${classNumber}${classLetter} успешно создан!`,
+            data: {
+                id: classResult.rows[0].id,
+                name: `${classNumber}${classLetter}`,
+                login: login,
+                password: password,
+                shift: classShift
+            }
+        });
+        
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('POST /classes error:', err);
-        res.status(500).json({ message: 'Ошибка создания класса: ' + err.message });
+        
+        // Обработка специфических ошибок PostgreSQL
+        if (err.code === '23505') { // Unique violation
+            if (err.constraint === 'users_login_key') {
+                return res.status(400).json({ 
+                    message: `Логин "${login}" уже существует. Пожалуйста, выберите другой.`,
+                    error: 'DUPLICATE_LOGIN'
+                });
+            } else if (err.constraint === 'classes_user_id_key') {
+                return res.status(400).json({ 
+                    message: `Ошибка: пользователь уже привязан к другому классу.`,
+                    error: 'USER_ALREADY_ASSIGNED'
+                });
+            }
+        }
+        
+        res.status(500).json({ 
+            message: 'Ошибка создания класса: ' + err.message,
+            error: err.code
+        });
     } finally {
         client.release();
     }
 });
-
 router.put('/classes/:id', async (req, res) => {
     const { id } = req.params;
-    const { shift, teacherId, maxLessonsPerDay } = req.body;
+    const { shift, teacherId, maxLessonsPerDay, login, password } = req.body;
+    
+    const client = await db.getClient();
     
     try {
-        if (shift !== undefined) {
-            await db.query('UPDATE classes SET shift = $1 WHERE id = $2', [shift, id]);
+        await client.query('BEGIN');
+        
+        // Получаем user_id класса
+        const classResult = await client.query('SELECT user_id FROM classes WHERE id = $1', [id]);
+        if (classResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ message: 'Класс не найден' });
         }
-        if (teacherId !== undefined) {
-            const newTeacherId = teacherId === null ? null : parseInt(teacherId);
-            await db.query('UPDATE classes SET teacher_id = $1 WHERE id = $2', [newTeacherId, id]);
+        const userId = classResult.rows[0].user_id;
+        
+        // Обновляем данные класса
+        if (shift !== undefined || teacherId !== undefined || maxLessonsPerDay !== undefined) {
+            const updates = [];
+            const values = [];
+            let paramIndex = 1;
+            
+            if (shift !== undefined) {
+                updates.push(`shift = $${paramIndex++}`);
+                values.push(shift);
+            }
+            if (teacherId !== undefined) {
+                updates.push(`teacher_id = $${paramIndex++}`);
+                values.push(teacherId === null ? null : parseInt(teacherId));
+            }
+            if (maxLessonsPerDay !== undefined) {
+                updates.push(`max_lessons_per_day = $${paramIndex++}`);
+                values.push(maxLessonsPerDay === null ? null : parseInt(maxLessonsPerDay));
+            }
+            
+            if (updates.length > 0) {
+                values.push(id);
+                await client.query(`UPDATE classes SET ${updates.join(', ')} WHERE id = $${paramIndex}`, values);
+            }
         }
-        if (maxLessonsPerDay !== undefined) {
-            await db.query('UPDATE classes SET max_lessons_per_day = $1 WHERE id = $2', [maxLessonsPerDay, id]);
+        
+        // Обновляем логин и пароль пользователя
+        if (login !== undefined) {
+            await client.query('UPDATE users SET login = $1 WHERE id = $2', [login, userId]);
         }
+        
+        if (password !== undefined && password !== '') {
+            const passwordHash = await bcrypt.hash(password, 10);
+            await client.query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, userId]);
+        }
+        
+        await client.query('COMMIT');
+        
         res.json({ message: 'Класс обновлен' });
     } catch (err) {
+        await client.query('ROLLBACK');
         console.error('PUT /classes error:', err);
-        res.status(500).json({ message: 'Ошибка обновления класса' });
+        res.status(500).json({ message: 'Ошибка обновления класса: ' + err.message });
+    } finally {
+        client.release();
     }
 });
 
@@ -1539,421 +1810,6 @@ router.delete('/sanpin/subject-hours/:id', async (req, res) => {
     }
 });
 
-// ============= НОВЫЕ МАРШРУТЫ: ДНЕВНЫЕ ЛИМИТЫ =============
-
-router.get('/daily-load-limits', async (req, res) => {
-    try {
-        const result = await db.query('SELECT * FROM daily_load_limits ORDER BY grade, day_name');
-        res.json(result.rows);
-    } catch (err) {
-        console.error('GET /daily-load-limits error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.post('/daily-load-limits', async (req, res) => {
-    const { grade, day_name, min_weight, max_weight, max_lessons } = req.body;
-    if (!grade || !day_name) return res.status(400).json({ message: 'Класс и день недели обязательны' });
-    try {
-        const result = await db.query(`
-            INSERT INTO daily_load_limits (grade, day_name, min_weight, max_weight, max_lessons)
-            VALUES ($1, $2, $3, $4, $5) RETURNING *
-        `, [grade, day_name, min_weight || 0, max_weight || 0, max_lessons || null]);
-        res.status(201).json(result.rows[0]);
-    } catch (err) {
-        console.error('POST /daily-load-limits error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.put('/daily-load-limits/:id', async (req, res) => {
-    const { id } = req.params;
-    const { grade, day_name, min_weight, max_weight, max_lessons } = req.body;
-    try {
-        await db.query(`
-            UPDATE daily_load_limits 
-            SET grade = $1, day_name = $2, min_weight = $3, max_weight = $4, max_lessons = $5
-            WHERE id = $6
-        `, [grade, day_name, min_weight || 0, max_weight || 0, max_lessons || null, id]);
-        res.json({ message: 'Обновлено' });
-    } catch (err) {
-        console.error('PUT /daily-load-limits error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.delete('/daily-load-limits/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        await db.query('DELETE FROM daily_load_limits WHERE id = $1', [id]);
-        res.json({ message: 'Удалено' });
-    } catch (err) {
-        console.error('DELETE /daily-load-limits error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// ============= НОВЫЕ МАРШРУТЫ: НЕДЕЛЬНЫЕ ЛИМИТЫ =============
-
-router.get('/weekly-load-limits', async (req, res) => {
-    try {
-        const result = await db.query('SELECT * FROM weekly_load_limits ORDER BY grade');
-        res.json(result.rows);
-    } catch (err) {
-        console.error('GET /weekly-load-limits error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.post('/weekly-load-limits', async (req, res) => {
-    const { grade, week_weight, month_weight } = req.body;
-    if (!grade) return res.status(400).json({ message: 'Класс обязателен' });
-    try {
-        const result = await db.query(`
-            INSERT INTO weekly_load_limits (grade, week_weight, month_weight)
-            VALUES ($1, $2, $3) RETURNING *
-        `, [grade, week_weight || 0, month_weight || 0]);
-        res.status(201).json(result.rows[0]);
-    } catch (err) {
-        console.error('POST /weekly-load-limits error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.put('/weekly-load-limits/:id', async (req, res) => {
-    const { id } = req.params;
-    const { grade, week_weight, month_weight } = req.body;
-    try {
-        await db.query(`
-            UPDATE weekly_load_limits 
-            SET grade = $1, week_weight = $2, month_weight = $3
-            WHERE id = $4
-        `, [grade, week_weight || 0, month_weight || 0, id]);
-        res.json({ message: 'Обновлено' });
-    } catch (err) {
-        console.error('PUT /weekly-load-limits error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.delete('/weekly-load-limits/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        await db.query('DELETE FROM weekly_load_limits WHERE id = $1', [id]);
-        res.json({ message: 'Удалено' });
-    } catch (err) {
-        console.error('DELETE /weekly-load-limits error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// ============= НОВЫЕ МАРШРУТЫ: TEACHER CONSTRAINTS =============
-
-router.get('/teacher-constraints', async (req, res) => {
-    try {
-        const result = await db.query(`
-            SELECT tc.*, CONCAT(t.last_name, ' ', t.first_name, ' ', COALESCE(t.middle_name, '')) as teacher_name
-            FROM teacher_constraints tc
-            JOIN teachers t ON tc.teacher_id = t.id
-            ORDER BY t.last_name, tc.constraint_type
-        `);
-        res.json(result.rows);
-    } catch (err) {
-        console.error('GET /teacher-constraints error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.post('/teacher-constraints', async (req, res) => {
-    const { teacher_id, constraint_type, constraint_data } = req.body;
-    if (!teacher_id || !constraint_type || !constraint_data) {
-        return res.status(400).json({ message: 'Все поля обязательны' });
-    }
-    try {
-        const result = await db.query(`
-            INSERT INTO teacher_constraints (teacher_id, constraint_type, constraint_data)
-            VALUES ($1, $2, $3) RETURNING *
-        `, [teacher_id, constraint_type, constraint_data]);
-        res.status(201).json(result.rows[0]);
-    } catch (err) {
-        console.error('POST /teacher-constraints error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.put('/teacher-constraints/:id', async (req, res) => {
-    const { id } = req.params;
-    const { constraint_type, constraint_data } = req.body;
-    try {
-        await db.query(`
-            UPDATE teacher_constraints
-            SET constraint_type = $1, constraint_data = $2, updated_at = NOW()
-            WHERE id = $3
-        `, [constraint_type, constraint_data, id]);
-        res.json({ message: 'Обновлено' });
-    } catch (err) {
-        console.error('PUT /teacher-constraints error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.delete('/teacher-constraints/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        await db.query('DELETE FROM teacher_constraints WHERE id = $1', [id]);
-        res.json({ message: 'Удалено' });
-    } catch (err) {
-        console.error('DELETE /teacher-constraints error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.get('/lesson-pairing-rules', async (req, res) => {
-    try {
-        const result = await db.query(`
-            SELECT 
-                lpr.id,
-                lpr.class_id,
-                lpr.teacher_id,
-                lpr.subject_id_1,
-                lpr.subject_id_2,
-                lpr.mandatory,
-                lpr.day_of_week,
-                lpr.lesson_slot1,
-                lpr.lesson_slot2,
-                CONCAT(c.number, c.letter) as class_name,
-                CONCAT(t.last_name, ' ', t.first_name, ' ', COALESCE(t.middle_name, '')) as teacher_name,
-                sub1.name as subject_name_1,
-                sub2.name as subject_name_2
-            FROM lesson_pairing_rules lpr
-            JOIN classes c ON lpr.class_id = c.id
-            LEFT JOIN teachers t ON lpr.teacher_id = t.id
-            JOIN lessons sub1 ON lpr.subject_id_1 = sub1.id
-            JOIN lessons sub2 ON lpr.subject_id_2 = sub2.id
-        `);
-        res.json(result.rows);
-    } catch (err) {
-        console.error('GET /lesson-pairing-rules error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.post('/lesson-pairing-rules', async (req, res) => {
-    const { class_id, teacher_id, subject_id_1, subject_id_2, mandatory, day_of_week, lesson_slot1, lesson_slot2 } = req.body;
-    if (!class_id || !teacher_id || !subject_id_1 || !subject_id_2) {
-        return res.status(400).json({ message: 'Класс, учитель и два предмета обязательны' });
-    }
-    try {
-        const result = await db.query(`
-            INSERT INTO lesson_pairing_rules (class_id, teacher_id, subject_id_1, subject_id_2, mandatory, day_of_week, lesson_slot1, lesson_slot2)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *
-        `, [class_id, teacher_id, subject_id_1, subject_id_2, mandatory || false, day_of_week || null, lesson_slot1 || null, lesson_slot2 || null]);
-        res.status(201).json(result.rows[0]);
-    } catch (err) {
-        console.error('POST /lesson-pairing-rules error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.put('/lesson-pairing-rules/:id', async (req, res) => {
-    const { id } = req.params;
-    const { teacher_id, mandatory, day_of_week, lesson_slot1, lesson_slot2 } = req.body;
-    try {
-        await db.query(`
-            UPDATE lesson_pairing_rules
-            SET teacher_id = $1, mandatory = $2, day_of_week = $3, lesson_slot1 = $4, lesson_slot2 = $5
-            WHERE id = $6
-        `, [teacher_id, mandatory, day_of_week, lesson_slot1, lesson_slot2, id]);
-        res.json({ message: 'Обновлено' });
-    } catch (err) {
-        console.error('PUT /lesson-pairing-rules error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-router.delete('/lesson-pairing-rules/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        await db.query('DELETE FROM lesson_pairing_rules WHERE id = $1', [id]);
-        res.json({ message: 'Удалено' });
-    } catch (err) {
-        console.error('DELETE /lesson-pairing-rules error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// ============= НОВЫЕ МАРШРУТЫ: GROUP DIVISION LINKS =============
-
-router.get('/group-division-links', async (req, res) => {
-    try {
-        const result = await db.query(`
-            SELECT gdl.*, CONCAT(c.number, c.letter) as class_name
-            FROM group_division_links gdl
-            JOIN classes c ON gdl.class_id = c.id
-        `);
-        res.json(result.rows);
-    } catch (err) {
-        console.error('GET /group-division-links error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.post('/group-division-links', async (req, res) => {
-    const { class_id, teacher_pair, room_ids, day_of_week, start_slot } = req.body;
-    if (!class_id || !teacher_pair || !room_ids || !day_of_week || start_slot === undefined) {
-        return res.status(400).json({ message: 'Все поля обязательны' });
-    }
-    try {
-        const result = await db.query(`
-            INSERT INTO group_division_links (class_id, teacher_pair, room_ids, day_of_week, start_slot)
-            VALUES ($1, $2, $3, $4, $5) RETURNING *
-        `, [class_id, teacher_pair, room_ids, day_of_week, start_slot]);
-        res.status(201).json(result.rows[0]);
-    } catch (err) {
-        console.error('POST /group-division-links error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.put('/group-division-links/:id', async (req, res) => {
-    const { id } = req.params;
-    const { teacher_pair, room_ids, day_of_week, start_slot } = req.body;
-    try {
-        await db.query(`
-            UPDATE group_division_links
-            SET teacher_pair = $1, room_ids = $2, day_of_week = $3, start_slot = $4
-            WHERE id = $5
-        `, [teacher_pair, room_ids, day_of_week, start_slot, id]);
-        res.json({ message: 'Обновлено' });
-    } catch (err) {
-        console.error('PUT /group-division-links error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.delete('/group-division-links/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        await db.query('DELETE FROM group_division_links WHERE id = $1', [id]);
-        res.json({ message: 'Удалено' });
-    } catch (err) {
-        console.error('DELETE /group-division-links error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// ============= НОВЫЕ МАРШРУТЫ: CLASS PARALLEL SYNC =============
-
-router.get('/class-parallel-sync', async (req, res) => {
-    try {
-        const result = await db.query(`
-            SELECT cps.*, l.name as subject_name
-            FROM class_parallel_sync cps
-            JOIN lessons l ON cps.subject_id = l.id
-            ORDER BY cps.grade, l.name
-        `);
-        res.json(result.rows);
-    } catch (err) {
-        console.error('GET /class-parallel-sync error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.post('/class-parallel-sync', async (req, res) => {
-    const { grade, subject_id, same_day_required } = req.body;
-    if (!grade || !subject_id) return res.status(400).json({ message: 'Класс и предмет обязательны' });
-    try {
-        const result = await db.query(`
-            INSERT INTO class_parallel_sync (grade, subject_id, same_day_required)
-            VALUES ($1, $2, $3) RETURNING *
-        `, [grade, subject_id, same_day_required === undefined ? true : same_day_required]);
-        res.status(201).json(result.rows[0]);
-    } catch (err) {
-        console.error('POST /class-parallel-sync error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.put('/class-parallel-sync/:id', async (req, res) => {
-    const { id } = req.params;
-    const { same_day_required } = req.body;
-    try {
-        await db.query(`
-            UPDATE class_parallel_sync
-            SET same_day_required = $1
-            WHERE id = $2
-        `, [same_day_required, id]);
-        res.json({ message: 'Обновлено' });
-    } catch (err) {
-        console.error('PUT /class-parallel-sync error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.delete('/class-parallel-sync/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        await db.query('DELETE FROM class_parallel_sync WHERE id = $1', [id]);
-        res.json({ message: 'Удалено' });
-    } catch (err) {
-        console.error('DELETE /class-parallel-sync error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// ============= НОВЫЕ МАРШРУТЫ: FORBIDDEN SEQUENCES =============
-
-router.get('/forbidden-sequences', async (req, res) => {
-    try {
-        const result = await db.query('SELECT * FROM forbidden_sequences ORDER BY id');
-        res.json(result.rows);
-    } catch (err) {
-        console.error('GET /forbidden-sequences error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.post('/forbidden-sequences', async (req, res) => {
-    const { sequence_type, param1, param2, severity } = req.body;
-    if (!sequence_type) return res.status(400).json({ message: 'Тип последовательности обязателен' });
-    try {
-        const result = await db.query(`
-            INSERT INTO forbidden_sequences (sequence_type, param1, param2, severity)
-            VALUES ($1, $2, $3, $4) RETURNING *
-        `, [sequence_type, param1 || null, param2 || null, severity || 'error']);
-        res.status(201).json(result.rows[0]);
-    } catch (err) {
-        console.error('POST /forbidden-sequences error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.put('/forbidden-sequences/:id', async (req, res) => {
-    const { id } = req.params;
-    const { sequence_type, param1, param2, severity } = req.body;
-    try {
-        await db.query(`
-            UPDATE forbidden_sequences
-            SET sequence_type = $1, param1 = $2, param2 = $3, severity = $4
-            WHERE id = $5
-        `, [sequence_type, param1, param2, severity, id]);
-        res.json({ message: 'Обновлено' });
-    } catch (err) {
-        console.error('PUT /forbidden-sequences error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.delete('/forbidden-sequences/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        await db.query('DELETE FROM forbidden_sequences WHERE id = $1', [id]);
-        res.json({ message: 'Удалено' });
-    } catch (err) {
-        console.error('DELETE /forbidden-sequences error:', err);
-        res.status(500).json({ message: err.message });
-    }
-});
-
 // ============= НАЗНАЧЕНИЯ КЛАССОВ ДЛЯ УЧИТЕЛЕЙ =============
 
 router.get('/teachers/:teacherId/class-assignments', async (req, res) => {
@@ -2020,5 +1876,536 @@ router.post('/generate-schedule', async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 });
+// ============= ДНЕВНЫЕ ЛИМИТЫ НАГРУЗКИ =============
 
+router.get('/daily-load-limits', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT id, grade, day_name, min_weight, max_weight, max_lessons, created_at
+            FROM daily_load_limits
+            ORDER BY grade, 
+                CASE day_name
+                    WHEN 'monday' THEN 1
+                    WHEN 'tuesday' THEN 2
+                    WHEN 'wednesday' THEN 3
+                    WHEN 'thursday' THEN 4
+                    WHEN 'friday' THEN 5
+                    WHEN 'saturday' THEN 6
+                    WHEN 'sunday' THEN 7
+                    ELSE 8
+                END
+        `);
+        res.json(result.rows || []);
+    } catch (err) {
+        console.error('GET /daily-load-limits error:', err);
+        res.json([]);
+    }
+});
+// Добавить дневной лимит
+router.post('/daily-load-limits', async (req, res) => {
+    const { grade, day_name, min_weight, max_weight, max_lessons } = req.body;
+    
+    if (!grade || !day_name) {
+        return res.status(400).json({ message: 'Класс и день недели обязательны' });
+    }
+    
+    try {
+        const existing = await db.query(
+            'SELECT id FROM daily_load_limits WHERE grade = $1 AND day_name = $2',
+            [grade, day_name]
+        );
+        
+        if (existing.rows.length > 0) {
+            return res.status(400).json({ message: 'Лимит для этого класса и дня уже существует' });
+        }
+        
+        const result = await db.query(`
+            INSERT INTO daily_load_limits (grade, day_name, min_weight, max_weight, max_lessons)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id, grade, day_name, min_weight, max_weight, max_lessons
+        `, [grade, day_name, min_weight || 0, max_weight || 0, max_lessons || null]);
+        
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error('POST /daily-load-limits error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Обновить дневной лимит
+router.put('/daily-load-limits/:id', async (req, res) => {
+    const { id } = req.params;
+    const { grade, day_name, min_weight, max_weight, max_lessons } = req.body;
+    
+    try {
+        const existing = await db.query('SELECT id FROM daily_load_limits WHERE id = $1', [id]);
+        if (existing.rows.length === 0) {
+            return res.status(404).json({ message: 'Лимит не найден' });
+        }
+        
+        await db.query(`
+            UPDATE daily_load_limits 
+            SET grade = $1, day_name = $2, min_weight = $3, max_weight = $4, max_lessons = $5, updated_at = NOW()
+            WHERE id = $6
+        `, [grade, day_name, min_weight || 0, max_weight || 0, max_lessons || null, id]);
+        
+        res.json({ message: 'Лимит обновлен' });
+    } catch (err) {
+        console.error('PUT /daily-load-limits error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Удалить дневной лимит
+router.delete('/daily-load-limits/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await db.query('DELETE FROM daily_load_limits WHERE id = $1 RETURNING id', [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Лимит не найден' });
+        }
+        res.json({ message: 'Лимит удален' });
+    } catch (err) {
+        console.error('DELETE /daily-load-limits error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// ============= НЕДЕЛЬНЫЕ ЛИМИТЫ НАГРУЗКИ =============
+
+// Временно замените SELECT на этот (без updated_at):
+router.get('/weekly-load-limits', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT id, grade, week_weight, month_weight, created_at
+            FROM weekly_load_limits
+            ORDER BY grade
+        `);
+        res.json(result.rows || []);
+    } catch (err) {
+        console.error('GET /weekly-load-limits error:', err);
+        res.json([]);
+    }
+});
+
+// Добавить недельный лимит
+router.post('/weekly-load-limits', async (req, res) => {
+    const { grade, week_weight, month_weight } = req.body;
+    
+    if (!grade) {
+        return res.status(400).json({ message: 'Класс обязателен' });
+    }
+    
+    try {
+        const existing = await db.query(
+            'SELECT id FROM weekly_load_limits WHERE grade = $1',
+            [grade]
+        );
+        
+        if (existing.rows.length > 0) {
+            return res.status(400).json({ message: 'Лимит для этого класса уже существует' });
+        }
+        
+        const result = await db.query(`
+            INSERT INTO weekly_load_limits (grade, week_weight, month_weight)
+            VALUES ($1, $2, $3)
+            RETURNING id, grade, week_weight, month_weight
+        `, [grade, week_weight || 0, month_weight || 0]);
+        
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error('POST /weekly-load-limits error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Обновить недельный лимит
+router.put('/weekly-load-limits/:id', async (req, res) => {
+    const { id } = req.params;
+    const { grade, week_weight, month_weight } = req.body;
+    
+    try {
+        const existing = await db.query('SELECT id FROM weekly_load_limits WHERE id = $1', [id]);
+        if (existing.rows.length === 0) {
+            return res.status(404).json({ message: 'Лимит не найден' });
+        }
+        
+        await db.query(`
+            UPDATE weekly_load_limits 
+            SET grade = $1, week_weight = $2, month_weight = $3, updated_at = NOW()
+            WHERE id = $4
+        `, [grade, week_weight || 0, month_weight || 0, id]);
+        
+        res.json({ message: 'Лимит обновлен' });
+    } catch (err) {
+        console.error('PUT /weekly-load-limits error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Удалить недельный лимит
+router.delete('/weekly-load-limits/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await db.query('DELETE FROM weekly_load_limits WHERE id = $1 RETURNING id', [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Лимит не найден' });
+        }
+        res.json({ message: 'Лимит удален' });
+    } catch (err) {
+        console.error('DELETE /weekly-load-limits error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+// ============= ПРАВИЛА СПАРИВАНИЯ УРОКОВ =============
+
+// Получить все правила спаривания
+router.get('/lesson-pairing-rules', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                lpr.id,
+                lpr.class_id,
+                c.number || c.letter as class_name,
+                lpr.teacher_id,
+                CONCAT(t.last_name, ' ', t.first_name) as teacher_name,
+                lpr.subject_id_1,
+                ls1.name as subject_name_1,
+                lpr.subject_id_2,
+                ls2.name as subject_name_2,
+                lpr.mandatory,
+                lpr.day_of_week,
+                lpr.lesson_slot1,
+                lpr.lesson_slot2,
+                lpr.created_at
+            FROM lesson_pairing_rules lpr
+            LEFT JOIN classes c ON lpr.class_id = c.id
+            LEFT JOIN teachers t ON lpr.teacher_id = t.id
+            LEFT JOIN lessons ls1 ON lpr.subject_id_1 = ls1.id
+            LEFT JOIN lessons ls2 ON lpr.subject_id_2 = ls2.id
+            ORDER BY lpr.created_at DESC
+        `);
+        res.json(result.rows || []);
+    } catch (err) {
+        console.error('GET /lesson-pairing-rules error:', err);
+        res.json([]);
+    }
+});
+
+// Создать правило спаривания
+router.post('/lesson-pairing-rules', async (req, res) => {
+    const { class_id, teacher_id, subject_id_1, subject_id_2, mandatory, day_of_week, lesson_slot1, lesson_slot2 } = req.body;
+    
+    if (!class_id || !teacher_id || !subject_id_1 || !subject_id_2) {
+        return res.status(400).json({ message: 'Класс, учитель и оба предмета обязательны' });
+    }
+    
+    try {
+        const result = await db.query(`
+            INSERT INTO lesson_pairing_rules (class_id, teacher_id, subject_id_1, subject_id_2, mandatory, day_of_week, lesson_slot1, lesson_slot2)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING id
+        `, [class_id, teacher_id, subject_id_1, subject_id_2, mandatory || false, day_of_week || null, lesson_slot1 || null, lesson_slot2 || null]);
+        
+        res.status(201).json({ message: 'Правило спаривания создано', id: result.rows[0].id });
+    } catch (err) {
+        console.error('POST /lesson-pairing-rules error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Обновить правило спаривания
+router.put('/lesson-pairing-rules/:id', async (req, res) => {
+    const { id } = req.params;
+    const { class_id, teacher_id, subject_id_1, subject_id_2, mandatory, day_of_week, lesson_slot1, lesson_slot2 } = req.body;
+    
+    try {
+        const existing = await db.query('SELECT id FROM lesson_pairing_rules WHERE id = $1', [id]);
+        if (existing.rows.length === 0) {
+            return res.status(404).json({ message: 'Правило не найдено' });
+        }
+        
+        await db.query(`
+            UPDATE lesson_pairing_rules 
+            SET class_id = $1, teacher_id = $2, subject_id_1 = $3, subject_id_2 = $4, 
+                mandatory = $5, day_of_week = $6, lesson_slot1 = $7, lesson_slot2 = $8,
+                updated_at = NOW()
+            WHERE id = $9
+        `, [class_id, teacher_id, subject_id_1, subject_id_2, mandatory, day_of_week, lesson_slot1, lesson_slot2, id]);
+        
+        res.json({ message: 'Правило обновлено' });
+    } catch (err) {
+        console.error('PUT /lesson-pairing-rules error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Удалить правило спаривания
+router.delete('/lesson-pairing-rules/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await db.query('DELETE FROM lesson_pairing_rules WHERE id = $1 RETURNING id', [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Правило не найдено' });
+        }
+        res.json({ message: 'Правило удалено' });
+    } catch (err) {
+        console.error('DELETE /lesson-pairing-rules error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// ============= ГРУППОВЫЕ ЗАНЯТИЯ =============
+
+// Получить все групповые связи
+router.get('/group-division-links', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                gdl.id,
+                gdl.class_id,
+                c.number || c.letter as class_name,
+                gdl.teacher_pair,
+                gdl.room_ids,
+                gdl.day_of_week,
+                gdl.start_slot,
+                gdl.created_at
+            FROM group_division_links gdl
+            LEFT JOIN classes c ON gdl.class_id = c.id
+            ORDER BY gdl.created_at DESC
+        `);
+        
+        // Парсим JSON поля
+        const parsed = result.rows.map(row => ({
+            ...row,
+            teacher_pair: Array.isArray(row.teacher_pair) ? row.teacher_pair : (row.teacher_pair ? JSON.parse(row.teacher_pair) : []),
+            room_ids: Array.isArray(row.room_ids) ? row.room_ids : (row.room_ids ? JSON.parse(row.room_ids) : [])
+        }));
+        
+        res.json(parsed);
+    } catch (err) {
+        console.error('GET /group-division-links error:', err);
+        res.json([]);
+    }
+});
+
+// Создать групповую связь
+router.post('/group-division-links', async (req, res) => {
+    const { class_id, teacher_pair, room_ids, day_of_week, start_slot } = req.body;
+    
+    if (!class_id || !teacher_pair || !room_ids || !day_of_week || !start_slot) {
+        return res.status(400).json({ message: 'Все поля обязательны' });
+    }
+    
+    try {
+        const teacherPairJson = JSON.stringify(teacher_pair);
+        const roomIdsJson = JSON.stringify(room_ids);
+        
+        const result = await db.query(`
+            INSERT INTO group_division_links (class_id, teacher_pair, room_ids, day_of_week, start_slot)
+            VALUES ($1, $2::jsonb, $3::jsonb, $4, $5)
+            RETURNING id
+        `, [class_id, teacherPairJson, roomIdsJson, day_of_week, start_slot]);
+        
+        res.status(201).json({ message: 'Групповая связь создана', id: result.rows[0].id });
+    } catch (err) {
+        console.error('POST /group-division-links error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Обновить групповую связь
+router.put('/group-division-links/:id', async (req, res) => {
+    const { id } = req.params;
+    const { class_id, teacher_pair, room_ids, day_of_week, start_slot } = req.body;
+    
+    try {
+        const existing = await db.query('SELECT id FROM group_division_links WHERE id = $1', [id]);
+        if (existing.rows.length === 0) {
+            return res.status(404).json({ message: 'Связь не найдена' });
+        }
+        
+        const teacherPairJson = JSON.stringify(teacher_pair);
+        const roomIdsJson = JSON.stringify(room_ids);
+        
+        await db.query(`
+            UPDATE group_division_links 
+            SET class_id = $1, teacher_pair = $2::jsonb, room_ids = $3::jsonb, 
+                day_of_week = $4, start_slot = $5, updated_at = NOW()
+            WHERE id = $6
+        `, [class_id, teacherPairJson, roomIdsJson, day_of_week, start_slot, id]);
+        
+        res.json({ message: 'Групповая связь обновлена' });
+    } catch (err) {
+        console.error('PUT /group-division-links error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Удалить групповую связь
+router.delete('/group-division-links/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await db.query('DELETE FROM group_division_links WHERE id = $1 RETURNING id', [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Связь не найдена' });
+        }
+        res.json({ message: 'Групповая связь удалена' });
+    } catch (err) {
+        console.error('DELETE /group-division-links error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// ============= СИНХРОНИЗАЦИЯ ПАРАЛЛЕЛЕЙ =============
+
+// Получить все синхронизации
+router.get('/class-parallel-sync', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                cps.id,
+                cps.grade,
+                cps.subject_id,
+                l.name as subject_name,
+                cps.same_day_required,
+                cps.created_at
+            FROM class_parallel_sync cps
+            LEFT JOIN lessons l ON cps.subject_id = l.id
+            ORDER BY cps.grade, l.name
+        `);
+        res.json(result.rows || []);
+    } catch (err) {
+        console.error('GET /class-parallel-sync error:', err);
+        res.json([]);
+    }
+});
+
+// Создать синхронизацию
+router.post('/class-parallel-sync', async (req, res) => {
+    const { grade, subject_id, same_day_required } = req.body;
+    
+    if (!grade || !subject_id) {
+        return res.status(400).json({ message: 'Класс и предмет обязательны' });
+    }
+    
+    try {
+        const existing = await db.query(
+            'SELECT id FROM class_parallel_sync WHERE grade = $1 AND subject_id = $2',
+            [grade, subject_id]
+        );
+        
+        if (existing.rows.length > 0) {
+            return res.status(400).json({ message: 'Синхронизация для этого класса и предмета уже существует' });
+        }
+        
+        const result = await db.query(`
+            INSERT INTO class_parallel_sync (grade, subject_id, same_day_required)
+            VALUES ($1, $2, $3)
+            RETURNING id
+        `, [grade, subject_id, same_day_required !== false]);
+        
+        res.status(201).json({ message: 'Синхронизация создана', id: result.rows[0].id });
+    } catch (err) {
+        console.error('POST /class-parallel-sync error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Удалить синхронизацию
+router.delete('/class-parallel-sync/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await db.query('DELETE FROM class_parallel_sync WHERE id = $1 RETURNING id', [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Синхронизация не найдена' });
+        }
+        res.json({ message: 'Синхронизация удалена' });
+    } catch (err) {
+        console.error('DELETE /class-parallel-sync error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// ============= ЗАПРЕЩЁННЫЕ ПОСЛЕДОВАТЕЛЬНОСТИ =============
+
+// Получить все запрещённые последовательности
+router.get('/forbidden-sequences', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT id, sequence_type, param1, param2, severity, created_at
+            FROM forbidden_sequences
+            ORDER BY created_at DESC
+        `);
+        res.json(result.rows || []);
+    } catch (err) {
+        console.error('GET /forbidden-sequences error:', err);
+        res.json([]);
+    }
+});
+
+// Создать запрещённую последовательность
+router.post('/forbidden-sequences', async (req, res) => {
+    const { sequence_type, param1, param2, severity } = req.body;
+    
+    if (!sequence_type) {
+        return res.status(400).json({ message: 'Тип последовательности обязателен' });
+    }
+    
+    if (!param2 || param2 < 1) {
+        return res.status(400).json({ message: 'Количество обязательное поле' });
+    }
+    
+    try {
+        const result = await db.query(`
+            INSERT INTO forbidden_sequences (sequence_type, param1, param2, severity)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id
+        `, [sequence_type, param1 || null, param2, severity || 'error']);
+        
+        res.status(201).json({ message: 'Правило создано', id: result.rows[0].id });
+    } catch (err) {
+        console.error('POST /forbidden-sequences error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Обновить запрещённую последовательность
+router.put('/forbidden-sequences/:id', async (req, res) => {
+    const { id } = req.params;
+    const { sequence_type, param1, param2, severity } = req.body;
+    
+    try {
+        const existing = await db.query('SELECT id FROM forbidden_sequences WHERE id = $1', [id]);
+        if (existing.rows.length === 0) {
+            return res.status(404).json({ message: 'Правило не найдено' });
+        }
+        
+        await db.query(`
+            UPDATE forbidden_sequences 
+            SET sequence_type = $1, param1 = $2, param2 = $3, severity = $4, updated_at = NOW()
+            WHERE id = $5
+        `, [sequence_type, param1 || null, param2, severity || 'error', id]);
+        
+        res.json({ message: 'Правило обновлено' });
+    } catch (err) {
+        console.error('PUT /forbidden-sequences error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Удалить запрещённую последовательность
+router.delete('/forbidden-sequences/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await db.query('DELETE FROM forbidden_sequences WHERE id = $1 RETURNING id', [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Правило не найдено' });
+        }
+        res.json({ message: 'Правило удалено' });
+    } catch (err) {
+        console.error('DELETE /forbidden-sequences error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
 module.exports = router;

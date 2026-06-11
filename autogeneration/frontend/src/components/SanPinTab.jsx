@@ -3,20 +3,23 @@ import React, { useState, useEffect } from 'react';
 import { 
     FaBook, FaCalendarWeek, FaBalanceScale, FaSave, FaExclamationTriangle, 
     FaInfoCircle, FaEdit, FaTrash, FaPlus, FaCheck, FaTimes, FaSpinner,
-    FaChartLine, FaLink, FaUsers, FaSync, FaBan, FaCalculator
+    FaChartLine, FaLink, FaUsers, FaSync, FaBan, FaCalculator, FaClock,
+    FaUniversity, FaBrain, FaHeartbeat, FaFlask, FaLanguage, FaMusic,
+    FaPalette, FaDatabase, FaChartBar
 } from 'react-icons/fa';
 import axios from 'axios';
 import PairingRulesTab from '../sanpin/PairingRulesTab';
 import GroupDivisionTab from '../sanpin/GroupDivisionTab';
 import ParallelSyncTab from '../sanpin/ParallelSyncTab';
 import ForbiddenSequencesTab from '../sanpin/ForbiddenSequencesTab';
-
+import '../styles/SanPinTab.css';
+import '../styles/SuperAdmin.css';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const SUBJECT_TYPES = [
-    { value: 'exact', label: 'Точные науки', color: '#3b82f6' },
-    { value: 'humanities', label: 'Гуманитарные', color: '#10b981' },
-    { value: 'neutral', label: 'Нейтральные', color: '#f59e0b' }
+    { value: 'exact', label: 'Точные науки', color: '#3b82f6', icon: FaFlask },
+    { value: 'humanities', label: 'Гуманитарные', color: '#10b981', icon: FaLanguage },
+    { value: 'neutral', label: 'Нейтральные', color: '#f59e0b', icon: FaBalanceScale }
 ];
 
 const DIFFICULTY_RANKS = [
@@ -34,6 +37,31 @@ const DIFFICULTY_RANKS = [
 
 const DAYS_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
+// Иконки для вкладок
+const TAB_ICONS = {
+    difficulty: FaBalanceScale,
+    hours: FaClock,
+    dailyLimits: FaChartBar,
+    weeklyLimits: FaCalendarWeek,
+    summary: FaChartLine,
+    pairing: FaLink,
+    group: FaUsers,
+    parallel: FaSync,
+    forbidden: FaBan
+};
+
+const TAB_LABELS = {
+    difficulty: 'Ранги сложности',
+    hours: 'Нагрузка по часам',
+    dailyLimits: 'Дневные лимиты',
+    weeklyLimits: 'Недельные лимиты',
+    summary: 'Сводка нагрузки',
+    pairing: 'Спаривание уроков',
+    group: 'Групповые занятия',
+    parallel: 'Синхронизация',
+    forbidden: 'Запрещённые последовательности'
+};
+
 const SanPinTab = ({ token }) => {
     const [classes, setClasses] = useState([]);
     const [subjects, setSubjects] = useState([]);
@@ -44,20 +72,22 @@ const SanPinTab = ({ token }) => {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState('difficulty');
-    const [notification, setNotification] = useState('');
+    const [notification, setNotification] = useState({ message: '', type: '' });
     const [editingDifficulty, setEditingDifficulty] = useState(null);
     const [editingHours, setEditingHours] = useState(null);
     const [editingDailyLimit, setEditingDailyLimit] = useState(null);
     const [editingWeeklyLimit, setEditingWeeklyLimit] = useState(null);
     const [selectedGrade, setSelectedGrade] = useState(null);
+    const [addModalOpen, setAddModalOpen] = useState(false);
+    const [addFormData, setAddFormData] = useState({ grade: '', subject_id: '', difficulty_rank: 5, subject_type: 'neutral' });
 
     useEffect(() => {
         loadAllData();
     }, []);
 
-    const showNotification = (message, isError = false) => {
-        setNotification(message);
-        setTimeout(() => setNotification(''), 3000);
+    const showNotification = (message, type = 'success') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification({ message: '', type: '' }), 3000);
     };
 
     const loadAllData = async () => {
@@ -82,26 +112,23 @@ const SanPinTab = ({ token }) => {
             setWeeklyLimits(weeklyLimitsRes.data || []);
         } catch (error) {
             console.error('Error loading data:', error);
-            showNotification('Ошибка загрузки данных', true);
+            showNotification('Ошибка загрузки данных', 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    // ============= РАСЧЕТ НЕДЕЛЬНЫХ ЛИМИТОВ ИЗ ДНЕВНЫХ =============
     const calculateWeeklyFromDaily = () => {
         const grades = [...new Set(dailyLimits.map(d => d.grade))];
         const calculated = [];
         
         for (const grade of grades) {
             const gradeLimits = dailyLimits.filter(d => d.grade === grade && DAYS_ORDER.includes(d.day_name));
-            let totalMin = 0;
             let totalMax = 0;
             
             for (const day of DAYS_ORDER) {
                 const limit = gradeLimits.find(d => d.day_name === day);
                 if (limit) {
-                    totalMin += limit.min_weight;
                     totalMax += limit.max_weight;
                 }
             }
@@ -117,10 +144,8 @@ const SanPinTab = ({ token }) => {
         return calculated;
     };
 
-    // ============= АВТОМАТИЧЕСКОЕ СОХРАНЕНИЕ НЕДЕЛЬНЫХ ЛИМИТОВ =============
     const autoSaveWeeklyLimits = async () => {
         const calculated = calculateWeeklyFromDaily();
-        
         if (calculated.length === 0) return;
         
         setSaving(true);
@@ -149,13 +174,12 @@ const SanPinTab = ({ token }) => {
             showNotification('Недельные лимиты автоматически пересчитаны из дневных');
         } catch (error) {
             console.error('Error auto-saving weekly limits:', error);
-            showNotification('Ошибка автоматического расчета', true);
+            showNotification('Ошибка автоматического расчета', 'error');
         } finally {
             setSaving(false);
         }
     };
 
-    // ============= ОБРАБОТЧИКИ =============
     const handleSaveDifficulty = async (data) => {
         setSaving(true);
         try {
@@ -173,9 +197,11 @@ const SanPinTab = ({ token }) => {
             await loadAllData();
             setEditingDifficulty(null);
             setSelectedGrade(null);
+            setAddModalOpen(false);
+            setAddFormData({ grade: '', subject_id: '', difficulty_rank: 5, subject_type: 'neutral' });
         } catch (error) {
             console.error('Error saving difficulty:', error);
-            showNotification('Ошибка сохранения', true);
+            showNotification('Ошибка сохранения', 'error');
         } finally {
             setSaving(false);
         }
@@ -192,7 +218,7 @@ const SanPinTab = ({ token }) => {
             await loadAllData();
         } catch (error) {
             console.error('Error deleting difficulty:', error);
-            showNotification('Ошибка удаления', true);
+            showNotification('Ошибка удаления', 'error');
         } finally {
             setSaving(false);
         }
@@ -217,7 +243,7 @@ const SanPinTab = ({ token }) => {
             setSelectedGrade(null);
         } catch (error) {
             console.error('Error saving hours:', error);
-            showNotification('Ошибка сохранения', true);
+            showNotification('Ошибка сохранения', 'error');
         } finally {
             setSaving(false);
         }
@@ -234,7 +260,7 @@ const SanPinTab = ({ token }) => {
             await loadAllData();
         } catch (error) {
             console.error('Error deleting hours:', error);
-            showNotification('Ошибка удаления', true);
+            showNotification('Ошибка удаления', 'error');
         } finally {
             setSaving(false);
         }
@@ -256,11 +282,10 @@ const SanPinTab = ({ token }) => {
             }
             await loadAllData();
             setEditingDailyLimit(null);
-            // Автоматически пересчитываем недельные лимиты
             await autoSaveWeeklyLimits();
         } catch (error) {
             console.error('Error saving daily limit:', error);
-            showNotification('Ошибка сохранения', true);
+            showNotification('Ошибка сохранения', 'error');
         } finally {
             setSaving(false);
         }
@@ -275,11 +300,10 @@ const SanPinTab = ({ token }) => {
             });
             showNotification('Запись удалена');
             await loadAllData();
-            // Автоматически пересчитываем недельные лимиты
             await autoSaveWeeklyLimits();
         } catch (error) {
             console.error('Error deleting daily limit:', error);
-            showNotification('Ошибка удаления', true);
+            showNotification('Ошибка удаления', 'error');
         } finally {
             setSaving(false);
         }
@@ -303,7 +327,7 @@ const SanPinTab = ({ token }) => {
             setEditingWeeklyLimit(null);
         } catch (error) {
             console.error('Error saving weekly limit:', error);
-            showNotification('Ошибка сохранения', true);
+            showNotification('Ошибка сохранения', 'error');
         } finally {
             setSaving(false);
         }
@@ -320,7 +344,7 @@ const SanPinTab = ({ token }) => {
             await loadAllData();
         } catch (error) {
             console.error('Error deleting weekly limit:', error);
-            showNotification('Ошибка удаления', true);
+            showNotification('Ошибка удаления', 'error');
         } finally {
             setSaving(false);
         }
@@ -335,32 +359,30 @@ const SanPinTab = ({ token }) => {
         return subjectDifficulty.find(d => d.grade === grade && d.subject_id === subjectId);
     };
 
-const calculateWeeklyLoad = (grade) => {
-    const gradeHours = subjectHours.filter(h => h.grade === grade);
-    let totalHours = 0;
-    let totalPoints = 0;
+    const calculateWeeklyLoad = (grade) => {
+        const gradeHours = subjectHours.filter(h => h.grade === grade);
+        let totalHours = 0;
+        let totalPoints = 0;
 
-    gradeHours.forEach(hour => {
-        const hoursPerWeek = parseFloat(hour.hours_per_week) || 0;
-        const difficulty = getDifficultyForSubject(grade, hour.subject_id);
-        const rank = difficulty?.difficulty_rank || 3;
-        const points = hoursPerWeek * rank;
-        
-        totalHours += hoursPerWeek;
-        totalPoints += points;
-    });
+        gradeHours.forEach(hour => {
+            const hoursPerWeek = parseFloat(hour.hours_per_week) || 0;
+            const difficulty = getDifficultyForSubject(grade, hour.subject_id);
+            const rank = difficulty?.difficulty_rank || 3;
+            const points = hoursPerWeek * rank;
+            
+            totalHours += hoursPerWeek;
+            totalPoints += points;
+        });
 
-    // Округляем до 1 десятичного знака
-    totalHours = Math.round(totalHours * 10) / 10;
-    totalPoints = Math.round(totalPoints);
+        totalHours = Math.round(totalHours * 10) / 10;
+        totalPoints = Math.round(totalPoints);
 
-    return { totalHours, totalPoints };
-};
+        return { totalHours, totalPoints };
+    };
 
     const uniqueGrades = getUniqueGrades();
     const validSubjects = subjects.filter(s => s && s.name);
 
-    // ============= ПОЛУЧЕНИЕ РАССЧИТАННЫХ НЕДЕЛЬНЫХ ЛИМИТОВ =============
     const getWeeklyLimitsDisplay = () => {
         const calculated = calculateWeeklyFromDaily();
         const result = [];
@@ -380,86 +402,346 @@ const calculateWeeklyLoad = (grade) => {
         return result;
     };
 
-    // ============= ФОРМЫ =============
-    const DifficultyForm = () => {
-        const [formData, setFormData] = useState({ grade: '', subject_id: '', difficulty_rank: 5, subject_type: 'neutral' });
+    // Компонент вкладок
+    const TabButton = ({ id, icon: Icon, label }) => (
+        <button
+            className={`sanpin-tab ${activeTab === id ? 'active' : ''}`}
+            onClick={() => setActiveTab(id)}
+        >
+            <Icon size={16} />
+            <span>{label}</span>
+        </button>
+    );
 
-        React.useEffect(() => {
-            if (editingDifficulty) {
-                setFormData({
-                    grade: editingDifficulty.grade,
-                    subject_id: editingDifficulty.subject_id,
-                    difficulty_rank: editingDifficulty.difficulty_rank,
-                    subject_type: editingDifficulty.subject_type || 'neutral'
-                });
-            } else if (selectedGrade) {
-                setFormData(prev => ({ ...prev, grade: selectedGrade }));
-            } else if (uniqueGrades[0]) {
-                setFormData(prev => ({ ...prev, grade: uniqueGrades[0] }));
-            }
-        }, [editingDifficulty, selectedGrade]);
+    // Модальное окно добавления
+    const AddDifficultyModal = () => {
+        if (!addModalOpen) return null;
 
         const handleSubmit = (e) => {
             e.preventDefault();
-            if (!formData.grade || !formData.subject_id) {
-                showNotification('Заполните все поля', true);
+            if (!addFormData.grade || !addFormData.subject_id) {
+                showNotification('Заполните все поля', 'error');
                 return;
             }
+            handleSaveDifficulty(addFormData);
+        };
+
+        return (
+            <div className="modal-overlay-fixed" onClick={() => !saving && setAddModalOpen(false)}>
+                <div className="modal-content-fixed" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+                    <div className="modal-header-fixed">
+                        <div className="modal-header-icon">
+                            <FaPlus size={18} />
+                        </div>
+                        <h3>Добавить ранг сложности</h3>
+                        <button className="modal-close-fixed" onClick={() => !saving && setAddModalOpen(false)} disabled={saving}>
+                            <FaTimes />
+                        </button>
+                    </div>
+                    <form onSubmit={handleSubmit}>
+                        <div className="modal-body-fixed">
+                            <div className="form-group">
+                                <label>Класс</label>
+                                <select 
+                                    value={addFormData.grade} 
+                                    onChange={e => setAddFormData({...addFormData, grade: parseInt(e.target.value)})} 
+                                    required
+                                    disabled={saving}
+                                >
+                                    <option value="">Выберите класс</option>
+                                    {uniqueGrades.map(g => <option key={g} value={g}>{g} класс</option>)}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Предмет</label>
+                                <select 
+                                    value={addFormData.subject_id} 
+                                    onChange={e => setAddFormData({...addFormData, subject_id: parseInt(e.target.value)})} 
+                                    required
+                                    disabled={saving}
+                                >
+                                    <option value="">Выберите предмет</option>
+                                    {validSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                </select>
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Ранг сложности (1-10)</label>
+                                    <select 
+                                        value={addFormData.difficulty_rank} 
+                                        onChange={e => setAddFormData({...addFormData, difficulty_rank: parseInt(e.target.value)})}
+                                        disabled={saving}
+                                    >
+                                        {DIFFICULTY_RANKS.map(rank => (
+                                            <option key={rank.value} value={rank.value}>{rank.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Тип предмета</label>
+                                    <select 
+                                        value={addFormData.subject_type} 
+                                        onChange={e => setAddFormData({...addFormData, subject_type: e.target.value})}
+                                        disabled={saving}
+                                    >
+                                        {SUBJECT_TYPES.map(type => (
+                                            <option key={type.value} value={type.value}>{type.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="modal-footer-fixed">
+                            <button type="button" className="btn-cancel-modal" onClick={() => !saving && setAddModalOpen(false)} disabled={saving}>
+                                Отмена
+                            </button>
+                            <button type="submit" className="btn-save-modal" disabled={saving}>
+                                <FaSave /> {saving ? 'Сохранение...' : 'Добавить'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        );
+    };
+
+    // Модальное окно редактирования
+    const EditDifficultyModal = () => {
+        if (!editingDifficulty) return null;
+
+        const [formData, setFormData] = useState({
+            grade: editingDifficulty.grade,
+            subject_id: editingDifficulty.subject_id,
+            difficulty_rank: editingDifficulty.difficulty_rank,
+            subject_type: editingDifficulty.subject_type || 'neutral'
+        });
+
+        const handleSubmit = (e) => {
+            e.preventDefault();
             handleSaveDifficulty(formData);
         };
 
         return (
-            <form onSubmit={handleSubmit} className="form-container" style={{ marginBottom: '1.25rem' }}>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Класс</label>
-                        <select value={formData.grade} onChange={e => setFormData({...formData, grade: parseInt(e.target.value)})} required>
-                            <option value="">Выберите класс</option>
-                            {uniqueGrades.map(g => <option key={g} value={g}>{g} класс</option>)}
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label>Предмет</label>
-                        <select value={formData.subject_id} onChange={e => setFormData({...formData, subject_id: parseInt(e.target.value)})} required>
-                            <option value="">Выберите предмет</option>
-                            {validSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                        </select>
-                    </div>
-                </div>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Ранг сложности (1-13)</label>
-                        <select value={formData.difficulty_rank} onChange={e => setFormData({...formData, difficulty_rank: parseInt(e.target.value)})}>
-                            {DIFFICULTY_RANKS.map(rank => (
-                                <option key={rank.value} value={rank.value}>{rank.label}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label>Тип предмета</label>
-                        <select value={formData.subject_type} onChange={e => setFormData({...formData, subject_type: e.target.value})}>
-                            {SUBJECT_TYPES.map(type => (
-                                <option key={type.value} value={type.value}>{type.label}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-                <div className="form-actions" style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
-                    <button type="submit" className="btn-save-modal" disabled={saving}>
-                        <FaSave /> {saving ? 'Сохранение...' : (editingDifficulty ? 'Обновить' : 'Добавить')}
-                    </button>
-                    {(editingDifficulty || selectedGrade) && (
-                        <button type="button" className="btn-cancel-modal" onClick={() => {
-                            setEditingDifficulty(null);
-                            setSelectedGrade(null);
-                        }}>
-                            <FaTimes /> Отмена
+            <div className="modal-overlay-fixed" onClick={() => !saving && setEditingDifficulty(null)}>
+                <div className="modal-content-fixed" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+                    <div className="modal-header-fixed" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+                        <div className="modal-header-icon">
+                            <FaEdit size={18} />
+                        </div>
+                        <h3>Редактировать ранг сложности</h3>
+                        <button className="modal-close-fixed" onClick={() => !saving && setEditingDifficulty(null)} disabled={saving}>
+                            <FaTimes />
                         </button>
-                    )}
+                    </div>
+                    <form onSubmit={handleSubmit}>
+                        <div className="modal-body-fixed">
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Класс</label>
+                                    <select value={formData.grade} onChange={e => setFormData({...formData, grade: parseInt(e.target.value)})} required disabled={saving}>
+                                        {uniqueGrades.map(g => <option key={g} value={g}>{g} класс</option>)}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Предмет</label>
+                                    <select value={formData.subject_id} onChange={e => setFormData({...formData, subject_id: parseInt(e.target.value)})} required disabled={saving}>
+                                        {validSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Ранг сложности (1-10)</label>
+                                    <select value={formData.difficulty_rank} onChange={e => setFormData({...formData, difficulty_rank: parseInt(e.target.value)})} disabled={saving}>
+                                        {DIFFICULTY_RANKS.map(rank => (
+                                            <option key={rank.value} value={rank.value}>{rank.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Тип предмета</label>
+                                    <select value={formData.subject_type} onChange={e => setFormData({...formData, subject_type: e.target.value})} disabled={saving}>
+                                        {SUBJECT_TYPES.map(type => (
+                                            <option key={type.value} value={type.value}>{type.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="modal-footer-fixed">
+                            <button type="button" className="btn-cancel-modal" onClick={() => !saving && setEditingDifficulty(null)} disabled={saving}>
+                                Отмена
+                            </button>
+                            <button type="submit" className="btn-save-modal" disabled={saving}>
+                                <FaSave /> {saving ? 'Сохранение...' : 'Сохранить'}
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         );
     };
+
+    // Таблица рангов сложности
+    const DifficultyTable = () => (
+        <div className="sanpin-table-card">
+            <div className="sanpin-table-header">
+                <div className="sanpin-table-title">
+                    <FaBalanceScale size={18} />
+                    <h3>Ранги сложности предметов</h3>
+                </div>
+                <button className="sanpin-add-btn" onClick={() => {
+                    setAddFormData({ grade: uniqueGrades[0] || '', subject_id: '', difficulty_rank: 5, subject_type: 'neutral' });
+                    setAddModalOpen(true);
+                }}>
+                    <FaPlus size={12} /> Добавить
+                </button>
+            </div>
+            <div className="sanpin-table-wrapper">
+                <table className="sanpin-table">
+                    <thead>
+                        <tr>
+                            <th>Класс</th>
+                            <th>Предмет</th>
+                            <th>Ранг сложности</th>
+                            <th>Тип предмета</th>
+                            <th style={{ width: '100px' }}>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {uniqueGrades.map(grade => {
+                            const gradeDifficulties = subjectDifficulty.filter(d => d.grade === grade);
+                            if (gradeDifficulties.length === 0) {
+                                return (
+                                    <tr key={grade} className="sanpin-empty-row">
+                                        <td colSpan="5">
+                                            <span className="empty-message">
+                                                {grade} класс — нет данных
+                                            </span>
+                                            <button className="sanpin-link-btn" onClick={() => {
+                                                setAddFormData({ grade: grade, subject_id: '', difficulty_rank: 5, subject_type: 'neutral' });
+                                                setAddModalOpen(true);
+                                            }}>Добавить</button>
+                                        </td>
+                                    </tr>
+                                );
+                            }
+                            return gradeDifficulties.map((item, idx) => {
+                                const subject = subjects.find(s => s.id === item.subject_id);
+                                const type = SUBJECT_TYPES.find(t => t.value === item.subject_type);
+                                const rankColor = DIFFICULTY_RANKS.find(r => r.value === item.difficulty_rank)?.color || '#6b7280';
+                                const TypeIcon = type?.icon || FaBalanceScale;
+                                return (
+                                    <tr key={item.id}>
+                                        {idx === 0 && (
+                                            <td rowSpan={gradeDifficulties.length} className="grade-group-cell">
+                                                <span className="grade-badge">{grade} класс</span>
+                                            </td>
+                                        )}
+                                        <td><span className="subject-name">{subject?.name || '-'}</span></td>
+                                        <td>
+                                            <span className="difficulty-rank" style={{ background: rankColor }}>
+                                                {item.difficulty_rank}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className="subject-type-badge" style={{ background: type?.color }}>
+                                                <TypeIcon size={10} />
+                                                {type?.label || 'Нейтральный'}
+                                            </span>
+                                        </td>
+                                        <td className="action-cell">
+                                            <button onClick={() => setEditingDifficulty(item)} className="sanpin-action-btn edit" title="Редактировать">
+                                                <FaEdit size={12} />
+                                            </button>
+                                            <button onClick={() => handleDeleteDifficulty(item.id)} className="sanpin-action-btn delete" title="Удалить">
+                                                <FaTrash size={12} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            });
+                        })}
+                        {uniqueGrades.length === 0 && (
+                            <tr className="sanpin-empty-row">
+                                <td colSpan="5">
+                                    <span className="empty-message">Нет классов. Сначала добавьте классы во вкладке "Классы"</span>
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+
+    // Таблица часов
+    const HoursTable = () => (
+        <div className="sanpin-table-card">
+            <div className="sanpin-table-header">
+                <div className="sanpin-table-title">
+                    <FaClock size={18} />
+                    <h3>Недельная нагрузка (часы)</h3>
+                </div>
+                <button className="sanpin-add-btn" onClick={() => setSelectedGrade(uniqueGrades[0])}>
+                    <FaPlus size={12} /> Добавить
+                </button>
+            </div>
+            <div className="sanpin-table-wrapper">
+                <table className="sanpin-table">
+                    <thead>
+                        <tr>
+                            <th>Класс</th>
+                            <th>Предмет</th>
+                            <th>Часов в неделю</th>
+                            <th>Вес (баллы)</th>
+                            <th style={{ width: '100px' }}>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {uniqueGrades.map(grade => {
+                            const gradeHours = subjectHours.filter(h => h.grade === grade);
+                            if (gradeHours.length === 0) {
+                                return (
+                                    <tr key={grade} className="sanpin-empty-row">
+                                        <td colSpan="5">
+                                            <span className="empty-message">{grade} класс — нет данных</span>
+                                            <button className="sanpin-link-btn" onClick={() => setSelectedGrade(grade)}>Добавить</button>
+                                        </td>
+                                    </tr>
+                                );
+                            }
+                            return gradeHours.map((item, idx) => {
+                                const subject = subjects.find(s => s.id === item.subject_id);
+                                const difficulty = getDifficultyForSubject(grade, item.subject_id);
+                                const weight = (item.hours_per_week || 0) * (difficulty?.difficulty_rank || 3);
+                                return (
+                                    <tr key={item.id}>
+                                        {idx === 0 && (
+                                            <td rowSpan={gradeHours.length} className="grade-group-cell">
+                                                <span className="grade-badge">{grade} класс</span>
+                                            </td>
+                                        )}
+                                        <td><span className="subject-name">{subject?.name || '-'}</span></td>
+                                        <td><span className="hours-value">{item.hours_per_week || 0}</span></td>
+                                        <td className="weight-cell">{Math.round(weight)}</td>
+                                        <td className="action-cell">
+                                            <button onClick={() => setEditingHours(item)} className="sanpin-action-btn edit" title="Редактировать">
+                                                <FaEdit size={12} />
+                                            </button>
+                                            <button onClick={() => handleDeleteHours(item.id)} className="sanpin-action-btn delete" title="Удалить">
+                                                <FaTrash size={12} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            });
+                        })}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
 
     const HoursForm = () => {
         const [formData, setFormData] = useState({ grade: '', subject_id: '', hours_per_week: 0, hours_per_year: 0 });
@@ -474,62 +756,67 @@ const calculateWeeklyLoad = (grade) => {
                 });
             } else if (selectedGrade) {
                 setFormData(prev => ({ ...prev, grade: selectedGrade }));
-            } else if (uniqueGrades[0]) {
-                setFormData(prev => ({ ...prev, grade: uniqueGrades[0] }));
             }
         }, [editingHours, selectedGrade]);
 
         const handleSubmit = (e) => {
             e.preventDefault();
             if (!formData.grade || !formData.subject_id) {
-                showNotification('Заполните все поля', true);
+                showNotification('Заполните все поля', 'error');
                 return;
             }
             handleSaveHours(formData);
         };
 
+        if (!editingHours && !selectedGrade) return null;
+
         return (
-            <form onSubmit={handleSubmit} className="form-container" style={{ marginBottom: '1.25rem' }}>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Класс</label>
-                        <select value={formData.grade} onChange={e => setFormData({...formData, grade: parseInt(e.target.value)})} required>
-                            <option value="">Выберите класс</option>
-                            {uniqueGrades.map(g => <option key={g} value={g}>{g} класс</option>)}
-                        </select>
+            <div className="sanpin-form-card">
+                <div className="sanpin-form-header">
+                    <div className="sanpin-form-icon">
+                        {editingHours ? <FaEdit size={16} /> : <FaPlus size={16} />}
                     </div>
-                    <div className="form-group">
-                        <label>Предмет</label>
-                        <select value={formData.subject_id} onChange={e => setFormData({...formData, subject_id: parseInt(e.target.value)})} required>
-                            <option value="">Выберите предмет</option>
-                            {validSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                        </select>
-                    </div>
+                    <h4>{editingHours ? 'Редактирование нагрузки' : 'Добавление нагрузки'}</h4>
                 </div>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Часов в неделю</label>
-                        <input type="number" min="0" max="10" step="0.5" value={formData.hours_per_week} onChange={e => setFormData({...formData, hours_per_week: parseFloat(e.target.value) || 0})} />
+                <form onSubmit={handleSubmit}>
+                    <div className="sanpin-form-row">
+                        <div className="sanpin-form-group">
+                            <label>Класс</label>
+                            <select value={formData.grade} onChange={e => setFormData({...formData, grade: parseInt(e.target.value)})} required>
+                                {uniqueGrades.map(g => <option key={g} value={g}>{g} класс</option>)}
+                            </select>
+                        </div>
+                        <div className="sanpin-form-group">
+                            <label>Предмет</label>
+                            <select value={formData.subject_id} onChange={e => setFormData({...formData, subject_id: parseInt(e.target.value)})} required>
+                                <option value="">Выберите предмет</option>
+                                {validSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                            </select>
+                        </div>
                     </div>
-                    <div className="form-group">
-                        <label>Часов в год</label>
-                        <input type="number" min="0" max="350" value={formData.hours_per_year} onChange={e => setFormData({...formData, hours_per_year: parseInt(e.target.value) || 0})} />
+                    <div className="sanpin-form-row">
+                        <div className="sanpin-form-group">
+                            <label>Часов в неделю</label>
+                            <input type="number" min="0" max="10" step="0.5" value={formData.hours_per_week} onChange={e => setFormData({...formData, hours_per_week: parseFloat(e.target.value) || 0})} />
+                        </div>
+                        <div className="sanpin-form-group">
+                            <label>Часов в год</label>
+                            <input type="number" min="0" max="350" value={formData.hours_per_year} onChange={e => setFormData({...formData, hours_per_year: parseInt(e.target.value) || 0})} />
+                        </div>
                     </div>
-                </div>
-                <div className="form-actions" style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
-                    <button type="submit" className="btn-save-modal" disabled={saving}>
-                        <FaSave /> {saving ? 'Сохранение...' : (editingHours ? 'Обновить' : 'Добавить')}
-                    </button>
-                    {(editingHours || selectedGrade) && (
-                        <button type="button" className="btn-cancel-modal" onClick={() => {
+                    <div className="sanpin-form-actions">
+                        <button type="button" className="sanpin-cancel-btn" onClick={() => {
                             setEditingHours(null);
                             setSelectedGrade(null);
                         }}>
                             <FaTimes /> Отмена
                         </button>
-                    )}
-                </div>
-            </form>
+                        <button type="submit" className="sanpin-submit-btn" disabled={saving}>
+                            <FaSave /> {saving ? 'Сохранение...' : (editingHours ? 'Обновить' : 'Добавить')}
+                        </button>
+                    </div>
+                </form>
+            </div>
         );
     };
 
@@ -546,63 +833,126 @@ const calculateWeeklyLoad = (grade) => {
                     max_weight: editingDailyLimit.max_weight || 0,
                     max_lessons: editingDailyLimit.max_lessons || ''
                 });
-            } else if (uniqueGrades[0]) {
-                setFormData(prev => ({ ...prev, grade: uniqueGrades[0] }));
             }
         }, [editingDailyLimit]);
 
         const handleSubmit = (e) => {
             e.preventDefault();
             if (!formData.grade || !formData.day_name) {
-                showNotification('Заполните все поля', true);
+                showNotification('Заполните все поля', 'error');
                 return;
             }
             handleSaveDailyLimit(formData);
         };
 
+        if (!editingDailyLimit) return null;
+
         return (
-            <form onSubmit={handleSubmit} className="form-container" style={{ marginBottom: '1.25rem' }}>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Класс</label>
-                        <select value={formData.grade} onChange={e => setFormData({...formData, grade: parseInt(e.target.value)})} required>
-                            <option value="">Выберите класс</option>
-                            {uniqueGrades.map(g => <option key={g} value={g}>{g} класс</option>)}
-                        </select>
+            <div className="sanpin-form-card">
+                <div className="sanpin-form-header">
+                    <div className="sanpin-form-icon">
+                        <FaEdit size={16} />
                     </div>
-                    <div className="form-group">
-                        <label>День недели</label>
-                        <select value={formData.day_name} onChange={e => setFormData({...formData, day_name: e.target.value})} required>
-                            <option value="">Выберите день</option>
-                            {Object.entries(DAYS_RU).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
-                        </select>
-                    </div>
+                    <h4>Редактирование дневного лимита</h4>
                 </div>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Минимальный вес (баллов)</label>
-                        <input type="number" min="0" value={formData.min_weight} onChange={e => setFormData({...formData, min_weight: parseInt(e.target.value) || 0})} />
+                <form onSubmit={handleSubmit}>
+                    <div className="sanpin-form-row">
+                        <div className="sanpin-form-group">
+                            <label>Класс</label>
+                            <select value={formData.grade} onChange={e => setFormData({...formData, grade: parseInt(e.target.value)})} required>
+                                {uniqueGrades.map(g => <option key={g} value={g}>{g} класс</option>)}
+                            </select>
+                        </div>
+                        <div className="sanpin-form-group">
+                            <label>День недели</label>
+                            <select value={formData.day_name} onChange={e => setFormData({...formData, day_name: e.target.value})} required>
+                                {Object.entries(DAYS_RU).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+                            </select>
+                        </div>
                     </div>
-                    <div className="form-group">
-                        <label>Максимальный вес (баллов)</label>
-                        <input type="number" min="0" value={formData.max_weight} onChange={e => setFormData({...formData, max_weight: parseInt(e.target.value) || 0})} />
+                    <div className="sanpin-form-row">
+                        <div className="sanpin-form-group">
+                            <label>Минимальный вес (баллов)</label>
+                            <input type="number" min="0" value={formData.min_weight} onChange={e => setFormData({...formData, min_weight: parseInt(e.target.value) || 0})} />
+                        </div>
+                        <div className="sanpin-form-group">
+                            <label>Максимальный вес (баллов)</label>
+                            <input type="number" min="0" value={formData.max_weight} onChange={e => setFormData({...formData, max_weight: parseInt(e.target.value) || 0})} />
+                        </div>
                     </div>
-                </div>
-                <div className="form-group">
-                    <label>Максимум уроков в день (опционально)</label>
-                    <input type="number" min="1" max="8" value={formData.max_lessons} onChange={e => setFormData({...formData, max_lessons: e.target.value ? parseInt(e.target.value) : ''})} placeholder="Напр: 7" />
-                </div>
-                <div className="form-actions" style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
-                    <button type="submit" className="btn-save-modal" disabled={saving}>
-                        <FaSave /> {saving ? 'Сохранение...' : (editingDailyLimit ? 'Обновить' : 'Добавить')}
-                    </button>
-                    {editingDailyLimit && (
-                        <button type="button" className="btn-cancel-modal" onClick={() => setEditingDailyLimit(null)}>
+                    <div className="sanpin-form-group">
+                        <label>Максимум уроков в день (опционально)</label>
+                        <input type="number" min="1" max="8" value={formData.max_lessons} onChange={e => setFormData({...formData, max_lessons: e.target.value ? parseInt(e.target.value) : ''})} placeholder="Напр: 7" />
+                    </div>
+                    <div className="sanpin-form-actions">
+                        <button type="button" className="sanpin-cancel-btn" onClick={() => setEditingDailyLimit(null)}>
                             <FaTimes /> Отмена
                         </button>
-                    )}
+                        <button type="submit" className="sanpin-submit-btn" disabled={saving}>
+                            <FaSave /> {saving ? 'Сохранение...' : 'Обновить'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        );
+    };
+
+    const DailyLimitsTable = () => {
+        const DAYS_RU = { monday: 'Понедельник', tuesday: 'Вторник', wednesday: 'Среда', thursday: 'Четверг', friday: 'Пятница', saturday: 'Суббота', sunday: 'Воскресенье' };
+        
+        return (
+            <div className="sanpin-table-card">
+                <div className="sanpin-table-header">
+                    <div className="sanpin-table-title">
+                        <FaChartBar size={18} />
+                        <h3>Дневные лимиты нагрузки</h3>
+                    </div>
+                    <button className="sanpin-add-btn" onClick={() => setEditingDailyLimit({})}>
+                        <FaPlus size={12} /> Добавить лимит
+                    </button>
                 </div>
-            </form>
+                <div className="sanpin-table-wrapper">
+                    <table className="sanpin-table">
+                        <thead>
+                            <tr>
+                                <th>Класс</th>
+                                <th>День недели</th>
+                                <th>Мин. баллов</th>
+                                <th>Макс. баллов</th>
+                                <th>Макс. уроков</th>
+                                <th style={{ width: '100px' }}>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {dailyLimits.length === 0 ? (
+                                <tr className="sanpin-empty-row">
+                                    <td colSpan="6">
+                                        <span className="empty-message">Нет данных. Добавьте дневные лимиты</span>
+                                    </td>
+                                </tr>
+                            ) : (
+                                dailyLimits.map(limit => (
+                                    <tr key={limit.id}>
+                                        <td><span className="grade-badge small">{limit.grade} класс</span></td>
+                                        <td><span className="day-badge">{DAYS_RU[limit.day_name] || limit.day_name}</span></td>
+                                        <td><span className="limit-value">{limit.min_weight}</span></td>
+                                        <td><span className="limit-value">{limit.max_weight}</span></td>
+                                        <td>{limit.max_lessons || '—'}</td>
+                                        <td className="action-cell">
+                                            <button onClick={() => setEditingDailyLimit(limit)} className="sanpin-action-btn edit" title="Редактировать">
+                                                <FaEdit size={12} />
+                                            </button>
+                                            <button onClick={() => handleDeleteDailyLimit(limit.id)} className="sanpin-action-btn delete" title="Удалить">
+                                                <FaTrash size={12} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         );
     };
 
@@ -616,211 +966,54 @@ const calculateWeeklyLoad = (grade) => {
                     week_weight: editingWeeklyLimit.week_weight || 0,
                     month_weight: editingWeeklyLimit.month_weight || 0
                 });
-            } else if (uniqueGrades[0]) {
-                setFormData(prev => ({ ...prev, grade: uniqueGrades[0] }));
             }
         }, [editingWeeklyLimit]);
 
         const handleSubmit = (e) => {
             e.preventDefault();
             if (!formData.grade) {
-                showNotification('Выберите класс', true);
+                showNotification('Выберите класс', 'error');
                 return;
             }
             handleSaveWeeklyLimit(formData);
         };
 
+        if (!editingWeeklyLimit) return null;
+
         return (
-            <form onSubmit={handleSubmit} className="form-container" style={{ marginBottom: '1.25rem' }}>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Класс</label>
-                        <select value={formData.grade} onChange={e => setFormData({...formData, grade: parseInt(e.target.value)})} required>
-                            <option value="">Выберите класс</option>
-                            {uniqueGrades.map(g => <option key={g} value={g}>{g} класс</option>)}
-                        </select>
+            <div className="sanpin-form-card">
+                <div className="sanpin-form-header">
+                    <div className="sanpin-form-icon">
+                        <FaEdit size={16} />
                     </div>
-                    <div className="form-group">
-                        <label>Недельный вес (баллов)</label>
-                        <input type="number" min="0" value={formData.week_weight} onChange={e => setFormData({...formData, week_weight: parseInt(e.target.value) || 0})} />
-                    </div>
-                    <div className="form-group">
-                        <label>Месячный вес (баллов)</label>
-                        <input type="number" min="0" value={formData.month_weight} onChange={e => setFormData({...formData, month_weight: parseInt(e.target.value) || 0})} />
-                    </div>
+                    <h4>Редактирование недельного лимита</h4>
                 </div>
-                <div className="form-actions" style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
-                    <button type="submit" className="btn-save-modal" disabled={saving}>
-                        <FaSave /> {saving ? 'Сохранение...' : (editingWeeklyLimit ? 'Обновить' : 'Добавить')}
-                    </button>
-                    {editingWeeklyLimit && (
-                        <button type="button" className="btn-cancel-modal" onClick={() => setEditingWeeklyLimit(null)}>
+                <form onSubmit={handleSubmit}>
+                    <div className="sanpin-form-row">
+                        <div className="sanpin-form-group">
+                            <label>Класс</label>
+                            <select value={formData.grade} onChange={e => setFormData({...formData, grade: parseInt(e.target.value)})} required>
+                                {uniqueGrades.map(g => <option key={g} value={g}>{g} класс</option>)}
+                            </select>
+                        </div>
+                        <div className="sanpin-form-group">
+                            <label>Недельный вес (баллов)</label>
+                            <input type="number" min="0" value={formData.week_weight} onChange={e => setFormData({...formData, week_weight: parseInt(e.target.value) || 0})} />
+                        </div>
+                        <div className="sanpin-form-group">
+                            <label>Месячный вес (баллов)</label>
+                            <input type="number" min="0" value={formData.month_weight} onChange={e => setFormData({...formData, month_weight: parseInt(e.target.value) || 0})} />
+                        </div>
+                    </div>
+                    <div className="sanpin-form-actions">
+                        <button type="button" className="sanpin-cancel-btn" onClick={() => setEditingWeeklyLimit(null)}>
                             <FaTimes /> Отмена
                         </button>
-                    )}
-                </div>
-            </form>
-        );
-    };
-
-    // ============= ТАБЛИЦЫ =============
-    const DifficultyTable = () => (
-        <div className="table-container">
-            <div className="table-header-actions">
-                <h4><FaBalanceScale /> Ранги сложности предметов</h4>
-                <button className="btn-add-small" onClick={() => setSelectedGrade(uniqueGrades[0])}>
-                    <FaPlus /> Добавить
-                </button>
-            </div>
-            <div className="table-responsive">
-                <table className="data-table">
-                    <thead>
-                        <tr>
-                            <th>Класс</th>
-                            <th>Предмет</th>
-                            <th>Ранг</th>
-                            <th>Тип</th>
-                            <th>Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {uniqueGrades.map(grade => {
-                            const gradeDifficulties = subjectDifficulty.filter(d => d.grade === grade);
-                            if (gradeDifficulties.length === 0) {
-                                return (
-                                    <tr key={grade} className="empty-row">
-                                        <td colSpan="5">
-                                            {grade} класс - нет данных
-                                            <button className="btn-link" onClick={() => setSelectedGrade(grade)}>Добавить</button>
-                                        </td>
-                                    </tr>
-                                );
-                            }
-                            return gradeDifficulties.map((item, idx) => {
-                                const subject = subjects.find(s => s.id === item.subject_id);
-                                const type = SUBJECT_TYPES.find(t => t.value === item.subject_type);
-                                const rankColor = DIFFICULTY_RANKS.find(r => r.value === item.difficulty_rank)?.color || '#6b7280';
-                                return (
-                                    <tr key={item.id}>
-                                        {idx === 0 && <td rowSpan={gradeDifficulties.length} className="grade-cell"><strong>{grade} класс</strong></td>}
-                                        <td><strong>{subject?.name || '-'}</strong></td>
-                                        <td><span className="difficulty-badge" style={{ background: rankColor }}>{item.difficulty_rank}</span></td>
-                                        <td><span className="subject-type-badge" style={{ background: type?.color }}>{type?.label || 'Нейтральный'}</span></td>
-                                        <td className="action-cell">
-                                            <button onClick={() => setEditingDifficulty(item)} className="action-button edit-button" title="Редактировать"><FaEdit /></button>
-                                            <button onClick={() => handleDeleteDifficulty(item.id)} className="action-button delete-button" title="Удалить"><FaTrash /></button>
-                                        </td>
-                                    </tr>
-                                );
-                            });
-                        })}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-
-    const HoursTable = () => (
-        <div className="table-container">
-            <div className="table-header-actions">
-                <h4><FaCalendarWeek /> Недельная нагрузка (часы)</h4>
-                <button className="btn-add-small" onClick={() => setSelectedGrade(uniqueGrades[0])}>
-                    <FaPlus /> Добавить
-                </button>
-            </div>
-            <div className="table-responsive">
-                <table className="data-table">
-                    <thead>
-                        <tr>
-                            <th>Класс</th>
-                            <th>Предмет</th>
-                            <th>Часов в неделю</th>
-                            <th>Вес (баллы)</th>
-                            <th>Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {uniqueGrades.map(grade => {
-                            const gradeHours = subjectHours.filter(h => h.grade === grade);
-                            if (gradeHours.length === 0) {
-                                return (
-                                    <tr key={grade} className="empty-row">
-                                        <td colSpan="5">
-                                            {grade} класс - нет данных
-                                            <button className="btn-link" onClick={() => setSelectedGrade(grade)}>Добавить</button>
-                                        </td>
-                                    </tr>
-                                );
-                            }
-                            return gradeHours.map((item, idx) => {
-                                const subject = subjects.find(s => s.id === item.subject_id);
-                                const difficulty = getDifficultyForSubject(grade, item.subject_id);
-                                const weight = (item.hours_per_week || 0) * (difficulty?.difficulty_rank || 3);
-                                return (
-                                    <tr key={item.id}>
-                                        {idx === 0 && <td rowSpan={gradeHours.length} className="grade-cell"><strong>{grade} класс</strong></td>}
-                                        <td><strong>{subject?.name || '-'}</strong></td>
-                                        <td><span className="limit-value">{item.hours_per_week || 0}</span></td>
-                                        <td className="weight-cell">{weight}</td>
-                                        <td className="action-cell">
-                                            <button onClick={() => setEditingHours(item)} className="action-button edit-button" title="Редактировать"><FaEdit /></button>
-                                            <button onClick={() => handleDeleteHours(item.id)} className="action-button delete-button" title="Удалить"><FaTrash /></button>
-                                        </td>
-                                    </tr>
-                                );
-                            });
-                        })}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-
-    const DailyLimitsTable = () => {
-        const DAYS_RU = { monday: 'Понедельник', tuesday: 'Вторник', wednesday: 'Среда', thursday: 'Четверг', friday: 'Пятница', saturday: 'Суббота', sunday: 'Воскресенье' };
-        
-        return (
-            <div className="table-container">
-                <div className="table-header-actions">
-                    <h4><FaChartLine /> Дневные лимиты нагрузки</h4>
-                    <button className="btn-add-small" onClick={() => setEditingDailyLimit({})}>
-                        <FaPlus /> Добавить лимит
-                    </button>
-                </div>
-                <div className="table-responsive">
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Класс</th>
-                                <th>День недели</th>
-                                <th>Мин. баллов</th>
-                                <th>Макс. баллов</th>
-                                <th>Макс. уроков</th>
-                                <th>Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {dailyLimits.length === 0 ? (
-                                <tr className="empty-row">
-                                    <td colSpan="6">Нет данных. Добавьте дневные лимиты.</td>
-                                </tr>                            ) : (
-                                dailyLimits.map(limit => (
-                                    <tr key={limit.id}>
-                                        <td><strong>{limit.grade} класс</strong></td>
-                                        <td><span className="day-badge">{DAYS_RU[limit.day_name] || limit.day_name}</span></td>
-                                        <td>{limit.min_weight}</td>
-                                        <td>{limit.max_weight}</td>
-                                        <td>{limit.max_lessons || '-'}</td>
-                                        <td className="action-cell">
-                                            <button onClick={() => setEditingDailyLimit(limit)} className="action-button edit-button" title="Редактировать"><FaEdit /></button>
-                                            <button onClick={() => handleDeleteDailyLimit(limit.id)} className="action-button delete-button" title="Удалить"><FaTrash /></button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                        <button type="submit" className="sanpin-submit-btn" disabled={saving}>
+                            <FaSave /> {saving ? 'Сохранение...' : 'Обновить'}
+                        </button>
+                    </div>
+                </form>
             </div>
         );
     };
@@ -829,77 +1022,75 @@ const calculateWeeklyLoad = (grade) => {
         const displayLimits = getWeeklyLimitsDisplay();
         
         return (
-            <div className="table-container">
-                <div className="table-header-actions">
-                    <h4><FaCalendarWeek /> Недельные и месячные лимиты</h4>
-                    <div>
-                        <button 
-                            className="btn-add-small" 
-                            onClick={() => autoSaveWeeklyLimits()} 
-                            style={{ marginRight: '0.5rem', background: 'var(--info)' }}
-                            title="Пересчитать из дневных лимитов"
-                        >
-                            <FaCalculator /> Пересчитать из дневных
+            <div className="sanpin-table-card">
+                <div className="sanpin-table-header">
+                    <div className="sanpin-table-title">
+                        <FaCalendarWeek size={18} />
+                        <h3>Недельные и месячные лимиты</h3>
+                    </div>
+                    <div className="sanpin-header-actions">
+                        <button className="sanpin-secondary-btn" onClick={() => autoSaveWeeklyLimits()} title="Пересчитать из дневных лимитов">
+                            <FaCalculator size={12} /> Пересчитать
                         </button>
-                        <button className="btn-add-small" onClick={() => setEditingWeeklyLimit({})}>
-                            <FaPlus /> Добавить вручную
+                        <button className="sanpin-add-btn" onClick={() => setEditingWeeklyLimit({})}>
+                            <FaPlus size={12} /> Добавить вручную
                         </button>
                     </div>
                 </div>
-                <div className="table-responsive">
-                    <table className="data-table">
+                <div className="sanpin-table-wrapper">
+                    <table className="sanpin-table">
                         <thead>
                             <tr>
                                 <th>Класс</th>
-                                <th>Недельный вес (баллов)</th>
-                                <th>Месячный вес (баллов)</th>
+                                <th>Недельный вес</th>
+                                <th>Месячный вес</th>
                                 <th>Источник</th>
-                                <th>Действия</th>
+                                <th style={{ width: '100px' }}>Действия</th>
                             </tr>
                         </thead>
                         <tbody>
                             {displayLimits.length === 0 ? (
-                                <tr className="empty-row">
-                                    <td colSpan="5">Нет данных. Нажмите "Пересчитать" для автоматического расчета.</td>
+                                <tr className="sanpin-empty-row">
+                                    <td colSpan="5">
+                                        <span className="empty-message">Нет данных. Нажмите "Пересчитать" для автоматического расчета</span>
+                                    </td>
                                 </tr>
                             ) : (
                                 displayLimits.map(limit => (
                                     <tr key={limit.grade}>
-                                        <td><strong>{limit.grade} класс</strong></td>
+                                        <td><span className="grade-badge small">{limit.grade} класс</span></td>
                                         <td><span className="limit-value">{limit.week_weight}</span></td>
                                         <td><span className="limit-value">{limit.month_weight}</span></td>
                                         <td>
                                             {limit.is_auto ? (
-                                                <span className="status-badge" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6' }}>
-                                                    <FaCalculator /> Авто (из дневных)
+                                                <span className="auto-badge">
+                                                    <FaCalculator size={10} /> Авто
                                                 </span>
                                             ) : (
-                                                <span className="status-badge success">
-                                                    <FaCheck /> Вручную
+                                                <span className="manual-badge">
+                                                    <FaCheck size={10} /> Вручную
                                                 </span>
                                             )}
                                         </td>
                                         <td className="action-cell">
                                             {!limit.is_auto && (
-                                                <button onClick={() => {
-                                                    const existing = weeklyLimits.find(w => w.grade === limit.grade);
-                                                    if (existing) setEditingWeeklyLimit(existing);
-                                                }} className="action-button edit-button" title="Редактировать">
-                                                    <FaEdit />
-                                                </button>
-                                            )}
-                                            {!limit.is_auto && (
-                                                <button onClick={() => {
-                                                    const existing = weeklyLimits.find(w => w.grade === limit.grade);
-                                                    if (existing) handleDeleteWeeklyLimit(existing.id);
-                                                }} className="action-button delete-button" title="Удалить">
-                                                    <FaTrash />
-                                                </button>
+                                                <>
+                                                    <button onClick={() => {
+                                                        const existing = weeklyLimits.find(w => w.grade === limit.grade);
+                                                        if (existing) setEditingWeeklyLimit(existing);
+                                                    }} className="sanpin-action-btn edit" title="Редактировать">
+                                                        <FaEdit size={12} />
+                                                    </button>
+                                                    <button onClick={() => {
+                                                        const existing = weeklyLimits.find(w => w.grade === limit.grade);
+                                                        if (existing) handleDeleteWeeklyLimit(existing.id);
+                                                    }} className="sanpin-action-btn delete" title="Удалить">
+                                                        <FaTrash size={12} />
+                                                    </button>
+                                                </>
                                             )}
                                             {limit.is_auto && (
-                                                <span className="info-note" style={{ fontSize: '0.6rem', padding: '0.2rem 0.4rem' }}>
-                                                    <FaInfoCircle /> Рассчитано автоматически
-                                                </span>
+                                                <span className="info-hint">Авто-расчёт</span>
                                             )}
                                         </td>
                                     </tr>
@@ -908,21 +1099,24 @@ const calculateWeeklyLoad = (grade) => {
                         </tbody>
                     </table>
                 </div>
-                <div className="info-note">
-                    <FaInfoCircle /> Недельный вес = сумма максимальных баллов за понедельник-пятницу. Месячный вес = недельный × 4.
-                    При изменении дневных лимитов недельные пересчитываются автоматически.
+                <div className="sanpin-table-note">
+                    <FaInfoCircle size={12} />
+                    <span>Недельный вес = сумма максимальных баллов за понедельник-пятницу. Месячный вес = недельный × 4.</span>
                 </div>
             </div>
         );
     };
 
     const LoadSummary = () => (
-        <div className="table-container">
-            <div className="table-header-actions">
-                <h4><FaChartLine /> Сводка недельной нагрузки</h4>
+        <div className="sanpin-table-card">
+            <div className="sanpin-table-header">
+                <div className="sanpin-table-title">
+                    <FaChartLine size={18} />
+                    <h3>Сводка недельной нагрузки</h3>
+                </div>
             </div>
-            <div className="table-responsive">
-                <table className="data-table">
+            <div className="sanpin-table-wrapper">
+                <table className="sanpin-table">
                     <thead>
                         <tr>
                             <th>Класс</th>
@@ -936,20 +1130,27 @@ const calculateWeeklyLoad = (grade) => {
                             const { totalHours, totalPoints } = calculateWeeklyLoad(grade);
                             const weeklyLimit = getWeeklyLimitsDisplay().find(w => w.grade === grade);
                             const isOverload = weeklyLimit && totalPoints > weeklyLimit.week_weight;
+                            const percent = weeklyLimit?.week_weight ? Math.round((totalPoints / weeklyLimit.week_weight) * 100) : 0;
                             return (
                                 <tr key={grade} className={isOverload ? 'overload-row' : ''}>
-                                    <td><strong>{grade} класс</strong></td>
-                                   <td>{totalHours.toFixed(1)} ч.</td>
-<td className="weight-cell"><strong>{totalPoints}</strong> баллов</td>
+                                    <td><span className="grade-badge">{grade} класс</span></td>
+                                    <td>{totalHours.toFixed(1)} ч.</td>
+                                    <td className="weight-cell"><strong>{Math.round(totalPoints)}</strong> баллов</td>
                                     <td>
                                         {totalPoints > 0 ? (
                                             isOverload ? (
-                                                <span className="status-badge warning"><FaExclamationTriangle /> Превышение!</span>
+                                                <div className="status-badge warning">
+                                                    <FaExclamationTriangle size={12} />
+                                                    <span>Превышение! {percent}%</span>
+                                                </div>
                                             ) : (
-                                                <span className="status-badge success"><FaCheck /> Загружено</span>
+                                                <div className="status-badge success">
+                                                    <FaCheck size={12} />
+                                                    <span>Норма ({percent}%)</span>
+                                                </div>
                                             )
                                         ) : (
-                                            <span className="status-badge muted">Нет данных</span>
+                                            <div className="status-badge muted">Нет данных</div>
                                         )}
                                     </td>
                                 </tr>
@@ -958,8 +1159,9 @@ const calculateWeeklyLoad = (grade) => {
                     </tbody>
                 </table>
             </div>
-            <div className="info-note">
-                <FaInfoCircle /> Вес = часы в неделю × ранг сложности. Превышение недельного лимита подсвечивается оранжевым.
+            <div className="sanpin-table-note">
+                <FaInfoCircle size={12} />
+                <span>Вес = часы в неделю × ранг сложности. Превышение недельного лимита подсвечивается.</span>
             </div>
         </div>
     );
@@ -967,94 +1169,83 @@ const calculateWeeklyLoad = (grade) => {
     if (loading) {
         return (
             <div className="sanpin-loading">
-                <FaSpinner className="spinner" />
-                <p>Загрузка...</p>
+                <div className="spinner"></div>
+                <p>Загрузка данных...</p>
             </div>
         );
     }
 
     return (
         <div className="sanpin-container">
-            {notification && <div className={`notification ${notification.includes('Ошибка') ? 'error' : 'success'}`}>{notification}</div>}
+            {notification.message && (
+                <div className={`sanpin-notification ${notification.type}`}>
+                    {notification.type === 'success' ? <FaCheck size={14} /> : <FaExclamationTriangle size={14} />}
+                    <span>{notification.message}</span>
+                </div>
+            )}
 
             <div className="sanpin-header">
-                <h2><FaBalanceScale /> Настройка нагрузки и сложности предметов</h2>
-                <p>Управление рангами сложности, недельной нагрузкой, дневными лимитами и правилами генерации</p>
+                <div className="sanpin-header-text">
+                    <h1>Тарификация</h1>
+                    <p>Управление рангами сложности, недельной нагрузкой, дневными лимитами и правилами генерации</p>
+                </div>
             </div>
 
-            <div className="sanpin-tabs">
-                <button className={`sanpin-tab ${activeTab === 'difficulty' ? 'active' : ''}`} onClick={() => setActiveTab('difficulty')}>
-                    <FaBalanceScale /> Ранги сложности
-                </button>
-                <button className={`sanpin-tab ${activeTab === 'hours' ? 'active' : ''}`} onClick={() => setActiveTab('hours')}>
-                    <FaCalendarWeek /> Нагрузка по часам
-                </button>
-                <button className={`sanpin-tab ${activeTab === 'dailyLimits' ? 'active' : ''}`} onClick={() => setActiveTab('dailyLimits')}>
-                    <FaChartLine /> Дневные лимиты
-                </button>
-                <button className={`sanpin-tab ${activeTab === 'weeklyLimits' ? 'active' : ''}`} onClick={() => setActiveTab('weeklyLimits')}>
-                    <FaCalendarWeek /> Недельные лимиты
-                </button>
-                <button className={`sanpin-tab ${activeTab === 'summary' ? 'active' : ''}`} onClick={() => setActiveTab('summary')}>
-                    <FaChartLine /> Сводка нагрузки
-                </button>
-                <button className={`sanpin-tab ${activeTab === 'pairing' ? 'active' : ''}`} onClick={() => setActiveTab('pairing')}>
-                    <FaLink /> Спаривание уроков
-                </button>
-                <button className={`sanpin-tab ${activeTab === 'group' ? 'active' : ''}`} onClick={() => setActiveTab('group')}>
-                    <FaUsers /> Групповые занятия
-                </button>
-                <button className={`sanpin-tab ${activeTab === 'parallel' ? 'active' : ''}`} onClick={() => setActiveTab('parallel')}>
-                    <FaSync /> Синхронизация
-                </button>
-                <button className={`sanpin-tab ${activeTab === 'forbidden' ? 'active' : ''}`} onClick={() => setActiveTab('forbidden')}>
-                    <FaBan /> Запрещённые последовательности
-                </button>
+            <div className="sanpin-tabs-wrapper">
+                {Object.entries(TAB_ICONS).map(([id, Icon]) => (
+                    <TabButton key={id} id={id} icon={Icon} label={TAB_LABELS[id]} />
+                ))}
             </div>
 
-            {activeTab === 'difficulty' && (
-                <>
-                    <DifficultyForm />
-                    <DifficultyTable />
-                    <div className="info-note">
-                        <FaInfoCircle /> Ранг сложности (1-13) влияет на вес урока. Чем выше ранг, тем сложнее предмет.
-                    </div>
-                </>
-            )}
+            <div className="sanpin-tab-content">
+                {activeTab === 'difficulty' && (
+                    <>
+                        <DifficultyTable />
+                        <EditDifficultyModal />
+                        <AddDifficultyModal />
+                        <div className="sanpin-info-card">
+                            <FaInfoCircle size={14} />
+                            <span>Ранг сложности (1-10) влияет на вес урока. Чем выше ранг, тем сложнее предмет.</span>
+                        </div>
+                    </>
+                )}
 
-            {activeTab === 'hours' && (
-                <>
-                    <HoursForm />
-                    <HoursTable />
-                    <div className="info-note">
-                        <FaInfoCircle /> Вес = часы в неделю × ранг сложности. Используется для балансировки расписания.
-                    </div>
-                </>
-            )}
+                {activeTab === 'hours' && (
+                    <>
+                        <HoursForm />
+                        <HoursTable />
+                        <div className="sanpin-info-card">
+                            <FaInfoCircle size={14} />
+                            <span>Вес = часы в неделю × ранг сложности. Используется для балансировки расписания.</span>
+                        </div>
+                    </>
+                )}
 
-            {activeTab === 'dailyLimits' && (
-                <>
-                    <DailyLimitForm />
-                    <DailyLimitsTable />
-                    <div className="info-note">
-                        <FaInfoCircle /> Дневные лимиты определяют допустимый диапазон суммарных баллов трудности. 
-                        Среда — пик, понедельник и пятница — минимум. При сохранении недельные лимиты пересчитываются автоматически.
-                    </div>
-                </>
-            )}
+                {activeTab === 'dailyLimits' && (
+                    <>
+                        <DailyLimitForm />
+                        <DailyLimitsTable />
+                        <div className="sanpin-info-card">
+                            <FaInfoCircle size={14} />
+                            <span>Дневные лимиты определяют допустимый диапазон суммарных баллов трудности. 
+                            Среда — пик, понедельник и пятница — минимум. При сохранении недельные лимиты пересчитываются автоматически.</span>
+                        </div>
+                    </>
+                )}
 
-            {activeTab === 'weeklyLimits' && (
-                <>
-                    <WeeklyLimitForm />
-                    <WeeklyLimitsTable />
-                </>
-            )}
+                {activeTab === 'weeklyLimits' && (
+                    <>
+                        <WeeklyLimitForm />
+                        <WeeklyLimitsTable />
+                    </>
+                )}
 
-            {activeTab === 'summary' && <LoadSummary />}
-            {activeTab === 'pairing' && <PairingRulesTab token={token} />}
-            {activeTab === 'group' && <GroupDivisionTab token={token} />}
-            {activeTab === 'parallel' && <ParallelSyncTab token={token} />}
-            {activeTab === 'forbidden' && <ForbiddenSequencesTab token={token} />}
+                {activeTab === 'summary' && <LoadSummary />}
+                {activeTab === 'pairing' && <PairingRulesTab token={token} />}
+                {activeTab === 'group' && <GroupDivisionTab token={token} />}
+                {activeTab === 'parallel' && <ParallelSyncTab token={token} />}
+                {activeTab === 'forbidden' && <ForbiddenSequencesTab token={token} />}
+            </div>
         </div>
     );
 };

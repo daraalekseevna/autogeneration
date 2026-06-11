@@ -141,8 +141,7 @@ const PersonalCabinet = ({ userData, onClose, onLogout }) => {
     
     if (currentUser?.role === 'class') {
       if (currentUser.gradeNumber && currentUser.gradeLetter) {
-        info.push({ label: 'Номер класса', value: currentUser.gradeNumber, icon: <FaBook /> });
-        info.push({ label: 'Буква класса', value: currentUser.gradeLetter, icon: <FaChalkboardTeacher /> });
+       
       }
     }
     

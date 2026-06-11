@@ -1,5 +1,3 @@
-/* ExcelGenerator.css - Стили для страницы генератора Excel */
-/* Переменные темы в global-theme.css */
 
 .excel-gen-page {
     min-height: 100vh;
@@ -13,7 +11,7 @@
     font-family: var(--font-family);
 }
 
-/* ========== ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ ========== */
+
 .theme-toggle {
     position: fixed;
     top: 100px;
