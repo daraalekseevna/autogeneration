@@ -18,7 +18,7 @@ if (connectionString) {
             rejectUnauthorized: false // Отключает строгую проверку сертификата (нужно для Supabase)
         }
     };
-    console.log('🔗 Подключение к БД через DATABASE_URL');
+    console.log('DATABASE_URL');
 } else {
     // Локальная разработка — используем локальные настройки
     poolConfig = {

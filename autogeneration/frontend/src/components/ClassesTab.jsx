@@ -531,6 +531,14 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
                                 <FaSchool size={18} />
                                 <h3>Список классов</h3>
                             </div>
+                            <div className={styles.statsSummary}>
+                                <span className={styles.statBadge}>
+                                    <FaSun size={12} /> {stats.shift1}
+                                </span>
+                                <span className={styles.statBadge}>
+                                    <FaMoon size={12} /> {stats.shift2}
+                                </span>
+                            </div>
                         </div>
                         
                         <div className={styles.tableWrapper}>
@@ -540,10 +548,9 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
                                         <th>Класс</th>
                                         <th>Смена</th>
                                         <th>Руководитель</th>
-                                        <th>Логин</th>
-                                        <th>Пароль</th>
+                                        <th>Логин / Пароль</th>
                                         <th>Макс. уроков</th>
-                                        <th style={{ width: '140px' }}>Действия</th>
+                                        <th style={{ width: '180px' }}>Действия</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -555,66 +562,72 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
                                                     <strong>{c.name}</strong>
                                                 </td>
                                                 
-                                                {/* КРАСИВЫЙ БЕЙДЖ СМЕНЫ В ТАБЛИЦЕ */}
-                                                <td>
-                                                    <div className={`${styles.shiftBadgeModern} ${c.shift === 1 ? styles.shiftBadgeMorning : styles.shiftBadgeEvening}`}>
-                                                        {c.shift === 1 ? (
-                                                            <>
-                                                                <span>1 </span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <span>2 </span>
-                                                            </>
-                                                        )}
+                                                <td className={styles.shiftCell}>
+                                                    <div className={`${styles.shiftBadge} ${c.shift === 1 ? styles.shiftMorning : styles.shiftEvening}`}>
+                                                        {c.shift === 1 ? <FaSun size={12} /> : <FaMoon size={12} />}
+                                                        <span>{c.shift === 1 ? '1 смена' : '2 смена'}</span>
+                                                        <small>{c.shift === 1 ? '08:00' : '14:00'}</small>
                                                     </div>
                                                 </td>
                                                 
-                                                <td>{c.teacher_name || '—'}</td>
-                                                <td className={styles.loginCell}>
-                                                    <code>{c.login || '—'}</code>
-                                                    {c.login && (
-                                                        <button 
-                                                            onClick={() => handleCopyToClipboard(c.login, 'Логин')}
-                                                            className={styles.copyMiniBtn}
-                                                            title="Скопировать логин"
-                                                        >
-                                                            <FaCopy size={12} />
-                                                        </button>
+                                                <td className={styles.teacherCell}>
+                                                    {c.teacher_name ? (
+                                                        <span className={styles.teacherName}>{c.teacher_name}</span>
+                                                    ) : (
+                                                        <span className={styles.noTeacher}>—</span>
                                                     )}
                                                 </td>
-                                                <td className={styles.passwordCell}>
-                                                    {c.password ? (
-                                                        <>
-                                                            <span>
-                                                                {showPasswords[c.id] ? c.password : '••••••••'}
-                                                            </span>
+                                                
+                                                <td className={styles.credentialsCell}>
+                                                    <div className={styles.credentialLine}>
+                                                        <code>{c.login || '—'}</code>
+                                                        {c.login && (
+                                                            <button 
+                                                                onClick={() => handleCopyToClipboard(c.login, 'Логин')}
+                                                                className={styles.copyBtn}
+                                                                title="Скопировать логин"
+                                                            >
+                                                                <FaCopy size={12} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    <div className={styles.credentialLine}>
+                                                        <span className={styles.passwordValue}>
+                                                            {showPasswords[c.id] ? c.password : '••••••••'}
+                                                        </span>
+                                                        <div className={styles.passwordActions}>
                                                             <button 
                                                                 onClick={() => toggleShowPassword(c.id)}
-                                                                className={styles.togglePasswordMiniBtn}
+                                                                className={styles.togglePasswordBtn}
                                                                 title={showPasswords[c.id] ? "Скрыть пароль" : "Показать пароль"}
                                                             >
                                                                 {showPasswords[c.id] ? <FaEyeSlash size={12} /> : <FaEye size={12} />}
                                                             </button>
-                                                            <button 
-                                                                onClick={() => handleCopyToClipboard(c.password, 'Пароль')}
-                                                                className={styles.copyMiniBtn}
-                                                                title="Скопировать пароль"
-                                                            >
-                                                                <FaCopy size={12} />
-                                                            </button>
-                                                        </>
+                                                            {c.password && (
+                                                                <button 
+                                                                    onClick={() => handleCopyToClipboard(c.password, 'Пароль')}
+                                                                    className={styles.copyBtn}
+                                                                    title="Скопировать пароль"
+                                                                >
+                                                                    <FaCopy size={12} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                 </td>
+                                                
+                                                <td className={styles.textCenter}>
+                                                    {c.max_lessons_per_day ? (
+                                                        <span className={styles.lessonsLimit}>{c.max_lessons_per_day}</span>
                                                     ) : (
-                                                        <span style={{ color: '#94a3b8' }}>—</span>
+                                                        <span className={styles.noData}>—</span>
                                                     )}
                                                 </td>
-                                                <td className={styles.textCenter}>{c.max_lessons_per_day || '—'}</td>
                                                 
-                                                {/* ОБНОВЛЁННАЯ КНОПКА СМЕНЫ */}
                                                 <td className={styles.actionsCell}>
                                                     <button 
                                                         onClick={() => { setEditingClass(c); setEditClassModalOpen(true); }} 
-                                                        className={`${styles.actionIcon} ${styles.edit}`} 
+                                                        className={`${styles.actionBtn} ${styles.editBtn}`} 
                                                         title="Редактировать класс"
                                                     >
                                                         <FaEdit size={14} />
@@ -622,7 +635,7 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
                                                     </button>
                                                     <button 
                                                         onClick={() => handleChangeShift(c.id, c.shift)} 
-                                                        className={`${styles.actionIcon} ${styles.shiftToggleAction}`} 
+                                                        className={`${styles.actionBtn} ${styles.shiftBtn}`} 
                                                         title={c.shift === 1 ? "Перевести во 2 смену" : "Перевести в 1 смену"}
                                                     >
                                                         <FaSync size={14} />
@@ -630,7 +643,7 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
                                                     </button>
                                                     <button 
                                                         onClick={() => handleDeleteClass(c.id, c.name)} 
-                                                        className={`${styles.actionIcon} ${styles.delete}`} 
+                                                        className={`${styles.actionBtn} ${styles.deleteBtn}`} 
                                                         title="Удалить класс"
                                                     >
                                                         <FaTrash size={14} />
@@ -641,7 +654,7 @@ const ClassesTab = ({ classes = [], teachers = [], token, onDataChange }) => {
                                         ))
                                     ) : (
                                         <tr className={styles.emptyRow}>
-                                            <td colSpan="7">
+                                            <td colSpan="6">
                                                 <div className={styles.emptyState}>
                                                     <div className={styles.emptyIcon}>
                                                         <FaSchool size={48} />

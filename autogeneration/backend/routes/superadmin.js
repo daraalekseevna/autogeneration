@@ -131,7 +131,17 @@ router.get('/teachers', async (req, res) => {
             WHERE u.role = 'teacher'
             ORDER BY t.last_name, t.first_name
         `);
-        res.json(result.rows || []);
+        
+        // Преобразуем поля для фронтенда
+        const teachers = result.rows.map(teacher => ({
+            ...teacher,
+            unavailableDays: teacher.unavailable_days || [],
+            maxConsecutiveLessons: teacher.max_consecutive_lessons || 5,
+            preferredStartTime: teacher.preferred_start_time,
+            preferredEndTime: teacher.preferred_end_time
+        }));
+        
+        res.json(teachers);
     } catch (err) {
         console.error('GET /teachers error:', err);
         res.json([]);
@@ -2291,7 +2301,7 @@ router.post('/class-parallel-sync', async (req, res) => {
     
     try {
         const existing = await db.query(
-            'SELECT id FROM class_parallel_sync WHERE grade = $1 AND subject_id = $2',
+            'SELECT id FROM class_parallel_sync WHERE grade = $1 AND subject_id = $2',АА
             [grade, subject_id]
         );
         
@@ -2408,4 +2418,5 @@ router.delete('/forbidden-sequences/:id', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
 module.exports = router;
