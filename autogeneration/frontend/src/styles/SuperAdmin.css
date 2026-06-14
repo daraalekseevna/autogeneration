@@ -1,0 +1,1270 @@
+/* SuperAdmin.css - ЛОКАЛЬНЫЕ СТИЛИ ТОЛЬКО ДЛЯ SUPERADMIN DASHBOARD */
+
+/* ========== ПЕРЕМЕННЫЕ ДЛЯ СВЕТЛОЙ ТЕМЫ ========== */
+:root {
+    --primary: #21435A;
+    --primary-light: #2c5a7a;
+    --primary-dark: #1a3548;
+    --secondary: #f59e0b;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border-color: #e2e8f0;
+    --border-solid: #cbd5e1;
+    --bg-card: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-hover: #f1f5f9;
+    --bg-input: #ffffff;
+    --bg-table-header: #f8fafc;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --transition: all 0.2s ease;
+}
+
+/* ========== ПЕРЕМЕННЫЕ ДЛЯ ТЕМНОЙ ТЕМЫ ========== */
+[data-theme="dark"] {
+    --primary: #3b82f6;
+    --primary-light: #60a5fa;
+    --primary-dark: #2563eb;
+    --secondary: #f59e0b;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #64748b;
+    --border-color: #334155;
+    --border-solid: #475569;
+    --bg-card: #1e293b;
+    --bg-secondary: #0f172a;
+    --bg-hover: #334155;
+    --bg-input: #334155;
+    --bg-table-header: #0f172a;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+/* ========== БАЗОВЫЕ СТИЛИ ========== */
+* {
+    box-sizing: border-box;
+}
+
+.superadmin-dashboard {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+/* ========== ЗАГОЛОВОК ========== */
+.superadmin-dashboard .superadmin-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.superadmin-dashboard .superadmin-title {
+    color: var(--text-primary);
+    margin-bottom: 0.9rem;
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.1px;
+}
+
+.superadmin-dashboard .superadmin-subtitle {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+/* ========== КНОПКА НАЗАД ========== */
+.superadmin-dashboard .back-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: var(--transition);
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+}
+
+.superadmin-dashboard .back-button:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: translateX(-3px);
+}
+
+/* ========== СТАТИСТИКА ========== */
+.superadmin-dashboard .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 1200px) { .superadmin-dashboard .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px) { .superadmin-dashboard .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .superadmin-dashboard .stats-grid { grid-template-columns: 1fr; } }
+
+.superadmin-dashboard .stat-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-light);
+}
+
+.superadmin-dashboard .stat-number {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1.2;
+}
+
+.superadmin-dashboard .stat-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+/* ========== КНОПКА НАЧАТЬ НОВЫЙ УЧЕБНЫЙ ГОД ========== */
+.superadmin-dashboard .new-year-button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1.5rem;
+}
+
+.superadmin-dashboard .new-year-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.7rem 1.5rem;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 40px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.superadmin-dashboard .new-year-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+.superadmin-dashboard .new-year-btn:active {
+    transform: translateY(0);
+}
+
+[data-theme="dark"] .superadmin-dashboard .new-year-btn {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+/* ========== ТАБЫ ========== */
+.superadmin-dashboard .tabs-container,
+.superadmin-dashboard .sanpin-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+.superadmin-dashboard .tab-button,
+.superadmin-dashboard .sanpin-tab {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.superadmin-dashboard .tab-button:hover,
+.superadmin-dashboard .sanpin-tab:hover {
+    color: var(--primary);
+    background: rgba(33, 67, 90, 0.05);
+}
+
+.superadmin-dashboard .tab-button.active,
+.superadmin-dashboard .sanpin-tab.active {
+    color: var(--primary);
+    background: rgba(33, 67, 90, 0.08);
+}
+
+/* ========== СЕТКА КОНТЕНТА ========== */
+.superadmin-dashboard .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+    .superadmin-dashboard .content-grid { grid-template-columns: 1fr; }
+}
+
+/* ========== КАРТОЧКИ ========== */
+.superadmin-dashboard .form-container,
+.superadmin-dashboard .table-container,
+.superadmin-dashboard .rooms-container-table,
+.superadmin-dashboard .lessons-container,
+.superadmin-dashboard .sanpin-container,
+.superadmin-dashboard .teachers-form-card,
+.superadmin-dashboard .teachers-table-card,
+.superadmin-dashboard .classes-form-card,
+.superadmin-dashboard .classes-table-card,
+.superadmin-dashboard .extended-table-card,
+.superadmin-dashboard .rooms-table-card,
+.superadmin-dashboard .sanpin-table-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .form-title,
+.superadmin-dashboard .table-title {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.superadmin-dashboard .form-title svg,
+.superadmin-dashboard .table-title svg {
+    color: var(--primary);
+}
+
+/* ========== ФОРМЫ ========== */
+.superadmin-dashboard .form-group {
+    margin-bottom: 1rem;
+}
+
+.superadmin-dashboard .form-group label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.superadmin-dashboard .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 640px) {
+    .superadmin-dashboard .form-row { grid-template-columns: 1fr; }
+}
+
+.superadmin-dashboard .form-group input,
+.superadmin-dashboard .form-group select,
+.superadmin-dashboard .form-group textarea {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--border-solid);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .form-group input:focus,
+.superadmin-dashboard .form-group select:focus,
+.superadmin-dashboard .form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(33, 67, 90, 0.1);
+}
+
+.superadmin-dashboard .form-group input:disabled {
+    background: var(--bg-secondary);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* ========== КНОПКИ ========== */
+.superadmin-dashboard .submit-button,
+.superadmin-dashboard .add-room-btn,
+.superadmin-dashboard .btn-save-modal,
+.superadmin-dashboard .btn-add-small,
+.superadmin-dashboard .teachers-submit-btn,
+.superadmin-dashboard .classes-submit-btn,
+.superadmin-dashboard .extended-add-btn,
+.superadmin-dashboard .rooms-add-btn,
+.superadmin-dashboard .sanpin-add-btn,
+.superadmin-dashboard .sanpin-submit-btn {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    background: var(--primary);
+    color: white;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.8rem;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.superadmin-dashboard .submit-button:hover,
+.superadmin-dashboard .add-room-btn:hover,
+.superadmin-dashboard .btn-save-modal:hover,
+.superadmin-dashboard .btn-add-small:hover,
+.superadmin-dashboard .teachers-submit-btn:hover,
+.superadmin-dashboard .classes-submit-btn:hover,
+.superadmin-dashboard .extended-add-btn:hover,
+.superadmin-dashboard .rooms-add-btn:hover,
+.superadmin-dashboard .sanpin-add-btn:hover,
+.superadmin-dashboard .sanpin-submit-btn:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+}
+
+.superadmin-dashboard .btn-cancel-modal,
+.superadmin-dashboard .teachers-modal-cancel,
+.superadmin-dashboard .classes-modal-cancel,
+.superadmin-dashboard .extended-modal-cancel,
+.superadmin-dashboard .rooms-modal-cancel,
+.superadmin-dashboard .sanpin-cancel-btn {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .btn-cancel-modal:hover,
+.superadmin-dashboard .teachers-modal-cancel:hover,
+.superadmin-dashboard .classes-modal-cancel:hover,
+.superadmin-dashboard .extended-modal-cancel:hover,
+.superadmin-dashboard .rooms-modal-cancel:hover,
+.superadmin-dashboard .sanpin-cancel-btn:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: white;
+}
+
+/* ========== ТАБЛИЦЫ ========== */
+.superadmin-dashboard .table-responsive {
+    overflow-x: auto;
+}
+
+.superadmin-dashboard .data-table,
+.superadmin-dashboard .rooms-table,
+.superadmin-dashboard .teachers-table,
+.superadmin-dashboard .classes-table,
+.superadmin-dashboard .extended-table,
+.superadmin-dashboard .sanpin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.superadmin-dashboard .data-table th,
+.superadmin-dashboard .rooms-table th,
+.superadmin-dashboard .teachers-table th,
+.superadmin-dashboard .classes-table th,
+.superadmin-dashboard .extended-table th,
+.superadmin-dashboard .sanpin-table th {
+    padding: 0.75rem;
+    text-align: left;
+    color: var(--text-primary);
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    background: var(--bg-table-header);
+}
+
+.superadmin-dashboard .data-table td,
+.superadmin-dashboard .rooms-table td,
+.superadmin-dashboard .teachers-table td,
+.superadmin-dashboard .classes-table td,
+.superadmin-dashboard .extended-table td,
+.superadmin-dashboard .sanpin-table td {
+    padding: 0.7rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.superadmin-dashboard .data-table tr:hover,
+.superadmin-dashboard .rooms-table tr:hover,
+.superadmin-dashboard .teachers-table tr:hover,
+.superadmin-dashboard .classes-table tr:hover,
+.superadmin-dashboard .extended-table tr:hover,
+.superadmin-dashboard .sanpin-table tr:hover {
+    background: var(--bg-hover);
+}
+
+/* ========== БЭЙДЖИ ========== */
+.superadmin-dashboard .shift-badge {
+    display: inline-block;
+    padding: 0.25rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: white;
+}
+
+.superadmin-dashboard .shift-badge.shift-1 {
+    background: var(--success);
+}
+
+.superadmin-dashboard .shift-badge.shift-2 {
+    background: var(--info);
+}
+
+.superadmin-dashboard .subject-tag,
+.superadmin-dashboard .class-tag,
+.superadmin-dashboard .priority-subject-tag,
+.superadmin-dashboard .teacher-tag,
+.superadmin-dashboard .rooms-tag.priority,
+.superadmin-dashboard .rooms-tag.teacher,
+.superadmin-dashboard .teachers-tag.subject,
+.superadmin-dashboard .teachers-tag.class {
+    display: inline-block;
+    padding: 0.25rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    background: var(--primary);
+    color: white;
+}
+
+.superadmin-dashboard .grade-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    background: rgba(33, 67, 90, 0.08);
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.superadmin-dashboard .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.superadmin-dashboard .status-badge.success {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+}
+
+.superadmin-dashboard .status-badge.warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--warning);
+}
+
+.superadmin-dashboard .status-badge.muted {
+    background: rgba(148, 163, 184, 0.15);
+    color: var(--text-muted);
+}
+
+/* ========== ЦВЕТОВЫЕ ЭЛЕМЕНТЫ ========== */
+.superadmin-dashboard .color-cell,
+.superadmin-dashboard .color-preview,
+.superadmin-dashboard .teachers-color-preview,
+.superadmin-dashboard .teachers-color-cell {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.superadmin-dashboard .color-cell:hover,
+.superadmin-dashboard .color-preview:hover {
+    transform: scale(1.05);
+}
+
+/* ========== МОДАЛЬНЫЕ ОКНА ========== */
+.superadmin-dashboard .modal-overlay-fixed,
+.superadmin-dashboard .teachers-modal-overlay,
+.superadmin-dashboard .classes-modal-overlay,
+.superadmin-dashboard .extended-modal-overlay,
+.superadmin-dashboard .rooms-modal-overlay,
+.superadmin-dashboard .confirm-modal-overlay,
+.superadmin-dashboard .wizard-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+}
+
+.superadmin-dashboard .modal-content-fixed,
+.superadmin-dashboard .teachers-modal-content,
+.superadmin-dashboard .classes-modal-content,
+.superadmin-dashboard .extended-modal-content,
+.superadmin-dashboard .rooms-modal-content,
+.superadmin-dashboard .confirm-modal-content,
+.superadmin-dashboard .wizard-modal-content {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 550px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.superadmin-dashboard .modal-header-fixed,
+.superadmin-dashboard .teachers-modal-header,
+.superadmin-dashboard .classes-modal-header,
+.superadmin-dashboard .extended-modal-header,
+.superadmin-dashboard .rooms-modal-header,
+.superadmin-dashboard .confirm-modal-header,
+.superadmin-dashboard .wizard-modal-header {
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--primary);
+    color: white;
+}
+
+.superadmin-dashboard .modal-header-fixed h3,
+.superadmin-dashboard .teachers-modal-header h3,
+.superadmin-dashboard .classes-modal-header h3,
+.superadmin-dashboard .extended-modal-header h3,
+.superadmin-dashboard .rooms-modal-header h3,
+.superadmin-dashboard .wizard-modal-header h2 {
+    margin: 0;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+}
+
+.superadmin-dashboard .modal-close-fixed,
+.superadmin-dashboard .teachers-modal-close,
+.superadmin-dashboard .classes-modal-close,
+.superadmin-dashboard .extended-modal-close,
+.superadmin-dashboard .rooms-modal-close,
+.superadmin-dashboard .wizard-close {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .modal-close-fixed:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: rotate(90deg);
+}
+
+.superadmin-dashboard .modal-body-fixed,
+.superadmin-dashboard .teachers-modal-body,
+.superadmin-dashboard .classes-modal-body,
+.superadmin-dashboard .extended-modal-body,
+.superadmin-dashboard .rooms-modal-body,
+.superadmin-dashboard .confirm-modal-body,
+.superadmin-dashboard .wizard-body {
+    padding: 1.25rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.superadmin-dashboard .modal-footer-fixed,
+.superadmin-dashboard .teachers-modal-footer,
+.superadmin-dashboard .classes-modal-footer,
+.superadmin-dashboard .extended-modal-footer,
+.superadmin-dashboard .rooms-modal-footer,
+.superadmin-dashboard .confirm-modal-footer,
+.superadmin-dashboard .wizard-step-footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    background: var(--bg-secondary);
+}
+
+/* ========== МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ УДАЛЕНИЯ ========== */
+.superadmin-dashboard .confirm-modal-content {
+    max-width: 420px;
+    text-align: center;
+}
+
+.superadmin-dashboard .confirm-modal-header {
+    background: var(--danger);
+    justify-content: center;
+    position: relative;
+}
+
+.superadmin-dashboard .confirm-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.5rem;
+    color: var(--danger);
+}
+
+.superadmin-dashboard .confirm-item-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--danger);
+    text-align: center;
+    padding: 0.5rem;
+    background: rgba(239, 68, 68, 0.08);
+    border-radius: var(--radius-md);
+    margin: 1rem 0;
+    word-break: break-all;
+}
+
+.superadmin-dashboard .confirm-btn-delete {
+    padding: 0.6rem 1.5rem;
+    background: var(--danger);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .confirm-btn-delete:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+/* ========== УВЕДОМЛЕНИЯ ========== */
+.superadmin-dashboard .notification,
+.superadmin-dashboard .teachers-notification,
+.superadmin-dashboard .classes-notification,
+.superadmin-dashboard .extended-notification,
+.superadmin-dashboard .rooms-notification,
+.superadmin-dashboard .sanpin-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--primary);
+    color: white;
+    padding: 12px 20px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 2100;
+    animation: slideInRight 0.3s ease;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.superadmin-dashboard .notification.error,
+.superadmin-dashboard .teachers-notification.error,
+.superadmin-dashboard .classes-notification.error,
+.superadmin-dashboard .extended-notification.error,
+.superadmin-dashboard .rooms-notification.error,
+.superadmin-dashboard .sanpin-notification.error {
+    background: var(--danger);
+}
+
+.superadmin-dashboard .notification.success,
+.superadmin-dashboard .teachers-notification.success,
+.superadmin-dashboard .classes-notification.success,
+.superadmin-dashboard .extended-notification.success,
+.superadmin-dashboard .rooms-notification.success,
+.superadmin-dashboard .sanpin-notification.success {
+    background: var(--success);
+}
+
+/* ========== ПУСТЫЕ СТРОКИ ========== */
+.superadmin-dashboard .empty-row,
+.superadmin-dashboard .sanpin-empty-row {
+    text-align: center !important;
+    padding: 2rem !important;
+    color: var(--text-muted);
+}
+
+.superadmin-dashboard .empty-row svg,
+.superadmin-dashboard .sanpin-empty-state svg {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+/* ========== ЗАГРУЗКА ========== */
+.superadmin-dashboard .loading-container,
+.superadmin-dashboard .sanpin-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    gap: 0.75rem;
+}
+
+.superadmin-dashboard .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ========== ИНФОРМАЦИОННЫЕ КАРТОЧКИ ========== */
+.superadmin-dashboard .info-note,
+.superadmin-dashboard .sanpin-info-card {
+    margin-top: 0.75rem;
+    padding: 0.6rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+
+.superadmin-dashboard .info-note svg,
+.superadmin-dashboard .sanpin-info-card svg {
+    color: var(--primary);
+}
+
+/* ========== SELECTOR КНОПКИ ========== */
+.superadmin-dashboard .subject-selector-button,
+.superadmin-dashboard .teachers-selector-btn,
+.superadmin-dashboard .rooms-selector-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--border-solid);
+    border-radius: var(--radius-md);
+    background: var(--bg-input);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .subject-selector-button:hover,
+.superadmin-dashboard .teachers-selector-btn:hover,
+.superadmin-dashboard .rooms-selector-btn:hover {
+    border-color: var(--primary);
+}
+
+.superadmin-dashboard .subject-preview,
+.superadmin-dashboard .teachers-preview-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 0.5rem;
+}
+
+.superadmin-dashboard .subject-preview-tag,
+.superadmin-dashboard .teachers-preview-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--primary);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: white;
+}
+
+/* ========== ПОИСК ========== */
+.superadmin-dashboard .teachers-selector-search,
+.superadmin-dashboard .rooms-selector-search,
+.superadmin-dashboard .subject-priorities-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-solid);
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+    background: var(--bg-input);
+}
+
+.superadmin-dashboard .teachers-selector-search input,
+.superadmin-dashboard .rooms-selector-search input,
+.superadmin-dashboard .subject-priorities-search input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--text-primary);
+}
+
+.superadmin-dashboard .teachers-selector-list,
+.superadmin-dashboard .rooms-selector-list,
+.superadmin-dashboard .subject-priorities-list {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 0.5rem;
+}
+
+.superadmin-dashboard .teachers-selector-item,
+.superadmin-dashboard .rooms-selector-item,
+.superadmin-dashboard .subject-priority-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.superadmin-dashboard .teachers-selector-item:hover,
+.superadmin-dashboard .rooms-selector-item:hover,
+.superadmin-dashboard .subject-priority-item:hover {
+    background: var(--bg-hover);
+}
+
+/* ========== ПЕРЕКЛЮЧАТЕЛЬ СМЕНЫ ========== */
+.superadmin-dashboard .shift-toggle-container {
+    display: flex;
+    gap: 0.5rem;
+    background: var(--bg-secondary);
+    padding: 0.3rem;
+    border-radius: 40px;
+    width: 100%;
+}
+
+.superadmin-dashboard .shift-option {
+    flex: 1;
+    position: relative;
+}
+
+.superadmin-dashboard .shift-option input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.superadmin-dashboard .shift-option label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 32px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+.superadmin-dashboard .shift-option input:checked + label {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(33, 67, 90, 0.3);
+}
+
+/* ========== КОПИРОВАНИЕ ========== */
+.superadmin-dashboard .copy-mini-btn,
+.superadmin-dashboard .toggle-password-mini-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-left: 6px;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .copy-mini-btn:hover,
+.superadmin-dashboard .toggle-password-mini-btn:hover {
+    background: var(--bg-hover);
+    color: var(--primary);
+}
+
+/* ========== ПАРОЛЬ ========== */
+.superadmin-dashboard .password-input-wrapper {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.superadmin-dashboard .password-input-wrapper input {
+    flex: 1;
+}
+
+.superadmin-dashboard .toggle-password-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.85rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: var(--transition);
+}
+
+/* ========== ДНИ НЕДЕЛИ ========== */
+.superadmin-dashboard .teachers-days-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.superadmin-dashboard .teachers-day {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    padding: 0.3rem 0.8rem;
+    background: var(--bg-secondary);
+    border-radius: 30px;
+    font-size: 0.7rem;
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .teachers-day:hover {
+    background: var(--bg-hover);
+}
+
+/* ========== ПАЛИТРА ЦВЕТОВ ========== */
+.superadmin-dashboard .teachers-palette-overlay,
+.superadmin-dashboard .color-picker-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+}
+
+.superadmin-dashboard .teachers-palette-content,
+.superadmin-dashboard .color-picker-content {
+    background: var(--bg-card);
+    border-radius: 20px;
+    width: 400px;
+    max-width: 90%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.superadmin-dashboard .teachers-palette-header {
+    padding: 0.75rem 1rem;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.superadmin-dashboard .teachers-palette-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+    padding: 1rem;
+}
+
+.superadmin-dashboard .teachers-palette-color {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.superadmin-dashboard .teachers-palette-color:hover {
+    transform: scale(1.1);
+}
+
+/* ========== СКРОЛЛБАР ========== */
+.superadmin-dashboard ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.superadmin-dashboard ::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 3px;
+}
+
+.superadmin-dashboard ::-webkit-scrollbar-thumb {
+    background: var(--border-solid);
+    border-radius: 3px;
+}
+
+.superadmin-dashboard ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* ========== АДАПТАЦИЯ ========== */
+@media (max-width: 1200px) {
+    .superadmin-dashboard .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1024px) {
+    .superadmin-dashboard .content-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .superadmin-dashboard .teachers-content-grid,
+    .superadmin-dashboard .classes-content-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .superadmin-dashboard .new-year-button-container {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .superadmin-dashboard {
+        padding: 0 1rem;
+    }
+    
+    .superadmin-dashboard .superadmin-title {
+        font-size: 1.35rem;
+    }
+    
+    .superadmin-dashboard .tab-button,
+    .superadmin-dashboard .sanpin-tab {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+    }
+    
+    .superadmin-dashboard .data-table th,
+    .superadmin-dashboard .data-table td {
+        padding: 0.5rem;
+        font-size: 0.7rem;
+    }
+    
+    .superadmin-dashboard .stats-grid {
+        gap: 0.75rem;
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .superadmin-dashboard .back-button {
+        top: 10px;
+        left: 10px;
+        padding: 6px 12px;
+        font-size: 0.7rem;
+    }
+    
+    .superadmin-dashboard .stats-cards {
+        flex-direction: column;
+    }
+    
+    .superadmin-dashboard .stats-cards .stat-card {
+        min-width: auto;
+    }
+    
+    .superadmin-dashboard .extended-teachers-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .superadmin-dashboard .new-year-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
+    }
+    
+    .superadmin-dashboard .sanpin-tabs {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .superadmin-dashboard .sanpin-tab {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 640px) {
+    .superadmin-dashboard .form-row,
+    .superadmin-dashboard .teachers-form-row,
+    .superadmin-dashboard .classes-form-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .superadmin-dashboard .action-cell {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .superadmin-dashboard .teachers-palette-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+    
+    .superadmin-dashboard .new-year-button-container {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .superadmin-dashboard .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .superadmin-dashboard .form-container,
+    .superadmin-dashboard .table-container {
+        padding: 0.75rem;
+    }
+    
+    .superadmin-dashboard .modal-content-fixed {
+        width: 95%;
+        margin: 0.5rem;
+    }
+    
+    .superadmin-dashboard .teachers-palette-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .superadmin-dashboard .teachers-days-group {
+        flex-direction: column;
+    }
+    
+    .superadmin-dashboard .teachers-day {
+        width: 100%;
+    }
+    
+    .superadmin-dashboard .shift-toggle-container {
+        flex-direction: column;
+        background: transparent;
+        gap: 0.5rem;
+    }
+    
+    .superadmin-dashboard .sanpin-table th,
+    .superadmin-dashboard .sanpin-table td {
+        padding: 0.3rem;
+        font-size: 0.65rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .superadmin-dashboard .teachers-palette-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .superadmin-dashboard .data-table th,
+    .superadmin-dashboard .data-table td {
+        padding: 0.3rem;
+        font-size: 0.6rem;
+    }
+    
+    .superadmin-dashboard .action-button {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.6rem;
+    }
+}

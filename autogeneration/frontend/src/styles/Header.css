@@ -1,0 +1,406 @@
+/* src/frontend/styles/Header.css */
+/* Переменные темы в global-theme.css */
+
+.admin-header {
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--border-color);
+    font-family: var(--font-family);
+    background: rgba(255, 255, 255, 0);
+    box-sizing: border-box;
+}
+
+/* ЛЕВАЯ ЧАСТЬ */
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.logo-image {
+    width: 55px;
+    height: 55px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.school-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.school-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+.school-location {
+    font-weight: 500;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* ПРАВАЯ ЧАСТЬ */
+.header-right {
+    display: flex;
+    justify-content: flex-end;
+    flex: 1;
+}
+
+.admin-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    padding: 0.3rem 1rem;
+    border-radius: 50px;
+    background: #f8fafc00;
+    transition: background 0.2s;
+}
+
+.admin-section:hover {
+    background: var(--primary-soft);
+}
+
+.admin-avatar-icon {
+    font-size: 56px;
+    width: 40px;
+    height: 40px;
+    color: var(--text-primary);
+    flex-shrink: 0;
+}
+
+.admin-info {
+    text-align: right;
+}
+
+.admin-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+.admin-role {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* ===== АДАПТАЦИЯ ===== */
+
+/* Планшеты и маленькие ноутбуки */
+@media (max-width: 1024px) {
+    .admin-header {
+        padding: 0.8rem 1.5rem;
+    }
+    
+    .logo-image {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .school-name {
+        font-size: 0.9rem;
+    }
+    
+    .school-location {
+        font-size: 0.75rem;
+    }
+    
+    .admin-avatar-icon {
+        font-size: 50px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .admin-name {
+        font-size: 0.9rem;
+    }
+    
+    .admin-role {
+        font-size: 0.75rem;
+    }
+    
+    .admin-section {
+        gap: 0.9rem;
+        padding: 0.25rem 0.9rem;
+    }
+}
+
+/* Средние планшеты */
+@media (max-width: 860px) {
+    .school-name {
+        font-size: 0.85rem;
+    }
+    
+    .school-location {
+        font-size: 0.7rem;
+    }
+    
+    .admin-name {
+        font-size: 0.85rem;
+    }
+    
+    .admin-avatar-icon {
+        font-size: 48px;
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* Вертикальная ориентация планшетов */
+@media (max-width: 768px) {
+    .admin-header {
+        flex-direction: column;
+        padding: 0.8rem;
+        gap: 0.8rem;
+    }
+    
+    .header-left {
+        width: 100%;
+        justify-content: center;
+        gap: 0.8rem;
+    }
+    
+    .school-info {
+        text-align: left;
+    }
+    
+    .header-right {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .admin-section {
+        justify-content: center;
+    }
+    
+    .admin-info {
+        text-align: left;
+    }
+    
+    .logo-image {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .school-name {
+        font-size: 0.9rem;
+        white-space: normal;
+    }
+    
+    .school-location {
+        font-size: 0.75rem;
+        white-space: normal;
+    }
+    
+    .admin-avatar-icon {
+        font-size: 52px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .admin-name {
+        font-size: 0.9rem;
+    }
+}
+
+/* Большие телефоны */
+@media (max-width: 580px) {
+    .admin-header {
+        padding: 0.7rem;
+    }
+    
+    .header-left {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .school-info {
+        text-align: center;
+    }
+    
+    .logo-image {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .school-name {
+        font-size: 0.95rem;
+        white-space: normal;
+        text-align: center;
+    }
+    
+    .school-location {
+        font-size: 0.75rem;
+        white-space: normal;
+        text-align: center;
+    }
+    
+    .admin-section {
+        padding: 0.3rem 1rem;
+        gap: 0.9rem;
+    }
+    
+    .admin-avatar-icon {
+        font-size: 50px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .admin-name {
+        font-size: 0.85rem;
+    }
+    
+    .admin-role {
+        font-size: 0.7rem;
+    }
+}
+
+/* Средние телефоны */
+@media (max-width: 480px) {
+    .admin-header {
+        padding: 0.6rem;
+    }
+    
+    .logo-image {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .school-name {
+        font-size: 0.9rem;
+    }
+    
+    .school-location {
+        font-size: 0.7rem;
+    }
+    
+    .admin-avatar-icon {
+        font-size: 46px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .admin-name {
+        font-size: 0.8rem;
+    }
+    
+    .admin-role {
+        font-size: 0.65rem;
+    }
+    
+    .admin-section {
+        padding: 0.25rem 0.8rem;
+        gap: 0.8rem;
+    }
+}
+
+/* Маленькие телефоны */
+@media (max-width: 380px) {
+    .admin-header {
+        padding: 0.5rem;
+    }
+    
+    .logo-image {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .school-name {
+        font-size: 0.85rem;
+    }
+    
+    .school-location {
+        font-size: 0.65rem;
+    }
+    
+    .admin-name {
+        font-size: 0.75rem;
+    }
+    
+    .admin-role {
+        font-size: 0.6rem;
+    }
+    
+    .admin-avatar-icon {
+        font-size: 42px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .admin-section {
+        padding: 0.2rem 0.6rem;
+        gap: 0.7rem;
+    }
+}
+
+/* Очень маленькие телефоны */
+@media (max-width: 320px) {
+    .logo-image {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .school-name {
+        font-size: 0.8rem;
+    }
+    
+    .school-location {
+        font-size: 0.6rem;
+    }
+    
+    .admin-name {
+        font-size: 0.7rem;
+    }
+    
+    .admin-role {
+        font-size: 0.55rem;
+    }
+    
+    .admin-avatar-icon {
+        font-size: 38px;
+        width: 38px;
+        height: 38px;
+    }
+}
+
+/* Альбомная ориентация телефонов */
+@media (max-width: 850px) and (orientation: landscape) {
+    .admin-header {
+        padding: 0.5rem 1rem;
+    }
+    
+    .logo-image {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .school-name {
+        font-size: 0.8rem;
+    }
+    
+    .school-location {
+        font-size: 0.7rem;
+    }
+    
+    .admin-avatar-icon {
+        font-size: 44px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .admin-name {
+        font-size: 0.8rem;
+    }
+}

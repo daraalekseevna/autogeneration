@@ -1,0 +1,84 @@
+# Build results
+/bin/
+/obj/
+/packages/
+*.user
+*.userprefs
+*.suo
+*.cache
+*.vs/
+*.vscode/
+
+# Rider
+.idea/
+
+# Visual Studio
+.vs/
+*.swp
+*.sln
+*.csproj.user
+
+# Test results
+TestResults/
+*.trx
+
+# Logs
+*.log
+logs/
+
+# Database
+*.mdf
+*.ldf
+*.db
+
+# Configuration files with secrets
+appsettings.Development.json
+appsettings.Production.json
+*.secrets.json
+
+# Runtime
+*.pid
+*.seed
+*.pid.lock
+
+# OS metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Code coverage
+*.coverage
+*.coveragexml
+*.dotCover
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+!packages/repositories.config
+
+# Publishing
+*.pubxml
+*.pubxml.user
+
+# Backup files
+*~
+*.bak
+*.tmp
+
+# Environment files
+.env
+.env.local
+.env.*.local

@@ -1,0 +1,108 @@
+/* Footer.css */
+/* Переменные темы в global-theme.css */
+
+footer {
+    padding: 2rem 1.5rem;
+    margin-top: 3rem;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border-color);
+    width: 100%;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    font-family: var(--font-family);
+}
+
+.footer-content {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.footer-item {
+    text-align: right;
+    min-width: 180px;
+    font-family: var(--font-family);
+}
+
+.footer-item h3 {
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: var(--font-family);
+}
+
+.footer-item p {
+    font-size: 0.6rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    line-height: 1.4;
+    font-family: var(--font-family);
+}
+
+.footer-copyright {
+    text-align: right;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-family: var(--font-family);
+}
+
+@media (max-width: 1024px) {
+    .footer-content {
+        gap: 3rem;
+    }
+    
+    .footer-item {
+        min-width: 160px;
+    }
+}
+
+@media (max-width: 768px) {
+    footer {
+        padding: 1.5rem 1rem;
+        margin-top: 2rem;
+    }
+    
+    .footer-content {
+        justify-content: space-between;
+        gap: 2rem;
+    }
+    
+    .footer-item {
+        min-width: 140px;
+        text-align: center;
+    }
+    
+    .footer-item h3 {
+        font-size: 0.6rem;
+    }
+    
+    .footer-item p {
+        font-size: 0.6rem;
+    }
+    
+    .footer-copyright {
+        text-align: center;
+    }
+}
+
+@media (max-width: 600px) {
+    .footer-content {
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+    }
+    
+    .footer-item {
+        min-width: auto;
+        width: 100%;
+        max-width: 250px;
+    }
+}
