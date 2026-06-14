@@ -14,7 +14,8 @@ import ThemeToggle from '../components/ThemeToggle';
 import { activityAPI } from '../services/activityAPI';
 import '../styles/MainContent.css';
 
-const API_URL = 'http://localhost:5000/api';
+// ИСПРАВЛЕНО: используем переменную окружения
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
@@ -416,12 +417,6 @@ const MainContent = () => {
         <div className="main-content-page">
             <ThemeToggle />
             
-            {/* <div className="animated-bg">
-                {[...Array(10)].map((_, i) => (
-                    <div key={i} className="glass-circle"></div>
-                ))}
-            </div>
-             */}
             <Header />
             
             <main className="main-content-container">

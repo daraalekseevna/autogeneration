@@ -1,4 +1,4 @@
-// ScheduleViewer.jsx - ПОЛНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ (БЕЗ ПОДСВЕТКИ КОНФЛИКТОВ)
+// ScheduleViewer.jsx - ПОЛНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { 
   FaEdit, FaTrash, FaPlus, FaSearch, FaFileExcel, FaPrint, FaGripVertical, FaTimes,
@@ -37,6 +37,64 @@ let lessonsCache = null;
 let teachersCache = null;
 let roomsCache = null;
 let scheduleSettingsCache = null;
+
+// Функция для проверки конфликтов
+const checkScheduleConflicts = (schedules) => {
+  const conflicts = [];
+  const teacherSchedule = new Map();
+  const roomSchedule = new Map();
+
+  for (const [className, days] of Object.entries(schedules)) {
+    for (const [day, lessons] of Object.entries(days)) {
+      for (const [lessonNum, lesson] of Object.entries(lessons)) {
+        if (!lesson || !lesson.teacher || !lesson.room) continue;
+
+        const lessonInfo = {
+          className,
+          day,
+          lessonNumber: parseInt(lessonNum),
+          subject: lesson.subject,
+          teacher: lesson.teacher,
+          room: lesson.room
+        };
+
+        const teacherKey = `${lesson.teacher}|${day}|${lessonNum}`;
+        if (teacherSchedule.has(teacherKey)) {
+          const existingLesson = teacherSchedule.get(teacherKey);
+          if (existingLesson.className !== className) {
+            conflicts.push({
+              key: `teacher_${Date.now()}_${Math.random()}`,
+              type: 'teacher',
+              severity: 'error',
+              message: `Учитель ${lesson.teacher} одновременно ведет уроки в разных классах: ${existingLesson.className} и ${className} (${day}, ${lessonNum} урок)`,
+              details: { first: existingLesson, second: lessonInfo }
+            });
+          }
+        } else {
+          teacherSchedule.set(teacherKey, lessonInfo);
+        }
+
+        const roomKey = `${lesson.room}|${day}|${lessonNum}`;
+        if (roomSchedule.has(roomKey)) {
+          const existingLesson = roomSchedule.get(roomKey);
+          if (existingLesson.className !== className) {
+            conflicts.push({
+              key: `room_${Date.now()}_${Math.random()}`,
+              type: 'room',
+              severity: 'error',
+              message: `Кабинет ${lesson.room} одновременно используется разными классами: ${existingLesson.className} и ${className} (${day}, ${lessonNum} урок)`,
+              details: { first: existingLesson, second: lessonInfo }
+            });
+          }
+        } else {
+          roomSchedule.set(roomKey, lessonInfo);
+        }
+      }
+    }
+  }
+
+  return conflicts;
+};
 
 // Функция для расчета времени урока
 const calculateLessonTimes = (settings, shift = 1) => {
@@ -124,8 +182,8 @@ const convertScheduleDays = (schedules) => {
   return converted;
 };
 
-// Компонент LessonCard (БЕЗ ПОДСВЕТКИ КОНФЛИКТОВ)
-const LessonCard = memo(({ lesson, teacherColor, onEdit, onDelete, isDraggable, onDragStart, onDragEnd, lessonNumber, className, day, onCopy, onPaste, canPaste }) => {
+// Компонент LessonCard
+const LessonCard = memo(({ lesson, teacherColor, onEdit, onDelete, isDraggable, onDragStart, onDragEnd, lessonNumber, className, day, onCopy, onPaste, canPaste, hasConflict }) => {
   const [isHovered, setIsHovered] = useState(false);
   
   if (!lesson) return null;
@@ -162,7 +220,7 @@ const LessonCard = memo(({ lesson, teacherColor, onEdit, onDelete, isDraggable, 
   
   return (
     <div 
-      className={`lesson-card ${isDraggable ? 'edit-mode draggable' : 'view-mode'}`}
+      className={`lesson-card ${isDraggable ? 'edit-mode draggable' : 'view-mode'} ${hasConflict ? 'has-conflicts' : ''}`}
       draggable={isDraggable}
       onDragStart={handleDragStart}
       onDragEnd={onDragEnd}
@@ -174,6 +232,7 @@ const LessonCard = memo(({ lesson, teacherColor, onEdit, onDelete, isDraggable, 
       <div className="lesson-subject" title={lesson.subject}>{shortSubject}</div>
       <div className="lesson-teacher"><FaUserGraduate /> {teacherInitials}</div>
       <div className="lesson-room"><FaDoorOpen /> {lesson.room}</div>
+      {hasConflict && <div className="conflict-indicator"><FaExclamationTriangle /></div>}
       {isHovered && isDraggable && (
         <div className="lesson-actions">
           <button className="lesson-action-btn edit" onClick={() => onEdit(lesson)}><FaEdit /></button>
@@ -207,10 +266,63 @@ const ToastNotification = ({ message, type, onClose }) => {
   );
 };
 
-// Панель конфликтов (скрыта полностью)
-const ConflictsPanel = ({ conflicts, isEditMode, isOpen, onToggle }) => {
-  // Полностью скрываем панель конфликтов
-  return null;
+// Панель конфликтов
+const ConflictsPanel = ({ conflicts, onFixConflict, onNavigateToLesson, isEditMode, isOpen, onToggle }) => {
+  if (!conflicts || conflicts.length === 0) {
+    return (
+      <div className="conflicts-panel-empty">
+        <FaCheckCircle /> Конфликтов не обнаружено
+      </div>
+    );
+  }
+
+  if (!isOpen) {
+    return (
+      <div className="conflicts-panel collapsed" onClick={onToggle}>
+        <div className="conflicts-panel-collapsed">
+          <FaExclamationTriangle style={{ color: '#f44336' }} />
+          <span>Обнаружено конфликтов: {conflicts.length}</span>
+          <button className="conflicts-expand-btn"><FaChevronDown /> Развернуть</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="conflicts-panel">
+      <div className="conflicts-panel-header">
+        <div className="conflicts-panel-title">
+          <FaExclamationTriangle /> Обнаружено конфликтов: {conflicts.length}
+        </div>
+        <button className="conflicts-collapse-btn" onClick={onToggle} title="Свернуть панель">
+          <FaChevronUp /> Свернуть
+        </button>
+      </div>
+      <div className="conflicts-list">
+        {conflicts.map((conflict, idx) => (
+          <div key={conflict.key || idx} className="conflict-item error">
+            <div className="conflict-item-header">
+              <div className="conflict-item-type" style={{ color: '#f44336' }}>
+                {conflict.type === 'teacher' ? <FaUserGraduate /> : <FaDoorOpen />} 
+                {conflict.type === 'teacher' ? 'Конфликт учителя' : 'Конфликт кабинета'}
+              </div>
+              <div className="conflict-item-actions">
+                {isEditMode && (
+                  <button className="conflict-item-fix" onClick={() => onFixConflict(conflict)}>
+                    <FaCheckCircle /> Быстрое исправление
+                  </button>
+                )}
+                <button className="conflict-item-goto" onClick={() => onNavigateToLesson(conflict.details?.first)}>
+                  <FaEye /> Перейти
+                </button>
+              </div>
+            </div>
+            <div className="conflict-item-message">{conflict.message}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 // Модальное окно редактирования
@@ -372,6 +484,13 @@ const ScheduleViewer = () => {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000);
   }, []);
 
+  // Проверка конфликтов
+  const checkConflicts = useCallback(() => {
+    const foundConflicts = checkScheduleConflicts(schedules);
+    setConflicts(foundConflicts);
+    return foundConflicts;
+  }, [schedules]);
+
   // Обновление урока
   const updateLesson = useCallback((className, day, lessonNumber, lesson) => {
     setSchedules(prev => {
@@ -486,6 +605,19 @@ const ScheduleViewer = () => {
   const getLessonForCell = useCallback((className, day, lessonNumber) => {
     return schedules[className]?.[day]?.[lessonNumber] || null;
   }, [schedules]);
+
+  // Проверка конфликта для урока
+  const getLessonConflict = useCallback((className, day, lessonNumber, lesson) => {
+    if (!lesson || !conflicts.length) return false;
+    return conflicts.some(conflict => 
+      (conflict.details?.first?.className === className && 
+       conflict.details?.first?.day === day && 
+       conflict.details?.first?.lessonNumber === lessonNumber) ||
+      (conflict.details?.second?.className === className && 
+       conflict.details?.second?.day === day && 
+       conflict.details?.second?.lessonNumber === lessonNumber)
+    );
+  }, [conflicts]);
 
   // Проверка показывать ли урок для класса
   const shouldShowLessonForClass = useCallback((className, lessonNumber) => {
@@ -627,7 +759,7 @@ const ScheduleViewer = () => {
     }
   }, [token, showToast]);
 
-  // ЗАГРУЗКА ДАННЫХ
+  // ЗАГРУЗКА ДАННЫХ - С КОНВЕРТАЦИЕЙ ДНЕЙ
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -740,6 +872,13 @@ const ScheduleViewer = () => {
     }
   }, [allClasses, token]);
 
+  // Проверка конфликтов
+  useEffect(() => {
+    if (!loading && Object.keys(schedules).length > 0) {
+      checkConflicts();
+    }
+  }, [schedules, loading, checkConflicts]);
+
   // Вычисление максимального количества уроков
   const maxTotalLessons = useMemo(() => {
     return Math.max(
@@ -813,10 +952,12 @@ const ScheduleViewer = () => {
           </div>
         </div>
 
-        {/* Панель конфликтов (скрыта) */}
+        {/* Панель конфликтов */}
         {isEditMode && (
           <ConflictsPanel 
             conflicts={conflicts}
+            onFixConflict={() => {}}
+            onNavigateToLesson={() => {}}
             isEditMode={isEditMode}
             isOpen={conflictsPanelOpen}
             onToggle={() => setConflictsPanelOpen(!conflictsPanelOpen)}
@@ -870,6 +1011,7 @@ const ScheduleViewer = () => {
                         const lesson = getLessonForCell(classItem.name, day, actualLessonNumber);
                         const isDragOver = dragOverCell === `${classItem.name}|${day}|${actualLessonNumber}`;
                         const teacherColor = lesson?.teacherColor || (lesson?.teacher ? teacherColors[lesson.teacher] : null);
+                        const hasConflict = lesson ? getLessonConflict(classItem.name, day, actualLessonNumber, lesson) : false;
                         
                         return (
                           <td 
@@ -896,6 +1038,7 @@ const ScheduleViewer = () => {
                                 onCopy={handleCopyLesson}
                                 onPaste={() => handlePasteLesson(classItem.name, day, actualLessonNumber)}
                                 canPaste={!!copiedLesson}
+                                hasConflict={hasConflict}
                               />
                             ) : (
                               <div className={`empty-slot-add ${!isEditMode ? 'disabled' : ''}`} onClick={() => {
@@ -922,6 +1065,9 @@ const ScheduleViewer = () => {
               <div className="tip"><FaGripVertical /> Перетащите карточку для перемещения</div>
               <div className="tip"><FaCopy /> Копируйте и вставляйте уроки</div>
               <div className="tip"><FaSave /> Сохраняйте черновики перед публикацией</div>
+              {conflicts.length > 0 && (
+                <div className="tip"><FaExclamationTriangle /> Обнаружено {conflicts.length} конфликтов. Исправьте их!</div>
+              )}
             </>
           ) : (
             <div className="tip"><FaInfoCircle /> Включите режим редактирования для изменения расписания</div>

@@ -1,5 +1,5 @@
 // Конфигурация пользователей системы - ИНТЕГРАЦИЯ С БЭКЕНДОМ
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Резервные демо-данные (на случай, если бэкенд не доступен)
 const DEMO_USERS = {
@@ -41,7 +41,7 @@ export const rolesConfig = {
         name: 'Класс',
         description: 'Просмотр расписания класса',
         permissions: ['view_schedule', 'view_announcements'],
-        dashboardRoute: '/class',  // <-- ИСПРАВЛЕНО: было '/class/schedule', стало '/class'
+        dashboardRoute: '/class',
         icon: ''
     },
     student: {
@@ -58,7 +58,7 @@ export const roleRoutes = {
     superadmin: '/superadmin',
     admin: '/',
     teacher: '/teacher',
-    class: '/class',  
+    class: '/class',
     student: '/student'
 };
 
@@ -75,7 +75,6 @@ export const getRouteByRole = (role) => {
     return route;
 };
 
-// Остальные функции...
 export const authenticateUser = async (username, password) => {
     try {
         const response = await fetch(`${API_URL}/auth/login`, {

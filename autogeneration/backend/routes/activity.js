@@ -4,58 +4,46 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Функция для определения цвета события
 function getEventColor(type, action = '') {
     const colors = {
-        // Аутентификация и вход
         'login': '#4caf50',           // зеленый
         'logout': '#ff9800',          // оранжевый
         'auth_error': '#f44336',      // красный
         
-        // Действия с расписанием
         'generate': '#2196f3',        // синий
         'edit': '#9c27b0',            // фиолетовый
         'delete': '#f44336',          // красный
         'export': '#00bcd4',          // бирюзовый
         'import': '#009688',          // зеленовато-синий
         
-        // CRUD операции
         'create': '#4caf50',          // зеленый
         'update': '#ff9800',          // оранжевый
         'remove': '#f44336',          // красный
         
-        // Действия с пользователями
         'user_create': '#2196f3',     // синий
         'user_update': '#ff9800',     // оранжевый
         'user_delete': '#f44336',     // красный
         'user_login': '#4caf50',      // зеленый
         'user_logout': '#ff9800',     // оранжевый
         
-        // Действия с данными
         'backup': '#607d8b',          // серо-синий
         'restore': '#9c27b0',         // фиолетовый
         'clear': '#f44336',           // красный
         
-        // Ошибки
         'error': '#f44336',           // красный
         'warning': '#ff9800',         // оранжевый
         
-        // Системные события
         'system': '#607d8b',          // серо-синий
         'maintenance': '#9c27b0',     // фиолетовый
         
-        // Дополнительные
         'view': '#2196f3',            // синий
         'extracurricular': '#9c27b0'  // фиолетовый
     };
     
-    // Проверка по точному совпадению типа
     if (colors[type]) {
         return colors[type];
     }
-    
-    // Проверка по ключевым словам в action
-    if (action) {
+        if (action) {
         const lowerAction = action.toLowerCase();
         if (lowerAction.includes('вход') || lowerAction.includes('login')) return colors.login;
         if (lowerAction.includes('выход') || lowerAction.includes('logout')) return colors.logout;
@@ -67,9 +55,7 @@ function getEventColor(type, action = '') {
         if (lowerAction.includes('добавл') || lowerAction.includes('создал')) return colors.create;
         if (lowerAction.includes('ошибк')) return colors.error;
     }
-    
-    // Цвет по умолчанию
-    return '#607d8b';
+     return '#607d8b';
 }
 
 // Функция для получения иконки события

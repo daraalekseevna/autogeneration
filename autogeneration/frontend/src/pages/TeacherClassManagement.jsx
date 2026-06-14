@@ -17,7 +17,8 @@ import ThemeToggle from '../components/ThemeToggle';
 import BackButton from '../components/BackButton';
 import styles from '../styles/TeacherClassManagement.module.css';
 
-const API_URL = 'http://localhost:5000/api';
+// ИСПРАВЛЕНО: используем переменную окружения
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const TeacherClassManagement = () => {
     const navigate = useNavigate();

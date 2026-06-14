@@ -1,172 +1,29 @@
+// TeacherClassManagement.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
+    FaUsers, 
+    FaUserGraduate,
     FaRegCalendarAlt,
-    FaStar,
     FaBook,
     FaChalkboardTeacher,
     FaMapMarkerAlt,
-    FaClock,
-    FaArrowLeft,
-    FaUsers
+    FaRegClock
 } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import ThemeToggle from '../components/ThemeToggle';
 import BackButton from '../components/BackButton';
-import { WEEK_DAYS } from '../config/teacherScheduleData';
-import styles from '../styles/TeacherMySchedule.module.css';
+import styles from '../styles/TeacherClassManagement.module.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// ИСПРАВЛЕННЫЙ КОМПОНЕНТ КАРТОЧКИ УРОКА
-const LessonCard = ({ lesson }) => {
-    // Используем цвет учителя или дефолтный синий
-    const cardColor = lesson.color || lesson.teacherColor || '#3b82f6';
-    
-    const cardStyle = {
-        borderLeftColor: cardColor,
-        backgroundColor: `${cardColor}10`
-    };
-
-    console.log('LessonCard color:', cardColor, 'for:', lesson.title);
-
-    return (
-        <div className={styles.lessonCard} style={cardStyle}>
-            <div className={styles.lessonCardSubject}>
-                <FaBook />
-                <span>{lesson.title}</span>
-            </div>
-            <div className={styles.lessonCardClass}>
-                <span>{lesson.className || '—'}</span>
-            </div>
-            <div className={styles.lessonCardRoom}>
-                <FaMapMarkerAlt />
-                <span>Каб. {lesson.room}</span>
-            </div>
-        </div>
-    );
-};
-
-const ExtracurricularCard = ({ activity }) => {
-    const cardColor = activity.color || '#ffa502';
-    
-    const cardStyle = {
-        borderLeftColor: cardColor,
-        backgroundColor: `${cardColor}10`
-    };
-
-    const formatTime = (time) => {
-        if (!time) return '';
-        return time.length > 5 ? time.substring(0, 5) : time;
-    };
-
-    return (
-        <div className={styles.extracurricularCard} style={cardStyle}>
-            <div className={styles.extracurricularCardTime}>
-                <FaClock />
-                <span>{formatTime(activity.startTime)} - {formatTime(activity.endTime)}</span>
-            </div>
-            <div className={styles.extracurricularCardInfo}>
-                <div className={styles.extracurricularCardHeader}>
-                    <FaStar className={styles.extracurricularStar} style={{ color: cardColor }} />
-                    <span className={styles.extracurricularCardName}>{activity.name}</span>
-                </div>
-                <div className={styles.extracurricularCardRoom}>
-                    <FaMapMarkerAlt />
-                    <span>Каб. {activity.room}</span>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const DayScheduleTable = ({ day, lessons, activities }) => {
-    const timeSlots = [
-        { number: 1, time: '08:30' },
-        { number: 2, time: '09:25' },
-        { number: 3, time: '10:20' },
-        { number: 4, time: '11:20' },
-        { number: 5, time: '12:15' },
-        { number: 6, time: '13:10' },
-        { number: 7, time: '14:05' }
-    ];
-
-    const lessonsByNumber = {};
-    lessons.forEach(lesson => {
-        if (lesson.days && lesson.days.includes(day.name)) {
-            lessonsByNumber[lesson.number] = lesson;
-        }
-    });
-
-    const dayActivities = (activities[day.name] || []);
-
-    return (
-        <div className={styles.dayTableWrapper}>
-            <div className={styles.dayTableHeader}>
-                <span className={styles.dayShort}>{day.short}</span>
-                <span className={styles.dayFull}>{day.name}</span>
-            </div>
-            <div className={styles.dayTableContainer}>
-                <table className={styles.scheduleTable}>
-                    <thead>
-                        <tr>
-                            <th className={styles.timeCol}>Урок</th>
-                            <th className={styles.timeColFull}>Время</th>
-                            <th className={styles.contentCol}>Занятие</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {timeSlots.map((slot) => {
-                            const lesson = lessonsByNumber[slot.number];
-                            
-                            return (
-                                <tr key={slot.number} className={styles.scheduleRow}>
-                                    <td className={styles.lessonNumCell}>
-                                        <div className={styles.lessonNumber}>{slot.number}</div>
-                                    </td>
-                                    <td className={styles.lessonTimeCell}>
-                                        <div className={styles.lessonTime}>
-                                            <FaClock />
-                                            <span>{slot.time}</span>
-                                        </div>
-                                    </td>
-                                    <td className={styles.lessonContentCell}>
-                                        {lesson ? (
-                                            <LessonCard lesson={lesson} />
-                                        ) : (
-                                            <div className={styles.emptySlot}>—</div>
-                                        )}
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-                
-                {dayActivities.length > 0 && (
-                    <div className={styles.extracurricularSection}>
-                        <div className={styles.extracurricularTitle}>
-                            <FaStar /> Дополнительные занятия
-                        </div>
-                        {dayActivities.map((activity, idx) => (
-                            <ExtracurricularCard key={idx} activity={activity} />
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
-
-const TeacherMySchedule = () => {
+const TeacherClassManagement = () => {
     const navigate = useNavigate();
-    
-    const [lessons, setLessons] = useState([]);
-    const [activities, setActivities] = useState({});
+    const [myClass, setMyClass] = useState(null);
+    const [schedule, setSchedule] = useState({});
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
     const getAuthHeaders = () => {
         const token = localStorage.getItem('token');
@@ -176,57 +33,128 @@ const TeacherMySchedule = () => {
     };
 
     useEffect(() => {
-        loadData();
+        loadClassData();
     }, []);
 
-    const loadData = async () => {
+    const loadClassData = async () => {
         setLoading(true);
-        setError(null);
         try {
-            const timestamp = Date.now();
+            const classResponse = await axios.get(`${API_URL}/teacher/my-class`, getAuthHeaders());
             
-            const scheduleResponse = await axios.get(`${API_URL}/teacher/my-schedule?_=${timestamp}`, getAuthHeaders());
-            
-            console.log('=== SCHEDULE RESPONSE ===');
-            console.log('Full response:', scheduleResponse.data);
-            
-            const scheduleData = scheduleResponse.data.schedule || {};
-            const formattedLessons = [];
-            
-            Object.keys(scheduleData).forEach(day => {
-                console.log(`Day ${day}:`, scheduleData[day]);
-                scheduleData[day].forEach(lesson => {
-                    console.log(`Lesson in ${day}:`, lesson);
-                    formattedLessons.push({
-                        id: lesson.id,
-                        title: lesson.subject,
-                        room: lesson.room,
-                        number: lesson.number,
-                        days: [day],
-                        className: lesson.className,
-                        // Важно: сохраняем цвет из ответа сервера
-                        color: lesson.color || lesson.teacherColor || '#3b82f6',
-                        teacherColor: lesson.color || lesson.teacherColor || '#3b82f6'
-                    });
-                });
-            });
-            
-            console.log('Formatted lessons with colors:', formattedLessons);
-            setLessons(formattedLessons);
-            
-            const activitiesResponse = await axios.get(`${API_URL}/teacher/my-extracurricular?_=${timestamp}`, getAuthHeaders());
-            setActivities(activitiesResponse.data.activities || {});
-            
+            if (classResponse.data.hasClass) {
+                setMyClass(classResponse.data.classData);
+                
+                const scheduleResponse = await axios.get(`${API_URL}/teacher/my-class/schedule`, getAuthHeaders());
+                console.log('Schedule response:', scheduleResponse.data);
+                setSchedule(scheduleResponse.data.schedule || {});
+            } else {
+                setMyClass(null);
+            }
         } catch (error) {
-            console.error('Error loading data:', error);
-            setError(error.response?.data?.message || 'Ошибка загрузки расписания');
+            console.error('Error loading class data:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const topRowDays = WEEK_DAYS.slice(0, 3);
-    const bottomRowDays = WEEK_DAYS.slice(3, 6);
+    // Функция для получения цвета учителя
+    const getTeacherColor = (lesson) => {
+        if (lesson && lesson.color) return lesson.color;
+        if (lesson && lesson.teacherColor) return lesson.teacherColor;
+        return '#21435A'; // цвет по умолчанию
+    };
+
+    const weekDays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+    const topRowDays = weekDays.slice(0, 3);
+    const bottomRowDays = weekDays.slice(3, 6);
+
+    const timeSlots = [
+        { number: 1, time: '08:30' },
+        { number: 2, time: '09:25' },
+        { number: 3, time: '10:20' },
+        { number: 4, time: '11:15' },
+        { number: 5, time: '12:10' },
+        { number: 6, time: '13:05' },
+        { number: 7, time: '14:00' }
+    ];
+
+    const DayScheduleTable = ({ dayName }) => {
+        const dayLessons = schedule[dayName] || [];
+
+        return (
+            <div className={styles.dayTableWrapper}>
+                <div className={styles.dayTableHeader}>
+                    <span className={styles.dayShort}>
+                        {dayName === 'Понедельник' ? 'ПН' : 
+                         dayName === 'Вторник' ? 'ВТ' : 
+                         dayName === 'Среда' ? 'СР' : 
+                         dayName === 'Четверг' ? 'ЧТ' : 
+                         dayName === 'Пятница' ? 'ПТ' : 'СБ'}
+                    </span>
+                    <span className={styles.dayFull}>{dayName}</span>
+                </div>
+                <div className={styles.dayTableContainer}>
+                    <table className={styles.scheduleTable}>
+                        <thead>
+                            <tr>
+                                <th className={styles.timeCol}>Урок</th>
+                                <th className={styles.timeColFull}>Время</th>
+                                <th className={styles.contentCol}>Занятие</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {timeSlots.map((slot) => {
+                                const lesson = dayLessons.find(l => l.number === slot.number);
+                                const teacherColor = getTeacherColor(lesson);
+                                
+                                return (
+                                    <tr key={slot.number} className={styles.scheduleRow}>
+                                        <td className={styles.lessonNumCell}>
+                                            <div className={styles.lessonNumber}>{slot.number}</div>
+                                        </td>
+                                        <td className={styles.lessonTimeCell}>
+                                            <div className={styles.lessonTime}>
+                                                <FaRegClock />
+                                                <span>{slot.time}</span>
+                                            </div>
+                                        </td>
+                                        <td className={styles.lessonContentCell}>
+                                            {lesson ? (
+                                                <div 
+                                                    className={styles.lessonItem}
+                                                    style={{ 
+                                                        borderLeftColor: teacherColor,
+                                                        backgroundColor: `${teacherColor}10`
+                                                    }}
+                                                >
+                                                    <div className={styles.lessonInfo}>
+                                                        <div className={styles.lessonSubject}>
+                                                            <FaBook />
+                                                            <span>{lesson.subject}</span>
+                                                        </div>
+                                                        <div className={styles.lessonTeacher}>
+                                                            <FaChalkboardTeacher />
+                                                            <span>{lesson.teacher}</span>
+                                                        </div>
+                                                        <div className={styles.lessonRoom}>
+                                                            <FaMapMarkerAlt />
+                                                            <span>Каб. {lesson.room}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className={styles.emptySlot}>—</div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        );
+    };
 
     if (loading) {
         return (
@@ -237,7 +165,7 @@ const TeacherMySchedule = () => {
                 <main className={styles.container}>
                     <div className={styles.loader}>
                         <div className={styles.spinner}></div>
-                        <p className={styles.loadingText}>Загрузка расписания...</p>
+                        <p>Загрузка...</p>
                     </div>
                 </main>
                 <Footer />
@@ -245,16 +173,20 @@ const TeacherMySchedule = () => {
         );
     }
 
-    if (error) {
+    if (!myClass) {
         return (
             <div className={styles.page}>
                 <ThemeToggle />
                 <BackButton fallbackPath="/teacher" />
                 <Header />
                 <main className={styles.container}>
-                    <div className={styles.errorContainer}>
-                        <p>{error}</p>
-                        <button onClick={loadData}>Повторить</button>
+                    <div className={styles.disabledCard}>
+                        <FaUsers className={styles.disabledIcon} />
+                        <h2>Доступ ограничен</h2>
+                        <p>Вы не являетесь классным руководителем.<br />Эта страница доступна только классным руководителям.</p>
+                        <button className={styles.backToTeacherBtn} onClick={() => navigate('/teacher')}>
+                            Вернуться назад
+                        </button>
                     </div>
                 </main>
                 <Footer />
@@ -270,30 +202,30 @@ const TeacherMySchedule = () => {
             <Header />
 
             <main className={styles.container}>
-                <div className={styles.scheduleHeader}>
-                    <h1><FaRegCalendarAlt /> Моё расписание</h1>
+                <div className={styles.classHeader}>
+                    <div className={styles.classIcon}>
+                        <FaUsers />
+                    </div>
+                    <div className={styles.classInfo}>
+                        <h1>{myClass.name} класс</h1>
+                        <p>Классный руководитель: {myClass.teacherName}</p>
+                        <p>Смена: {myClass.shift}</p>
+                    </div>
                 </div>
 
-                <div className={styles.scheduleGrid}>
-                    <div className={styles.topRow}>
-                        {topRowDays.map(day => (
-                            <DayScheduleTable 
-                                key={day.id} 
-                                day={day} 
-                                lessons={lessons} 
-                                activities={activities}
-                            />
-                        ))}
-                    </div>
-                    <div className={styles.bottomRow}>
-                        {bottomRowDays.map(day => (
-                            <DayScheduleTable 
-                                key={day.id} 
-                                day={day} 
-                                lessons={lessons} 
-                                activities={activities}
-                            />
-                        ))}
+                <div className={styles.scheduleSection}>
+                    <h2><FaRegCalendarAlt /> Расписание класса</h2>
+                    <div className={styles.scheduleGrid}>
+                        <div className={styles.topRow}>
+                            {topRowDays.map(day => (
+                                <DayScheduleTable key={day} dayName={day} />
+                            ))}
+                        </div>
+                        <div className={styles.bottomRow}>
+                            {bottomRowDays.map(day => (
+                                <DayScheduleTable key={day} dayName={day} />
+                            ))}
+                        </div>
                     </div>
                 </div>
             </main>
@@ -303,4 +235,4 @@ const TeacherMySchedule = () => {
     );
 };
 
-export default TeacherMySchedule;
+export default TeacherClassManagement;
