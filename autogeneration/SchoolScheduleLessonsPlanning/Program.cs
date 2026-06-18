@@ -1,8 +1,4 @@
-﻿// Program.cs
-// Полный однофайловый генератор расписания с выводом в 2 листа Excel (1-4 и 5-11).
-// Требует ClosedXML (установите через NuGet).
-
-using ClosedXML.Excel;
+﻿using ClosedXML.Excel;
 using SchoolScheduleLessonsPlanning;
 using SchoolScheduler;
 using System;
@@ -88,6 +84,7 @@ namespace SchoolScheduleGenerator
             if (!File.Exists(inputPath))
             {
                 Console.WriteLine($"Не найден входной файл: {inputPath}");
+                Console.WriteLine($"Текущая директория: {AppDomain.CurrentDomain.BaseDirectory}");
                 return;
             }
 
@@ -139,43 +136,6 @@ namespace SchoolScheduleGenerator
             var eqw = Parse2(wb.Worksheet("ранг трудности"));
             var difficultyByDay = GetDifficultyByDay();
             var difficultyByWeek = GetDifficultyByWeek();
-
-            Dictionary<string, int> factWeghtsPerWeek = new Dictionary<string, int>();
-
-            var allClasses = teachers
-                .SelectMany(t => t.WorkloadInHoursByClass.Values.SelectMany(d => d.Keys))
-                .Distinct()
-                .OrderBy(c =>
-                {
-                    int n = int.Parse(new string(c.Where(char.IsDigit).ToArray()));
-                    return n;
-                })
-                .ThenBy(c => c[c.Length - 1])
-                .ToList();
-
-            foreach (var classNumber in allClasses)
-            {
-                var s = 0;
-                Dictionary<string, string> used = new();
-                foreach (var uniqueTeacher in uniqueTeachers)
-                {
-                    foreach (var workloadInHoursByClassItem in uniqueTeacher.WorkloadInHoursByClass)
-                    {
-                        foreach (var qq in workloadInHoursByClassItem.Value)
-                        {
-                            if (qq.Key == classNumber)
-                            {
-                                if (used.TryAdd(workloadInHoursByClassItem.Key, classNumber))
-                                {
-                                    var resTemp = parseRes[int.Parse(new string(classNumber.Where(char.IsDigit).ToArray())).ToString()][workloadInHoursByClassItem.Key] * qq.Value;
-                                    s += resTemp;
-                                }
-                            }
-                        }
-                    }
-                }
-                factWeghtsPerWeek.Add(classNumber, s);
-            }
 
             var attemt = 1;
             var totalAttemts = 1000;
@@ -425,17 +385,14 @@ namespace SchoolScheduleGenerator
 
             using var workbook = new XLWorkbook();
             
-            // Создаем два листа
             var ws1 = workbook.Worksheets.Add("1-4 классы");
             var ws2 = workbook.Worksheets.Add("5-11 классы");
 
-            int row = 1;
             foreach (var classSchedule in schedule)
             {
                 var className = classSchedule.Key;
                 var days = classSchedule.Value;
 
-                // Определяем лист по номеру класса
                 var classNum = int.Parse(new string(className.Where(char.IsDigit).ToArray()));
                 var ws = classNum <= 4 ? ws1 : ws2;
 
@@ -443,7 +400,6 @@ namespace SchoolScheduleGenerator
                 ws.Cell(currentRow, 1).Value = $"Расписание для {className} класса";
                 currentRow += 2;
 
-                // Заголовки
                 string[] headers = { "Время", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница" };
                 for (int i = 0; i < headers.Length; i++)
                 {
@@ -451,7 +407,6 @@ namespace SchoolScheduleGenerator
                 }
                 currentRow++;
 
-                // Заполняем данные
                 for (int lesson = 1; lesson <= 8; lesson++)
                 {
                     ws.Cell(currentRow, 1).Value = $"{lesson} урок";
