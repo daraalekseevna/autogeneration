@@ -68,6 +68,8 @@ app.MapPost("/api/generate", async (HttpContext context) =>
 // Добавляем эндпоинт для проверки
 app.MapGet("/", () => "Сервис генерации расписания работает! Используйте /health для проверки.");
 
-Console.WriteLine("Генератор расписания запущен на http://localhost:5001");
+// Используем порт из переменной окружения и слушаем на 0.0.0.0
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+Console.WriteLine($"Генератор расписания запущен на порту {port}");
 Console.WriteLine("Ожидание запросов...");
-app.Run("http://localhost:5001");
+app.Run($"http://0.0.0.0:{port}");
