@@ -3,24 +3,53 @@
 // Требует ClosedXML (установите через NuGet).
 
 using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Bibliography;
 using SchoolScheduleLessonsPlanning;
-using SchoolScheduleLessonsPlanning.Extensions;
-using SchoolScheduleLessonsPlanning.Models;
-using SchoolScheduleLessonsPlanning.Services;
 using SchoolScheduler;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace SchoolScheduleGenerator
 {
+    // ===== ВСПОМОГАТЕЛЬНЫЙ КЛАСС ДЛЯ РАСШИРЕНИЙ =====
+    public static class Extensions
+    {
+        public static bool CustomParseToBool(this string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return false;
+            return value.Trim().Equals("да", StringComparison.OrdinalIgnoreCase) ||
+                   value.Trim().Equals("true", StringComparison.OrdinalIgnoreCase) ||
+                   value.Trim() == "1";
+        }
+
+        public static string GetCellValue(this IXLCell cell)
+        {
+            return cell?.GetString()?.Trim() ?? string.Empty;
+        }
+    }
+
+    // ===== КЛАСС МОДЕЛИ =====
+    public class MyTeacher
+    {
+        public string FullName { get; set; } = string.Empty;
+        public List<string> Subjects { get; set; } = new();
+        public List<string> WorkInMainOffice { get; set; } = new();
+        public List<int> Shifts { get; set; } = new();
+        public bool CanReuseOffice { get; set; }
+        public bool IsOfficeOwner { get; set; }
+        public List<string> OfficeNumbers { get; set; } = new();
+        public HashSet<string> AcademicDays { get; set; } = new();
+        public Dictionary<string, Dictionary<string, int>> WorkloadInHoursByClass { get; set; } = new();
+    }
+
+    // ===== ОСНОВНОЙ КЛАСС ПРОГРАММЫ =====
     class Program
     {
         private static Dictionary<string, string> _subjectsWithType = new Dictionary<string, string>();
+
         public static DataTable ReadExcelWithMergedCells(string filePath)
         {
             var dataTable = new DataTable();
@@ -28,35 +57,27 @@ namespace SchoolScheduleGenerator
             using (var workbook = new XLWorkbook(filePath))
             {
                 var worksheet = workbook.Worksheet(1);
-
-                // Определяем диапазон данных
                 var range = worksheet.RangeUsed();
 
-                // Создаем колонки
                 for (int col = 1; col <= range.ColumnCount(); col++)
                 {
                     dataTable.Columns.Add($"Column_{col}");
                 }
 
-                // Заполняем данные
                 for (int row = 1; row <= range.RowCount(); row++)
                 {
                     var dataRow = dataTable.NewRow();
-
                     for (int col = 1; col <= range.ColumnCount(); col++)
                     {
                         var cell = worksheet.Cell(row, col);
                         dataRow[col - 1] = cell.GetCellValue();
                     }
-
                     dataTable.Rows.Add(dataRow);
                 }
             }
 
             return dataTable;
         }
-
-
 
         // ========================= MAIN =========================
         static void Main(string[] args)
@@ -70,8 +91,6 @@ namespace SchoolScheduleGenerator
                 return;
             }
 
-            var outputPath = Path.Combine(Path.GetDirectoryName(inputPath) ?? ".", "расписание_сгенерировано.xlsx");
-
             Console.WriteLine("Читаю входной Excel...");
             ReadInput(inputPath);
         }
@@ -79,11 +98,10 @@ namespace SchoolScheduleGenerator
         // ========================= ЧТЕНИЕ ВХОДНЫХ ДАННЫХ =========================
         static List<MyTeacher> ReadInput(string path)
         {
-            List<MyTeacher> teachers = [];
+            List<MyTeacher> teachers = new();
 
             using var wb = new XLWorkbook(path);
 
-            // ---------- Лист "нагрузка" ----------
             if (!wb.Worksheets.Contains("нагрузка"))
             {
                 Console.WriteLine("[ERROR] Нет листа 'нагрузка' в файле.");
@@ -92,12 +110,7 @@ namespace SchoolScheduleGenerator
 
             var ws = wb.Worksheet("нагрузка");
 
-            // Определим колонки: по формату вашего файла:
-            // 1: Предмет
-            // 2: ФИО учителя (в нашем раннем варианте это 2, но в предыдущих скриптах использовалось 1/2 — уточним)
-            // В ваших старых примерах предмет был в колонке 1, ФИО в 2 — будем читать так:
             int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
-            int lastCol = ws.LastColumnUsed()?.ColumnNumber() ?? 0;
             int index = 3;
             while (index <= lastRow)
             {
@@ -121,16 +134,12 @@ namespace SchoolScheduleGenerator
             }
 
             var uniqueTeachers = teachers.DistinctBy(x => x.FullName).ToList();
-            var qq23 = 12;
 
             var parseRes = ParseSubjectsLevelRank(wb.Worksheet("ранг трудности"));
-
             var eqw = Parse2(wb.Worksheet("ранг трудности"));
             var difficultyByDay = GetDifficultyByDay();
             var difficultyByWeek = GetDifficultyByWeek();
-            //CheckDifficultyVsSubjects(difficultyByDay, parseRes);
 
-            //
             Dictionary<string, int> factWeghtsPerWeek = new Dictionary<string, int>();
 
             var allClasses = teachers
@@ -147,7 +156,7 @@ namespace SchoolScheduleGenerator
             foreach (var classNumber in allClasses)
             {
                 var s = 0;
-                Dictionary<string, string> used = [];
+                Dictionary<string, string> used = new();
                 foreach (var uniqueTeacher in uniqueTeachers)
                 {
                     foreach (var workloadInHoursByClassItem in uniqueTeacher.WorkloadInHoursByClass)
@@ -159,50 +168,15 @@ namespace SchoolScheduleGenerator
                                 if (used.TryAdd(workloadInHoursByClassItem.Key, classNumber))
                                 {
                                     var resTemp = parseRes[int.Parse(new string(classNumber.Where(char.IsDigit).ToArray())).ToString()][workloadInHoursByClassItem.Key] * qq.Value;
-
                                     s += resTemp;
                                 }
                             }
                         }
                     }
                 }
-
                 factWeghtsPerWeek.Add(classNumber, s);
             }
-            Console.Write($"Ожидаемый недельный вес берется из таблицы 'Примерное распределение' -> поля 'главное чтобы сумма была такой:'");
-            foreach (var item in factWeghtsPerWeek) //factWeghtsPerWeek //difficultyByWeek
-            {
-                var expectedValue = difficultyByWeek[int.Parse(new string(item.Key.Where(char.IsDigit).ToArray()))];
-                if (item.Value != expectedValue)
-                {
-                    var t = 3 * 7 + 2 * 4 + 6 * 10 + 1 * 10 + 3 * 8 + 3 * 2 + 2 * 6 + 2 * 7 + 2 * 10 + 3 * 8 + 2 * 9 + 2 * 7 + 1 * 1 + 1 * 3 + 1 * 1;
-                    Console.Write($"Ожидаемый недельный вес в {item.Key} классе = {expectedValue}, фактический = {item.Value}, ");
-                    if (item.Key == "7Б")
-                    {
-                        Console.Write("Вычислено в ручную по экселю = 228");
-                    }
-                    else if (item.Key == "8А")
-                    {
-                        Console.Write("Вычислено в ручную по экселю = 236");
-                    } else if(item.Key == "9А")
-                    {
-                        var t1 = 3 * 6 + 3 * 7 + 6 * 8 + 3 * 9 + 2 * 2 + 2 * 5 + 2 * 7 + 2 * 12 + 1 * 5 + 3 * 10 + 3 * 13 + 2 * 7 + 1 * 4 + 1 * 3;
-                        Console.Write($"Вычислено в ручную по экселю = {t1}");
-                    } else if(item.Key == "10А")
-                    {
-                        var t2 = 2 * 9 + 1 * 8 + 3 * 8 + 8 * 11 + 3 * 8 + 3 * 1 + 1 * 3 + 1 * 7 + 11 + 2 * 5 + 4 * 5 + 1 * 3 + 2 * 12 + 2 * 6 + 2 * 1;
-                        Console.Write($"Вычислено в ручную по экселю = {t2}");
-                    }else if(item.Key == "11А")
-                    {
-                        var t3 = 3 * 8 + 2 * 9 + 1 * 9 + 8 * 11 + 3 * 8 + 2 * 1 + 1 * 3 + 1 * 7 + 1 * 7 + 1 * 11 + 2 * 5 + 4 * 5 + 2 * 12 + 2 * 6 + 1 * 6 + 1 * 2;
-                        Console.Write($"Вычислено в ручную по экселю = {t3}");
-                    }
 
-                    Console.WriteLine();
-                }
-            }
-
-            //
             var attemt = 1;
             var totalAttemts = 1000;
             Dictionary<string, Dictionary<string, List<(int lessonNumber, string subject, string teacher, string office)>>> res = null;
@@ -221,7 +195,6 @@ namespace SchoolScheduleGenerator
                     }
                     Console.WriteLine($"Не удалось сгенерировать расписание, попытка № {attemt}");
                     Console.WriteLine(ex.Message);
-                    //Console.WriteLine(ex.Message);
                     Task.Delay(1000).GetAwaiter().GetResult();
                     attemt++;
                 }
@@ -230,36 +203,6 @@ namespace SchoolScheduleGenerator
             Console.WriteLine($"Начало запсывания результатов в эксель");
             ExcelScheduleExporter.Export(res, parseRes, Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "расп.xlsx"));
             Console.WriteLine($"Результаты успешно записаны в эксель");
-            //for (int i = 3; i <= lastRow; i++)
-            //{
-            //    for (int c = 1; c <= 2; c++)
-            //    {
-            //        var cell = ws.Cell(i, c);
-            //        var t = GetCellValue(cell);
-            //        var qq1 = cell.MergedRange();
-            //        var text = cell.GetString().Trim();
-            //        if (!string.IsNullOrWhiteSpace(text))
-            //        {
-            //            var qq = 1;
-            //        }
-            //    }
-            //}
-
-            if (lastRow == 0 || lastCol == 0)
-            {
-                Console.WriteLine("[ERROR] Лист 'нагрузка' пустой.");
-                return teachers;
-            }
-
-            //DataTable table = ReadExcelWithMergedCells(path);
-            //foreach (DataRow row in table.Rows)
-            //{
-            //    for (int i = 0; i < table.Columns.Count; i++)
-            //    {
-            //        Console.Write($"{row[i]}\t");
-            //    }
-            //    Console.WriteLine();
-            //}
 
             return teachers;
         }
@@ -267,7 +210,7 @@ namespace SchoolScheduleGenerator
         private static List<string> GetSubjects(IXLWorksheet ws, IXLCell teacherCell, int defaultIndexator)
         {
             var range = teacherCell.MergedRange();
-            HashSet<string> subjects = [];
+            HashSet<string> subjects = new();
             for (int j = range?.RangeAddress?.FirstAddress?.RowNumber ?? defaultIndexator; j <= (range?.RangeAddress?.LastAddress?.RowNumber ?? defaultIndexator); j++)
             {
                 var subject = ws.Cell(j, 1).GetCellValue()?.ToLower();
@@ -276,13 +219,12 @@ namespace SchoolScheduleGenerator
                     subjects.Add(subject.Trim());
                 }
             }
-
             return subjects.ToList();
         }
 
         private static Dictionary<string, Dictionary<string, int>> GetWorkloadInHoursByClass(IXLWorksheet ws, IXLCell teacherCell, int defaultIndexator)
         {
-            Dictionary<string, Dictionary<string, int>> result = [];
+            Dictionary<string, Dictionary<string, int>> result = new();
             var range = teacherCell.MergedRange();
             var i = 8;
             var attempts = 5;
@@ -290,7 +232,6 @@ namespace SchoolScheduleGenerator
             var gradeRowIndex = range?.RangeAddress?.FirstAddress?.RowNumber ?? defaultIndexator;
             while (true)
             {
-                var tempResult = new Dictionary<string, List<int>>();
                 string grade = ws.Cell(gradeRowIndex, i).GetCellValue();
                 if (string.IsNullOrWhiteSpace(grade) || int.TryParse(grade, out var gradeInteger))
                 {
@@ -310,7 +251,6 @@ namespace SchoolScheduleGenerator
                     break;
                 }
 
-                var needBreak = false;
                 int j = (range?.RangeAddress?.FirstAddress?.RowNumber ?? defaultIndexator) + 1;
                 while (j <= (range?.RangeAddress?.LastAddress?.RowNumber ?? defaultIndexator))
                 {
@@ -320,6 +260,7 @@ namespace SchoolScheduleGenerator
 
                     if (string.IsNullOrWhiteSpace(subject))
                     {
+                        j++;
                         continue;
                     }
 
@@ -347,7 +288,6 @@ namespace SchoolScheduleGenerator
                             result.Add(subject, new Dictionary<string, int>() { [grade] = int.Parse(loadInGours.Trim()) });
                         }
                     }
-
                     j++;
                 }
                 i++;
@@ -358,13 +298,16 @@ namespace SchoolScheduleGenerator
 
         private static Dictionary<string, Dictionary<string, int>> ParseSubjectsLevelRank(IXLWorksheet ws)
         {
-            Dictionary<string, Dictionary<string, int>> result = [];
+            Dictionary<string, Dictionary<string, int>> result = new();
 
             for (int j = 2; j <= ws.ColumnCount(); j++)
             {
                 var subject = ws.Cell(2, j).GetCellValue()?.ToLower();
                 var subjectType = ws.Cell(3, j).GetCellValue()?.ToLower();
-                _subjectsWithType.Add(subject, subjectType);
+                if (!string.IsNullOrEmpty(subject))
+                {
+                    _subjectsWithType[subject] = subjectType;
+                }
                 if (!string.IsNullOrWhiteSpace(subject))
                 {
                     for (int i = 4; i <= 14; i++)
@@ -398,7 +341,7 @@ namespace SchoolScheduleGenerator
 
         private static Dictionary<string, KeyValuePair<int, int>> Parse2(IXLWorksheet ws)
         {
-            Dictionary<string, KeyValuePair<int, int>> result = [];
+            Dictionary<string, KeyValuePair<int, int>> result = new();
 
             for (int i = 17; i <= 27; i++)
             {
@@ -419,8 +362,7 @@ namespace SchoolScheduleGenerator
 
         private static Dictionary<int, Dictionary<string, (int from, int to)>> GetDifficultyByDay()
         {
-            //_days = { "Понедельник", "Вторник", "Среда", "Четверг", "Пятница" };
-            Dictionary<int, Dictionary<string, (int from, int to)>> result = new Dictionary<int, Dictionary<string, (int from, int to)>>
+            return new Dictionary<int, Dictionary<string, (int from, int to)>>
             {
                 [1] = Create((17,20), (21,24),(24,27), (21,24), (17, 20)),
                 [2] = Create((21, 24), (23, 26), (27, 30), (23, 26), (21, 24)),
@@ -434,14 +376,11 @@ namespace SchoolScheduleGenerator
                 [10] = Create((44, 49), (49, 54), (55, 62), (49, 54), (44, 49)),
                 [11] = Create((44, 49), (49, 54), (55, 62), (49, 54), (44, 49)),
             };
-
-            return result;
         }
 
         private static Dictionary<int, int> GetDifficultyByWeek()
         {
-            //_days = { "Понедельник", "Вторник", "Среда", "Четверг", "Пятница" };
-            Dictionary<int, int> result = new Dictionary<int, int>
+            return new Dictionary<int, int>
             {
                 [1] = 110,
                 [2] = 124,
@@ -455,56 +394,95 @@ namespace SchoolScheduleGenerator
                 [10] = 257,
                 [11] = 267
             };
-
-            return result;
         }
 
-        private static void CheckDifficultyVsSubjects(
-    Dictionary<int, Dictionary<string, int>> difficultyByDay,
-    Dictionary<string, Dictionary<string, int>> parseRes)
-        {
-            foreach (var classEntry in parseRes)
-            {
-                string classNumberStr = classEntry.Key; // "10", "11" и т.д.
-                int classNum = int.Parse(classNumberStr);
-
-                int totalSubjectWeight = classEntry.Value.Values.Sum();
-                int totalDifficultyLimit = 0;
-
-                if (difficultyByDay.TryGetValue(classNum, out var dayLimits))
-                {
-                    totalDifficultyLimit = dayLimits.Values.Sum();
-                }
-                else
-                {
-                    Console.WriteLine($"Для класса {classNumberStr} нет данных по лимитам веса.");
-                    continue;
-                }
-
-                if (totalSubjectWeight > totalDifficultyLimit)
-                {
-                    Console.WriteLine($"⚠ Класс {classNumberStr}: суммарный вес уроков = {totalSubjectWeight}, " +
-                                      $"сумма лимитов по дням = {totalDifficultyLimit} → НЕДОСТАТОЧНО лимитов!");
-                }
-                else
-                {
-                    Console.WriteLine($"Класс {classNumberStr}: суммарный вес уроков = {totalSubjectWeight}, " +
-                                      $"сумма лимитов по дням = {totalDifficultyLimit} → лимитов хватает.");
-                }
-            }
-        }
-
-        private static Dictionary<string, (int from, int to)> Create(params (int from,int to)[] args)
+        private static Dictionary<string, (int from, int to)> Create(params (int from, int to)[] args)
         {
             return new Dictionary<string, (int from, int to)>()
             {
-
                 ["Понедельник"] = args[0],
                 ["Вторник"] = args[1],
                 ["Среда"] = args[2],
                 ["Четверг"] = args[3],
                 ["Пятница"] = args[4],
             };
+        }
+    }
+
+    // ===== ЭКСПОРТЕР В EXCEL =====
+    public static class ExcelScheduleExporter
+    {
+        public static void Export(
+            Dictionary<string, Dictionary<string, List<(int lessonNumber, string subject, string teacher, string office)>>> schedule,
+            Dictionary<string, Dictionary<string, int>> parseRes,
+            string filePath)
+        {
+            if (schedule == null)
+            {
+                Console.WriteLine("Расписание пустое, нечего экспортировать");
+                return;
+            }
+
+            using var workbook = new XLWorkbook();
+            
+            // Создаем два листа
+            var ws1 = workbook.Worksheets.Add("1-4 классы");
+            var ws2 = workbook.Worksheets.Add("5-11 классы");
+
+            int row = 1;
+            foreach (var classSchedule in schedule)
+            {
+                var className = classSchedule.Key;
+                var days = classSchedule.Value;
+
+                // Определяем лист по номеру класса
+                var classNum = int.Parse(new string(className.Where(char.IsDigit).ToArray()));
+                var ws = classNum <= 4 ? ws1 : ws2;
+
+                int currentRow = ws.LastRowUsed()?.RowNumber() + 2 ?? 1;
+                ws.Cell(currentRow, 1).Value = $"Расписание для {className} класса";
+                currentRow += 2;
+
+                // Заголовки
+                string[] headers = { "Время", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница" };
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    ws.Cell(currentRow, i + 1).Value = headers[i];
+                }
+                currentRow++;
+
+                // Заполняем данные
+                for (int lesson = 1; lesson <= 8; lesson++)
+                {
+                    ws.Cell(currentRow, 1).Value = $"{lesson} урок";
+                    
+                    for (int dayIdx = 0; dayIdx < 5; dayIdx++)
+                    {
+                        string dayName = dayIdx switch
+                        {
+                            0 => "Понедельник",
+                            1 => "Вторник",
+                            2 => "Среда",
+                            3 => "Четверг",
+                            4 => "Пятница",
+                            _ => ""
+                        };
+
+                        if (days.ContainsKey(dayName))
+                        {
+                            var lessonInfo = days[dayName].FirstOrDefault(x => x.lessonNumber == lesson);
+                            if (lessonInfo != default)
+                            {
+                                ws.Cell(currentRow, dayIdx + 2).Value = $"{lessonInfo.subject} ({lessonInfo.teacher})";
+                            }
+                        }
+                    }
+                    currentRow++;
+                }
+            }
+
+            workbook.SaveAs(filePath);
+            Console.WriteLine($"Excel файл сохранен: {filePath}");
         }
     }
 }
