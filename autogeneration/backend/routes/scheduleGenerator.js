@@ -2,11 +2,15 @@
 const express = require('express');
 const db = require('../models/database');
 const { authenticateToken, requireSuperAdmin } = require('../middleware/auth');
+const axios = require('axios'); // <-- Добавляем axios
 
 const router = express.Router();
 
 router.use(authenticateToken);
 router.use(requireSuperAdmin);
+
+// === URL МИКРОСЕРВИСА ===
+const MICROSERVICE_URL = process.env.MICROSERVICE_URL || 'http://localhost:5001';
 
 // ============= УПРАВЛЕНИЕ ТРУДНОСТЬЮ ПРЕДМЕТОВ =============
 
@@ -164,17 +168,78 @@ router.post('/weekly-limits', async (req, res) => {
     }
 });
 
-// ============= ЗАПУСК ГЕНЕРАЦИИ =============
+// ============= ЗАПУСК ГЕНЕРАЦИИ (ЧЕРЕЗ МИКРОСЕРВИС) =============
 
-// Запустить генерацию расписания
+// Запустить генерацию расписания через микросервис
 router.post('/generate', async (req, res) => {
     try {
-        // Здесь будет вызов C# генератора
-        // Пока возвращаем заглушку
-        res.json({ message: 'Генерация запущена', status: 'processing' });
+        const { rulesUrl, token } = req.body;
+        
+        console.log('🔄 Запрос к микросервису генерации...');
+        console.log(`📡 MICROSERVICE_URL: ${MICROSERVICE_URL}`);
+
+        // Вызов микросервиса через axios
+        const response = await axios.post(`${MICROSERVICE_URL}/api/generate`, {
+            rulesUrl: rulesUrl || '',
+            token: token || ''
+        }, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            timeout: 120000 // 120 секунд таймаут
+        });
+
+        console.log(`✅ Микросервис успешно сгенерировал расписание`);
+        console.log(`📊 Уроков: ${response.data.totalLessons || 0}, Классов: ${response.data.classesProcessed || 0}`);
+        
+        res.json(response.data);
     } catch (err) {
-        console.error('POST /generate error:', err);
-        res.status(500).json({ message: 'Ошибка генерации' });
+        console.error('❌ Ошибка при вызове микросервиса:', err.message);
+        
+        if (err.code === 'ECONNABORTED') {
+            return res.status(504).json({ 
+                success: false, 
+                error: 'timeout',
+                message: 'Микросервис не ответил за 120 секунд'
+            });
+        }
+        
+        if (err.response) {
+            // Микросервис ответил с ошибкой
+            return res.status(err.response.status).json({
+                success: false,
+                error: 'microservice_error',
+                message: err.response.data?.error || 'Ошибка в микросервисе',
+                details: err.response.data
+            });
+        }
+        
+        res.status(500).json({ 
+            success: false, 
+            error: 'microservice_unavailable',
+            message: 'Не удалось связаться с микросервисом генерации расписания',
+            details: err.message
+        });
+    }
+});
+
+// Проверка статуса микросервиса
+router.get('/status', async (req, res) => {
+    try {
+        const response = await axios.get(`${MICROSERVICE_URL}/health`, {
+            timeout: 5000
+        });
+        res.json({ 
+            microservice: 'available',
+            status: response.data,
+            url: MICROSERVICE_URL
+        });
+    } catch (err) {
+        res.status(503).json({ 
+            microservice: 'unavailable',
+            error: err.message,
+            url: MICROSERVICE_URL
+        });
     }
 });
 
