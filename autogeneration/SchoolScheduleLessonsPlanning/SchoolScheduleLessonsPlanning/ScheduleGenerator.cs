@@ -74,15 +74,6 @@ namespace SchoolScheduleLessonsPlanning
         [JsonPropertyName("secondShiftStartLesson")] public int SecondShiftStartLesson { get; set; } = 5;
     }
 
-    public class LessonEntry
-    {
-        public int LessonNumber { get; set; }
-        public string SubjectName { get; set; } = "";
-        public string TeacherName { get; set; } = "";
-        public string Room { get; set; } = "";
-        public string TeacherColor { get; set; } = "#3b82f6";
-    }
-
     public class GenerationResult
     {
         public Dictionary<string, object> Schedule { get; set; } = new();
@@ -140,7 +131,6 @@ namespace SchoolScheduleLessonsPlanning
                     var subjectHoursJson = data["subjectHours"].ToString()!;
                     Console.WriteLine($"📊 subjectHours JSON: {subjectHoursJson.Substring(0, Math.Min(300, subjectHoursJson.Length))}");
                     
-                    // Ручной парсинг для отладки
                     var tempOptions = new JsonSerializerOptions 
                     { 
                         PropertyNameCaseInsensitive = true,
@@ -193,146 +183,142 @@ namespace SchoolScheduleLessonsPlanning
                 return false;
             }
         }
-public GenerationResult Generate()
-{
-    var result = new GenerationResult();
-    var schedule = new Dictionary<string, object>();
-    
-    var daysMap = new Dictionary<string, string>
-    {
-        { "Пн", "Понедельник" }, { "Вт", "Вторник" }, { "Ср", "Среда" },
-        { "Чт", "Четверг" }, { "Пт", "Пятница" }
-    };
-    
-    var workDays = (_settings.WorkDays?.Any() == true ? _settings.WorkDays : new List<string> { "Пн", "Вт", "Ср", "Чт", "Пт" })
-        .Select(d => daysMap.ContainsKey(d) ? daysMap[d] : d).ToList();
-    
-    var roomNumbers = _rooms.Select(r => r.Number).ToList();
-    if (!roomNumbers.Any()) roomNumbers.Add("101");
-    
-    int totalLessons = 0;
-    int classesProcessed = 0;
-    
-    foreach (var cls in _classes.OrderBy(c => c.Number).ThenBy(c => c.Letter))
-    {
-        Console.WriteLine($"\n📚 Обработка класса {cls.Name}");
-        
-        var classTeachers = _teachers.Where(t => _teacherClasses.GetValueOrDefault(t.Id, new List<int>()).Contains(cls.Id)).ToList();
-        if (!classTeachers.Any())
+
+        public GenerationResult Generate()
         {
-            Console.WriteLine($"   ⚠️ Нет учителей для класса");
-            continue;
-        }
-        
-        var classHours = _subjectHours.Where(h => h.Grade == cls.Number).ToList();
-        if (!classHours.Any())
-        {
-            Console.WriteLine($"   ⚠️ Нет часов нагрузки для {cls.Number} класса");
-            continue;
-        }
-        
-        int maxLessons = cls.MaxLessonsPerDay ?? (cls.Number == 1 ? 4 : (cls.Shift == 2 ? 5 : 6));
-        
-        var classSchedule = new Dictionary<string, List<Dictionary<string, object>>>();
-        foreach (var day in workDays)
-            classSchedule[day] = new List<Dictionary<string, object>>();
-        
-        // Создаем список уроков для класса на основе часов
-        var lessonsToSchedule = new List<(SubjectHours hour, int hoursNeeded)>();
-        foreach (var hour in classHours)
-        {
-            int hoursNeeded = (int)Math.Ceiling(hour.HoursPerWeek);
-            lessonsToSchedule.Add((hour, hoursNeeded));
-        }
-        
-        // Для каждого предмета распределяем уроки по дням
-        foreach (var (hour, hoursNeeded) in lessonsToSchedule)
-        {
-            var lesson = _lessons.FirstOrDefault(l => l.Id == hour.SubjectId);
-            if (lesson == null)
-            {
-                Console.WriteLine($"   ⚠️ Предмет id={hour.SubjectId} не найден");
-                continue;
-            }
+            var result = new GenerationResult();
+            var schedule = new Dictionary<string, object>();
             
-            var availableTeachers = classTeachers.Where(t => _teacherLessons.GetValueOrDefault(t.Id, new List<int>()).Contains(hour.SubjectId)).ToList();
-            if (!availableTeachers.Any())
+            var daysMap = new Dictionary<string, string>
             {
-                Console.WriteLine($"   ⚠️ Для предмета '{lesson.Name}' нет учителей");
-                continue;
-            }
+                { "Пн", "Понедельник" }, { "Вт", "Вторник" }, { "Ср", "Среда" },
+                { "Чт", "Четверг" }, { "Пт", "Пятница" }
+            };
             
-            int scheduled = 0;
-            int dayIndex = 0;
-            var shuffledDays = workDays.OrderBy(x => _random.Next()).ToList();
+            var workDays = (_settings.WorkDays?.Any() == true ? _settings.WorkDays : new List<string> { "Пн", "Вт", "Ср", "Чт", "Пт" })
+                .Select(d => daysMap.ContainsKey(d) ? daysMap[d] : d).ToList();
             
-            while (scheduled < hoursNeeded && dayIndex < shuffledDays.Count)
+            var roomNumbers = _rooms.Select(r => r.Number).ToList();
+            if (!roomNumbers.Any()) roomNumbers.Add("101");
+            
+            int totalLessons = 0;
+            int classesProcessed = 0;
+            
+            foreach (var cls in _classes.OrderBy(c => c.Number).ThenBy(c => c.Letter))
             {
-                var day = shuffledDays[dayIndex];
+                Console.WriteLine($"\n📚 Обработка класса {cls.Name}");
                 
-                // Проверяем лимит уроков в день
-                if (classSchedule[day].Count >= maxLessons)
+                var classTeachers = _teachers.Where(t => _teacherClasses.GetValueOrDefault(t.Id, new List<int>()).Contains(cls.Id)).ToList();
+                if (!classTeachers.Any())
                 {
-                    dayIndex++;
+                    Console.WriteLine($"   ⚠️ Нет учителей для класса");
                     continue;
                 }
                 
-                var teacher = availableTeachers[_random.Next(availableTeachers.Count)];
-                var roomIds = _teacherRooms.GetValueOrDefault(teacher.Id, new List<int>());
-                var room = roomIds.Count > 0 ? _roomMap.GetValueOrDefault(roomIds.First(), "") : "";
-                if (string.IsNullOrEmpty(room) && roomNumbers.Any())
-                    room = roomNumbers[_random.Next(roomNumbers.Count)];
-                
-                // СОЗДАЕМ ОБЫЧНЫЙ СЛОВАРЬ, А НЕ АНОНИМНЫЙ ТИП
-                var lessonDict = new Dictionary<string, object>
+                var classHours = _subjectHours.Where(h => h.Grade == cls.Number).ToList();
+                if (!classHours.Any())
                 {
-                    ["lessonNumber"] = classSchedule[day].Count + 1,
-                    ["subject"] = lesson.Name,
-                    ["teacher"] = $"{teacher.LastName} {teacher.FirstName}".Trim(),
-                    ["office"] = room,
-                    ["teacherColor"] = teacher.Color ?? "#3b82f6"
-                };
+                    Console.WriteLine($"   ⚠️ Нет часов нагрузки для {cls.Number} класса");
+                    continue;
+                }
                 
-                classSchedule[day].Add(lessonDict);
+                int maxLessons = cls.MaxLessonsPerDay ?? (cls.Number == 1 ? 4 : (cls.Shift == 2 ? 5 : 6));
                 
-                scheduled++;
-                totalLessons++;
-                dayIndex++;
+                var classSchedule = new Dictionary<string, List<Dictionary<string, object>>>();
+                foreach (var day in workDays)
+                    classSchedule[day] = new List<Dictionary<string, object>>();
+                
+                var lessonsToSchedule = new List<(SubjectHours hour, int hoursNeeded)>();
+                foreach (var hour in classHours)
+                {
+                    int hoursNeeded = (int)Math.Ceiling(hour.HoursPerWeek);
+                    lessonsToSchedule.Add((hour, hoursNeeded));
+                }
+                
+                foreach (var (hour, hoursNeeded) in lessonsToSchedule)
+                {
+                    var lesson = _lessons.FirstOrDefault(l => l.Id == hour.SubjectId);
+                    if (lesson == null)
+                    {
+                        Console.WriteLine($"   ⚠️ Предмет id={hour.SubjectId} не найден");
+                        continue;
+                    }
+                    
+                    var availableTeachers = classTeachers.Where(t => _teacherLessons.GetValueOrDefault(t.Id, new List<int>()).Contains(hour.SubjectId)).ToList();
+                    if (!availableTeachers.Any())
+                    {
+                        Console.WriteLine($"   ⚠️ Для предмета '{lesson.Name}' нет учителей");
+                        continue;
+                    }
+                    
+                    int scheduled = 0;
+                    int dayIndex = 0;
+                    var shuffledDays = workDays.OrderBy(x => _random.Next()).ToList();
+                    
+                    while (scheduled < hoursNeeded && dayIndex < shuffledDays.Count)
+                    {
+                        var day = shuffledDays[dayIndex];
+                        
+                        if (classSchedule[day].Count >= maxLessons)
+                        {
+                            dayIndex++;
+                            continue;
+                        }
+                        
+                        var teacher = availableTeachers[_random.Next(availableTeachers.Count)];
+                        var roomIds = _teacherRooms.GetValueOrDefault(teacher.Id, new List<int>());
+                        var room = roomIds.Count > 0 ? _roomMap.GetValueOrDefault(roomIds.First(), "") : "";
+                        if (string.IsNullOrEmpty(room) && roomNumbers.Any())
+                            room = roomNumbers[_random.Next(roomNumbers.Count)];
+                        
+                        var lessonDict = new Dictionary<string, object>
+                        {
+                            ["lessonNumber"] = classSchedule[day].Count + 1,
+                            ["subject"] = lesson.Name,
+                            ["teacher"] = $"{teacher.LastName} {teacher.FirstName}".Trim(),
+                            ["office"] = room,
+                            ["teacherColor"] = teacher.Color ?? "#3b82f6"
+                        };
+                        
+                        classSchedule[day].Add(lessonDict);
+                        
+                        scheduled++;
+                        totalLessons++;
+                        dayIndex++;
+                    }
+                    
+                    if (scheduled < hoursNeeded)
+                    {
+                        Console.WriteLine($"   ⚠️ Не удалось распределить все часы для {lesson.Name}: {scheduled}/{hoursNeeded}");
+                    }
+                }
+                
+                foreach (var day in workDays)
+                {
+                    var lessons = classSchedule[day];
+                    for (int i = 0; i < lessons.Count; i++)
+                    {
+                        lessons[i]["lessonNumber"] = i + 1;
+                    }
+                }
+                
+                schedule[cls.Name] = classSchedule;
+                classesProcessed++;
+                Console.WriteLine($"   ✅ {classSchedule.Sum(d => d.Value.Count)} уроков");
             }
             
-            if (scheduled < hoursNeeded)
+            result.Schedule = schedule;
+            result.Success = totalLessons > 0;
+            result.TotalLessons = totalLessons;
+            result.ClassesProcessed = classesProcessed;
+            
+            if (!result.Success)
             {
-                Console.WriteLine($"   ⚠️ Не удалось распределить все часы для {lesson.Name}: {scheduled}/{hoursNeeded}");
+                result.Error = "Не удалось создать ни одного урока. Проверьте данные: классы, учителя, предметы, часы нагрузки.";
             }
+            
+            Console.WriteLine($"\n✅ Создано {totalLessons} уроков в {classesProcessed} классах");
+            return result;
         }
-        
-        // Перенумеровываем уроки
-        foreach (var day in workDays)
-        {
-            var lessons = classSchedule[day];
-            for (int i = 0; i < lessons.Count; i++)
-            {
-                lessons[i]["lessonNumber"] = i + 1;
-            }
-        }
-        
-        schedule[cls.Name] = classSchedule;
-        classesProcessed++;
-        Console.WriteLine($"   ✅ {classSchedule.Sum(d => d.Value.Count)} уроков");
-    }
-    
-    result.Schedule = schedule;
-    result.Success = totalLessons > 0;
-    result.TotalLessons = totalLessons;
-    result.ClassesProcessed = classesProcessed;
-    
-    if (!result.Success)
-    {
-        result.Error = "Не удалось создать ни одного урока. Проверьте данные: классы, учителя, предметы, часы нагрузки.";
-    }
-    
-    Console.WriteLine($"\n✅ Создано {totalLessons} уроков в {classesProcessed} классах");
-    return result;
-}
     }
 }

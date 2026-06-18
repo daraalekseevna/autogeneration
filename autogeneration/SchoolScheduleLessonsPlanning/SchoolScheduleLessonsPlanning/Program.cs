@@ -1,5 +1,11 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using SchoolScheduleLessonsPlanning;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors();
@@ -17,7 +23,7 @@ app.MapPost("/api/generate", async (HttpContext context) =>
     {
         using var reader = new StreamReader(context.Request.Body);
         var body = await reader.ReadToEndAsync();
-        var request = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(body);
+        var request = JsonSerializer.Deserialize<Dictionary<string, string>>(body);
         var rulesUrl = request?["rulesUrl"] ?? "";
         var token = request?["token"] ?? "";
 
@@ -58,6 +64,9 @@ app.MapPost("/api/generate", async (HttpContext context) =>
         return Results.Json(new { success = false, error = ex.Message, stack = ex.StackTrace });
     }
 });
+
+// Добавляем эндпоинт для проверки
+app.MapGet("/", () => "Сервис генерации расписания работает! Используйте /health для проверки.");
 
 Console.WriteLine("Генератор расписания запущен на http://localhost:5001");
 Console.WriteLine("Ожидание запросов...");
