@@ -9,7 +9,6 @@ import { getRouteByRole, authenticateUser } from '../config/usersConfig';
 import { loginConfig, getPasswordFieldType, getPasswordToggleConfig } from '../config/loginConfig';
 import { appConfig, getCopyrightInfo } from '../config/appConfig';
 
-// ИСПРАВЛЕНО: используем переменную окружения
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const Login = () => {
