@@ -206,7 +206,7 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
 
     const handleUpdateTeacherColor = async (teacherId, newColor) => {
         try {
-            await axios.put(`${API_URL}/superadmin/teachers/${teacherId}`, {
+            await axios.patch(`${API_URL}/superadmin/teachers/${teacherId}/color`, {
                 color: newColor
             }, { headers: { Authorization: `Bearer ${token}` } });
             showNotification('Цвет обновлен');
@@ -294,24 +294,44 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
 
     const openColorPicker = (teacher = null) => {
         if (teacher) {
-            setColorPickerTarget({ type: 'existing', id: teacher.id, currentColor: teacher.color || '#b8e2ff' });
+            setColorPickerTarget({ 
+                type: 'existing', 
+                id: teacher.id, 
+                currentColor: teacher.color || '#b8e2ff' 
+            });
             setTempColor(teacher.color || '#b8e2ff');
         } else {
-            setColorPickerTarget({ type: 'new', currentColor: newTeacher.color });
+            setColorPickerTarget({ 
+                type: 'new', 
+                currentColor: newTeacher.color 
+            });
             setTempColor(newTeacher.color);
         }
         setColorPickerModalOpen(true);
     };
 
     const saveColor = async () => {
-        if (colorPickerTarget?.type === 'existing') {
-            await handleUpdateTeacherColor(colorPickerTarget.id, tempColor);
-        } else {
-            setNewTeacher(prev => ({ ...prev, color: tempColor }));
-            showNotification('Цвет выбран');
+        if (!colorPickerTarget) return;
+        
+        try {
+            if (colorPickerTarget.type === 'existing') {
+                await handleUpdateTeacherColor(colorPickerTarget.id, tempColor);
+                
+                // Обновляем editingTeacher если он открыт
+                if (editingTeacher && editingTeacher.id === colorPickerTarget.id) {
+                    setEditingTeacher(prev => ({ ...prev, color: tempColor }));
+                }
+            } else {
+                setNewTeacher(prev => ({ ...prev, color: tempColor }));
+                showNotification('Цвет выбран');
+            }
+            
+            setColorPickerModalOpen(false);
+            setColorPickerTarget(null);
+        } catch (err) {
+            console.error('Error saving color:', err);
+            showNotification('Ошибка сохранения цвета', 'error');
         }
-        setColorPickerModalOpen(false);
-        setColorPickerTarget(null);
     };
 
     // Палитра цветов
@@ -319,7 +339,11 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
         if (!colorPickerModalOpen) return null;
 
         return (
-            <div className={styles.paletteOverlay} onClick={() => setColorPickerModalOpen(false)}>
+            <div className={styles.paletteOverlay} onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                    setColorPickerModalOpen(false);
+                }
+            }}>
                 <div className={styles.paletteContent}>
                     <div className={styles.paletteHeader}>
                         <span><FaPalette /> Выбор цвета</span>
@@ -335,20 +359,69 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
                                 onClick={() => setTempColor(color.value)}
                                 style={{
                                     backgroundColor: color.value,
-                                    border: tempColor === color.value ? '3px solid #21435A' : '2px solid white',
+                                    border: tempColor === color.value ? '3px solid #21435A' : '2px solid #e0e0e0',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    width: '40px',
+                                    height: '40px',
+                                    position: 'relative',
                                 }}
                                 title={color.name}
-                            />
+                            >
+                                {tempColor === color.value && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '50%',
+                                        left: '50%',
+                                        transform: 'translate(-50%, -50%)',
+                                        color: '#21435A',
+                                        fontSize: '16px',
+                                    }}>
+                                        <FaCheck />
+                                    </div>
+                                )}
+                            </div>
                         ))}
                     </div>
                     <div className={styles.paletteFooter}>
                         <div className={styles.paletteSelected}>
-                            <div className={styles.paletteSelectedBox} style={{ backgroundColor: tempColor }} />
-                            <span>{tempColor}</span>
+                            <div 
+                                className={styles.paletteSelectedBox} 
+                                style={{ 
+                                    backgroundColor: tempColor,
+                                    width: '30px',
+                                    height: '30px',
+                                    borderRadius: '4px',
+                                    border: '1px solid #ddd',
+                                }} 
+                            />
+                            <span style={{ marginLeft: '10px' }}>{tempColor}</span>
                         </div>
                         <div className={styles.selectorActions}>
-                            <button className={styles.modalCancel} onClick={() => setColorPickerModalOpen(false)}>Отмена</button>
-                            <button className={styles.modalSave} onClick={saveColor}><FaCheck /> OK</button>
+                            <button 
+                                className={styles.modalCancel} 
+                                onClick={() => setColorPickerModalOpen(false)}
+                            >
+                                Отмена
+                            </button>
+                            <button 
+                                className={styles.modalSave} 
+                                onClick={saveColor}
+                                style={{
+                                    background: '#4CAF50',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '8px 16px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                }}
+                            >
+                                <FaCheck /> OK
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -598,12 +671,18 @@ const TeachersTab = ({ teachers = [], lessons = [], token, onDataChange }) => {
                                     <div 
                                         className={styles.colorPreview} 
                                         style={{ background: formData.color }}
-                                        onClick={() => openColorPicker({ id: editingTeacher?.id, color: formData.color })}
+                                        onClick={() => openColorPicker({ 
+                                            id: editingTeacher?.id, 
+                                            color: formData.color 
+                                        })}
                                     />
                                     <button 
                                         type="button"
                                         className={styles.colorBtn}
-                                        onClick={() => openColorPicker({ id: editingTeacher?.id, color: formData.color })}
+                                        onClick={() => openColorPicker({ 
+                                            id: editingTeacher?.id, 
+                                            color: formData.color 
+                                        })}
                                     >
                                         <FaPalette /> Выбрать цвет
                                     </button>
