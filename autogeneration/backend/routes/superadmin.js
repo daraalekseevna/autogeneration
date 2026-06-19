@@ -98,7 +98,7 @@ router.get('/teachers', async (req, res) => {
                 t.last_name, 
                 t.first_name, 
                 t.middle_name,
-                t.color,
+                t.color,  
                 t.room_id,
                 t.max_consecutive_lessons,
                 t.unavailable_days,
@@ -138,7 +138,7 @@ router.get('/teachers', async (req, res) => {
             maxConsecutiveLessons: teacher.max_consecutive_lessons || 5,
             preferredStartTime: teacher.preferred_start_time,
             preferredEndTime: teacher.preferred_end_time,
-            color: teacher.color || '#b8e2ff'
+            color: teacher.color || '#b8e2ff' // ✅ ДОБАВЬТЕ ЭТУ СТРОКУ
         }));
         
         res.json(teachers);
