@@ -1570,5 +1570,86 @@ router.post('/generate-schedule', async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 });
+// ============= НАЗНАЧЕНИЯ УРОКОВ =============
 
+router.get('/lesson-assignments', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                la.id,
+                la.lesson_id,
+                l.name as lesson_name,
+                la.teacher_id,
+                CONCAT(t.last_name, ' ', t.first_name, ' ', COALESCE(t.middle_name, '')) as teacher_name,
+                la.room_id,
+                r.number as room_number,
+                la.created_at
+            FROM lesson_assignments la
+            JOIN lessons l ON la.lesson_id = l.id
+            JOIN teachers t ON la.teacher_id = t.id
+            LEFT JOIN rooms r ON la.room_id = r.id
+            ORDER BY la.created_at DESC
+        `);
+        res.json(result.rows || []);
+    } catch (err) {
+        console.error('GET /lesson-assignments error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.post('/lesson-assignments', async (req, res) => {
+    const { lesson_id, teacher_id, room_id } = req.body;
+    
+    if (!lesson_id || !teacher_id) {
+        return res.status(400).json({ message: 'Урок и учитель обязательны' });
+    }
+    
+    try {
+        const existing = await db.query(`
+            SELECT id FROM lesson_assignments 
+            WHERE lesson_id = $1 AND teacher_id = $2 AND (room_id = $3 OR ($3 IS NULL AND room_id IS NULL))
+        `, [lesson_id, teacher_id, room_id || null]);
+        
+        if (existing.rows.length > 0) {
+            return res.status(400).json({ message: 'Такое назначение уже существует' });
+        }
+        
+        await db.query(`
+            INSERT INTO lesson_assignments (lesson_id, teacher_id, room_id) 
+            VALUES ($1, $2, $3)
+        `, [lesson_id, teacher_id, room_id || null]);
+        
+        res.status(201).json({ message: 'Урок успешно назначен' });
+    } catch (err) {
+        console.error('POST /lesson-assignments error:', err);
+        res.status(500).json({ message: 'Ошибка назначения урока' });
+    }
+});
+
+router.delete('/lesson-assignments/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await db.query('DELETE FROM lesson_assignments WHERE id = $1', [id]);
+        res.json({ message: 'Назначение удалено' });
+    } catch (err) {
+        console.error('DELETE /lesson-assignments error:', err);
+        res.status(500).json({ message: 'Ошибка удаления назначения' });
+    }
+});
+
+// ============= СТАТИСТИКА УРОКОВ =============
+
+router.get('/lessons/stats', async (req, res) => {
+    try {
+        const totalResult = await db.query('SELECT COUNT(*) as total FROM lessons');
+        const withDescResult = await db.query('SELECT COUNT(*) as count FROM lessons WHERE description IS NOT NULL AND description != \'\'');
+        res.json({
+            total: parseInt(totalResult.rows[0]?.total || 0),
+            withDescription: parseInt(withDescResult.rows[0]?.count || 0)
+        });
+    } catch (err) {
+        console.error('GET /lessons/stats error:', err);
+        res.json({ total: 0, withDescription: 0 });
+    }
+});
 module.exports = router;
