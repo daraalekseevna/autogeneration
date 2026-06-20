@@ -1652,4 +1652,357 @@ router.get('/lessons/stats', async (req, res) => {
         res.json({ total: 0, withDescription: 0 });
     }
 });
+// ============================================
+// ДОБАВИТЬ В КОНЕЦ ФАЙЛА superadmin.js
+// ============================================
+
+// ============================================
+// 1. ПРАВИЛА СПАРИВАНИЯ (lesson_pairing_rules)
+// ============================================
+
+// Получить все правила спаривания
+router.get('/lesson-pairing-rules', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                lpr.*,
+                c.number || c.letter as class_name,
+                t.name as teacher_name,
+                l1.name as subject_name_1,
+                l2.name as subject_name_2
+            FROM lesson_pairing_rules lpr
+            LEFT JOIN classes c ON lpr.class_id = c.id
+            LEFT JOIN teachers t ON lpr.teacher_id = t.id
+            LEFT JOIN lessons l1 ON lpr.subject_id_1 = l1.id
+            LEFT JOIN lessons l2 ON lpr.subject_id_2 = l2.id
+            ORDER BY lpr.id
+        `);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('GET /lesson-pairing-rules error:', error);
+        res.status(500).json({ error: 'Ошибка загрузки правил спаривания' });
+    }
+});
+
+// Создать правило спаривания
+router.post('/lesson-pairing-rules', async (req, res) => {
+    try {
+        const { class_id, teacher_id, subject_id_1, subject_id_2, mandatory, day_of_week, lesson_slot1, lesson_slot2 } = req.body;
+        
+        if (!class_id || !subject_id_1 || !subject_id_2) {
+            return res.status(400).json({ error: 'Не все обязательные поля заполнены' });
+        }
+        
+        const result = await db.query(
+            `INSERT INTO lesson_pairing_rules 
+             (class_id, teacher_id, subject_id_1, subject_id_2, mandatory, day_of_week, lesson_slot1, lesson_slot2) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+             RETURNING *`,
+            [class_id, teacher_id || null, subject_id_1, subject_id_2, mandatory || false, day_of_week || null, lesson_slot1 || null, lesson_slot2 || null]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error('POST /lesson-pairing-rules error:', error);
+        res.status(500).json({ error: 'Ошибка создания правила спаривания' });
+    }
+});
+
+// Обновить правило спаривания
+router.put('/lesson-pairing-rules/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { class_id, teacher_id, subject_id_1, subject_id_2, mandatory, day_of_week, lesson_slot1, lesson_slot2 } = req.body;
+        
+        const result = await db.query(
+            `UPDATE lesson_pairing_rules 
+             SET class_id = $1, teacher_id = $2, subject_id_1 = $3, subject_id_2 = $4, 
+                 mandatory = $5, day_of_week = $6, lesson_slot1 = $7, lesson_slot2 = $8
+             WHERE id = $9 
+             RETURNING *`,
+            [class_id, teacher_id || null, subject_id_1, subject_id_2, mandatory || false, day_of_week || null, lesson_slot1 || null, lesson_slot2 || null, id]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Правило не найдено' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('PUT /lesson-pairing-rules/:id error:', error);
+        res.status(500).json({ error: 'Ошибка обновления правила спаривания' });
+    }
+});
+
+// Удалить правило спаривания
+router.delete('/lesson-pairing-rules/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await db.query('DELETE FROM lesson_pairing_rules WHERE id = $1 RETURNING *', [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Правило не найдено' });
+        }
+        
+        res.status(204).send();
+    } catch (error) {
+        console.error('DELETE /lesson-pairing-rules/:id error:', error);
+        res.status(500).json({ error: 'Ошибка удаления правила спаривания' });
+    }
+});
+
+// ============================================
+// 2. ГРУППОВЫЕ ЗАНЯТИЯ (group_division_links)
+// ============================================
+
+// Получить все групповые связи
+router.get('/group-division-links', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                gdl.*,
+                c.number || c.letter as class_name,
+                array_agg(DISTINCT t.name) as teacher_names,
+                array_agg(DISTINCT r.number) as room_numbers
+            FROM group_division_links gdl
+            LEFT JOIN classes c ON gdl.class_id = c.id
+            LEFT JOIN teachers t ON t.id = ANY(SELECT jsonb_array_elements_text(gdl.teacher_pair)::int)
+            LEFT JOIN rooms r ON r.id = ANY(SELECT jsonb_array_elements_text(gdl.room_ids)::int)
+            GROUP BY gdl.id, c.number, c.letter
+            ORDER BY gdl.id
+        `);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('GET /group-division-links error:', error);
+        res.status(500).json({ error: 'Ошибка загрузки групповых занятий' });
+    }
+});
+
+// Создать групповую связь
+router.post('/group-division-links', async (req, res) => {
+    try {
+        const { class_id, teacher_pair, room_ids, day_of_week, start_slot } = req.body;
+        
+        if (!class_id || !teacher_pair || !room_ids || !day_of_week || !start_slot) {
+            return res.status(400).json({ error: 'Не все обязательные поля заполнены' });
+        }
+        
+        if (teacher_pair.length !== 2 || room_ids.length !== 2) {
+            return res.status(400).json({ error: 'Должно быть выбрано 2 учителя и 2 кабинета' });
+        }
+        
+        const result = await db.query(
+            `INSERT INTO group_division_links 
+             (class_id, teacher_pair, room_ids, day_of_week, start_slot) 
+             VALUES ($1, $2, $3, $4, $5) 
+             RETURNING *`,
+            [class_id, JSON.stringify(teacher_pair), JSON.stringify(room_ids), day_of_week, start_slot]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error('POST /group-division-links error:', error);
+        res.status(500).json({ error: 'Ошибка создания групповой связи' });
+    }
+});
+
+// Удалить групповую связь
+router.delete('/group-division-links/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await db.query('DELETE FROM group_division_links WHERE id = $1 RETURNING *', [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Связь не найдена' });
+        }
+        
+        res.status(204).send();
+    } catch (error) {
+        console.error('DELETE /group-division-links/:id error:', error);
+        res.status(500).json({ error: 'Ошибка удаления групповой связи' });
+    }
+});
+
+// ============================================
+// 3. СИНХРОНИЗАЦИЯ ПАРАЛЛЕЛЕЙ (class_parallel_sync)
+// ============================================
+
+// Получить все синхронизации
+router.get('/class-parallel-sync', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                cps.*,
+                l.name as subject_name
+            FROM class_parallel_sync cps
+            LEFT JOIN lessons l ON cps.subject_id = l.id
+            ORDER BY cps.grade, cps.subject_id
+        `);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('GET /class-parallel-sync error:', error);
+        res.status(500).json({ error: 'Ошибка загрузки синхронизаций' });
+    }
+});
+
+// Создать синхронизацию
+router.post('/class-parallel-sync', async (req, res) => {
+    try {
+        const { grade, subject_id, same_day_required } = req.body;
+        
+        if (!grade || !subject_id) {
+            return res.status(400).json({ error: 'Не все обязательные поля заполнены' });
+        }
+        
+        const result = await db.query(
+            `INSERT INTO class_parallel_sync (grade, subject_id, same_day_required) 
+             VALUES ($1, $2, $3) 
+             ON CONFLICT (grade, subject_id) DO UPDATE SET same_day_required = $3
+             RETURNING *`,
+            [grade, subject_id, same_day_required !== undefined ? same_day_required : true]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error('POST /class-parallel-sync error:', error);
+        res.status(500).json({ error: 'Ошибка создания синхронизации' });
+    }
+});
+
+// Удалить синхронизацию
+router.delete('/class-parallel-sync/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await db.query('DELETE FROM class_parallel_sync WHERE id = $1 RETURNING *', [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Синхронизация не найдена' });
+        }
+        
+        res.status(204).send();
+    } catch (error) {
+        console.error('DELETE /class-parallel-sync/:id error:', error);
+        res.status(500).json({ error: 'Ошибка удаления синхронизации' });
+    }
+});
+
+// ============================================
+// 4. ЗАПРЕЩЁННЫЕ ПОСЛЕДОВАТЕЛЬНОСТИ (forbidden_sequences)
+// ============================================
+
+// Получить все запрещённые последовательности
+router.get('/forbidden-sequences', async (req, res) => {
+    try {
+        const result = await db.query('SELECT * FROM forbidden_sequences ORDER BY id');
+        res.json(result.rows);
+    } catch (error) {
+        console.error('GET /forbidden-sequences error:', error);
+        res.status(500).json({ error: 'Ошибка загрузки запрещённых последовательностей' });
+    }
+});
+
+// Создать запрещённую последовательность
+router.post('/forbidden-sequences', async (req, res) => {
+    try {
+        const { sequence_type, param1, param2, severity } = req.body;
+        
+        if (!sequence_type) {
+            return res.status(400).json({ error: 'Тип последовательности обязателен' });
+        }
+        
+        const result = await db.query(
+            `INSERT INTO forbidden_sequences (sequence_type, param1, param2, severity) 
+             VALUES ($1, $2, $3, $4) 
+             RETURNING *`,
+            [sequence_type, param1 || null, param2 || null, severity || 'error']
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error('POST /forbidden-sequences error:', error);
+        res.status(500).json({ error: 'Ошибка создания запрещённой последовательности' });
+    }
+});
+
+// Обновить запрещённую последовательность
+router.put('/forbidden-sequences/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { sequence_type, param1, param2, severity } = req.body;
+        
+        const result = await db.query(
+            `UPDATE forbidden_sequences 
+             SET sequence_type = $1, param1 = $2, param2 = $3, severity = $4
+             WHERE id = $5 
+             RETURNING *`,
+            [sequence_type, param1 || null, param2 || null, severity || 'error', id]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Последовательность не найдена' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('PUT /forbidden-sequences/:id error:', error);
+        res.status(500).json({ error: 'Ошибка обновления запрещённой последовательности' });
+    }
+});
+
+// Удалить запрещённую последовательность
+router.delete('/forbidden-sequences/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await db.query('DELETE FROM forbidden_sequences WHERE id = $1 RETURNING *', [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Последовательность не найдена' });
+        }
+        
+        res.status(204).send();
+    } catch (error) {
+        console.error('DELETE /forbidden-sequences/:id error:', error);
+        res.status(500).json({ error: 'Ошибка удаления запрещённой последовательности' });
+    }
+});
+
+// ============================================
+// 5. ПОЛУЧИТЬ РАНГИ СЛОЖНОСТИ (subject_difficulty)
+// ============================================
+
+// Получить все ранги сложности
+router.get('/sanpin/subject-difficulty', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                sd.*,
+                l.name as subject_name
+            FROM subject_difficulty sd
+            LEFT JOIN lessons l ON sd.subject_id = l.id
+            ORDER BY sd.grade, sd.subject_id
+        `);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('GET /sanpin/subject-difficulty error:', error);
+        res.status(500).json({ error: 'Ошибка загрузки рангов сложности' });
+    }
+});
+
+// ============================================
+// 6. ПОЛУЧИТЬ НАГРУЗКУ ПО ЧАСАМ (subject_hours)
+// ============================================
+
+// Получить нагрузку по часам
+router.get('/sanpin/subject-hours', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                sh.*,
+                l.name as subject_name
+            FROM subject_hours sh
+            LEFT JOIN lessons l ON sh.subject_id = l.id
+            ORDER BY sh.grade, sh.subject_id
+        `);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('GET /sanpin/subject-hours error:', error);
+        res.status(500).json({ error: 'Ошибка загрузки нагрузки по часам' });
+    }
+});
 module.exports = router;
