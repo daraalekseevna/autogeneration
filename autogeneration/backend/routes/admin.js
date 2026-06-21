@@ -327,7 +327,7 @@ router.get('/generation-rules', async (req, res) => {
     }
 });
 
-// ============= ИСПРАВЛЕННЫЙ ЭНДПОИНТ ГЕНЕРАЦИИ =============
+// ============= ИСПРАВЛЕННЫЙ ЭНДПОИНТ ГЕНЕРАЦИИ (С ТАЙМАУТОМ) =============
 
 router.post('/generate-schedule', async (req, res) => {
     console.log('\n🚀 ========== ЗАПУСК ГЕНЕРАЦИИ РАСПИСАНИЯ ==========\n');
@@ -337,17 +337,22 @@ router.post('/generate-schedule', async (req, res) => {
         return res.status(401).json({ success: false, message: 'Нет токена' });
     }
 
+    // Устанавливаем таймаут для всего запроса
+    req.setTimeout(600000); // 10 минут
+
     try {
         const generatorUrl = process.env.GENERATOR_URL || process.env.SCHEDULE_GENERATOR_URL || 'http://localhost:5001';
         
-        console.log(`🔍 Проверка доступности C# генератора на ${generatorUrl}...`);
+        console.log(`🔍 Проверка доступности генератора на ${generatorUrl}...`);
         
         let useLocalGeneration = false;
         try {
-            const healthCheck = await axios.get(`${generatorUrl}/health`, { timeout: 3000 });
-            console.log('✅ C# генератор доступен');
+            const healthCheck = await axios.get(`${generatorUrl}/health`, { 
+                timeout: 5000 
+            });
+            console.log('✅ Генератор доступен');
         } catch (healthError) {
-            console.log('❌ C# генератор НЕ доступен, используем локальную генерацию...');
+            console.log('❌ Генератор НЕ доступен, используем локальную генерацию...');
             useLocalGeneration = true;
         }
         
@@ -358,55 +363,81 @@ router.post('/generate-schedule', async (req, res) => {
         
         if (useLocalGeneration) {
             // Локальная генерация
+            console.log('🔄 Запуск локальной генерации...');
             const localResult = await generateLocalSchedule();
-            if (localResult) {
+            if (localResult && localResult.schedule) {
                 schedule = localResult.schedule;
                 totalLessons = localResult.totalLessons;
                 classesProcessed = localResult.classesProcessed;
-                generationMessage = 'Расписание сгенерировано локально (C# генератор недоступен)';
+                generationMessage = 'Расписание сгенерировано локально';
             } else {
                 return res.status(500).json({ 
                     success: false, 
-                    message: 'Не удалось сгенерировать расписание локально. Проверьте данные в БД.'
+                    message: 'Не удалось сгенерировать расписание локально'
                 });
             }
         } else {
-            // C# генератор
-            const rulesUrl = `${req.protocol}://${req.get('host')}/api/admin/generation-rules`;
-            console.log(`📡 Отправка запроса к C# генератору: ${generatorUrl}/api/generate`);
+            // C# генератор с таймаутом
+            console.log('📡 Отправка запроса к C# генератору...');
             
-            const response = await axios.post(`${generatorUrl}/api/generate`, {
-                rulesUrl: rulesUrl,
-                token: token
-            }, {
-                headers: { 'Content-Type': 'application/json' },
-                timeout: 300000
-            });
-            
-            if (!response.data?.success) {
-                throw new Error(response.data?.error || 'Ошибка генерации');
-            }
-            
-            schedule = response.data.schedule;
-            if (!schedule || Object.keys(schedule).length === 0) {
-                throw new Error('Расписание пустое');
-            }
-            
-            totalLessons = Object.values(schedule).reduce((acc, days) => {
-                let count = 0;
-                for (const lessons of Object.values(days)) {
-                    count += lessons.length;
+            try {
+                const rulesUrl = `${req.protocol}://${req.get('host')}/api/admin/generation-rules`;
+                console.log(`📋 URL правил: ${rulesUrl}`);
+                
+                const response = await axios.post(`${generatorUrl}/api/generate`, {
+                    rulesUrl: rulesUrl,
+                    token: token
+                }, {
+                    headers: { 'Content-Type': 'application/json' },
+                    timeout: 300000 // 5 минут
+                });
+                
+                if (!response.data?.success) {
+                    throw new Error(response.data?.error || 'Ошибка генерации');
                 }
-                return acc + count;
-            }, 0);
-            classesProcessed = Object.keys(schedule).length;
-            generationMessage = 'Расписание сгенерировано C# генератором';
+                
+                schedule = response.data.schedule;
+                if (!schedule || Object.keys(schedule).length === 0) {
+                    throw new Error('Расписание пустое');
+                }
+                
+                totalLessons = Object.values(schedule).reduce((acc, days) => {
+                    let count = 0;
+                    for (const lessons of Object.values(days)) {
+                        count += lessons.length;
+                    }
+                    return acc + count;
+                }, 0);
+                classesProcessed = Object.keys(schedule).length;
+                generationMessage = 'Расписание сгенерировано C# генератором';
+                
+            } catch (genError) {
+                console.error('❌ Ошибка C# генератора:', genError.message);
+                // Fallback на локальную генерацию
+                console.log('🔄 Пробуем локальную генерацию...');
+                const localResult = await generateLocalSchedule();
+                if (localResult && localResult.schedule) {
+                    schedule = localResult.schedule;
+                    totalLessons = localResult.totalLessons;
+                    classesProcessed = localResult.classesProcessed;
+                    generationMessage = 'Расписание сгенерировано локально (C# генератор не ответил)';
+                } else {
+                    throw new Error('Не удалось сгенерировать расписание');
+                }
+            }
+        }
+        
+        if (!schedule || Object.keys(schedule).length === 0) {
+            throw new Error('Расписание пустое');
         }
         
         console.log(`📊 Получено расписание для ${classesProcessed} классов, ${totalLessons} уроков`);
         
         // Сохраняем в БД
+        console.log('💾 Сохранение в БД...');
         const saved = await saveScheduleToDB(schedule);
+        
+        console.log(`✅ Готово! Сохранено ${saved.totalLessons} уроков`);
         
         res.json({ 
             success: true, 
@@ -419,9 +450,9 @@ router.post('/generate-schedule', async (req, res) => {
     } catch (error) {
         console.error('❌ Ошибка генерации:', error);
         
-        // Пробуем локальную генерацию как fallback
+        // Пробуем локальную генерацию как последний шанс
         try {
-            console.log('🔄 Пробуем локальную генерацию...');
+            console.log('🔄 Последняя попытка - локальная генерация...');
             const localResult = await generateLocalSchedule();
             if (localResult && localResult.schedule && Object.keys(localResult.schedule).length > 0) {
                 const saved = await saveScheduleToDB(localResult.schedule);
@@ -430,7 +461,7 @@ router.post('/generate-schedule', async (req, res) => {
                     schedule: localResult.schedule,
                     totalLessons: saved.totalLessons,
                     classesProcessed: saved.classesProcessed,
-                    message: `Расписание сгенерировано локально (ошибка C# генератора). ${saved.totalLessons} уроков.`
+                    message: `Расписание сгенерировано локально. ${saved.totalLessons} уроков.`
                 });
             }
         } catch (localErr) {
@@ -439,8 +470,7 @@ router.post('/generate-schedule', async (req, res) => {
         
         res.status(500).json({ 
             success: false, 
-            message: error.message || 'Ошибка генерации расписания',
-            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            message: error.message || 'Ошибка генерации расписания'
         });
     }
 });
@@ -472,7 +502,6 @@ async function saveScheduleToDB(schedule) {
         const classMap = {};
         for (const cls of allClasses.rows) {
             classMap[cls.name] = cls.id;
-            // Также добавляем с маленькой буквы для поиска
             classMap[cls.name.toLowerCase()] = cls.id;
         }
         
@@ -581,7 +610,6 @@ async function saveScheduleToDB(schedule) {
                             let teacherResult = await client.query(query, params);
                             
                             if (teacherResult.rows.length === 0 && firstName) {
-                                // Пробуем поискать по полному имени
                                 teacherResult = await client.query(
                                     'SELECT id FROM teachers WHERE CONCAT(last_name, \' \', first_name) ILIKE $1',
                                     [`%${teacherName}%`]
@@ -652,14 +680,17 @@ async function generateLocalSchedule() {
         schedule[cls.name] = {};
         classesProcessed++;
         
+        // Определяем количество уроков в день (4-6)
+        const maxLessons = Math.min(4 + Math.floor(Math.random() * 3), lessons.rows.length);
+        
         for (const day of days) {
             schedule[cls.name][day] = [];
             
-            // Добавляем по 4-6 уроков
-            const numLessons = Math.min(4 + Math.floor(Math.random() * 3), lessons.rows.length);
+            // Перемешиваем предметы для разнообразия
             const shuffledLessons = [...lessons.rows].sort(() => Math.random() - 0.5);
+            const numLessons = Math.min(maxLessons, shuffledLessons.length);
             
-            for (let i = 0; i < numLessons && i < shuffledLessons.length; i++) {
+            for (let i = 0; i < numLessons; i++) {
                 const teacher = teachers.rows[i % teachers.rows.length];
                 const lessonData = {
                     subject: shuffledLessons[i].name,
