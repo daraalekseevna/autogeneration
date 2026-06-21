@@ -177,33 +177,32 @@ const ClassSchedule = () => {
         }
     };
 
-    // ✅ ИСПРАВЛЕННАЯ ФУНКЦИЯ
-    const loadSchedule = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const token = localStorage.getItem('token');
-            // ✅ ИСПРАВЛЕНО: используем /superadmin/schedule/class/
-            const response = await axios.get(`${API_URL}/superadmin/schedule/class/${className}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            
-            console.log('Schedule response:', response.data);
-            
-            if (response.data.success) {
-                setSchedule(response.data.schedule || {});
-            } else {
-                setSchedule({});
-                setError('Не удалось загрузить расписание');
-            }
-        } catch (err) {
-            console.error('Error loading schedule:', err);
-            setError(err.response?.data?.message || 'Ошибка загрузки расписания');
+const loadSchedule = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+        const token = localStorage.getItem('token');
+        // ✅ ИСПРАВЛЕНО: используем /schedule/class/ (без superadmin)
+        const response = await axios.get(`${API_URL}/schedule/class/${className}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        console.log('Schedule response:', response.data);
+        
+        if (response.data.success) {
+            setSchedule(response.data.schedule || {});
+        } else {
             setSchedule({});
-        } finally {
-            setLoading(false);
+            setError('Не удалось загрузить расписание');
         }
-    };
+    } catch (err) {
+        console.error('Error loading schedule:', err);
+        setError(err.response?.data?.message || 'Ошибка загрузки расписания');
+        setSchedule({});
+    } finally {
+        setLoading(false);
+    }
+};
 
     useEffect(() => {
         if (scheduleSettings) {
