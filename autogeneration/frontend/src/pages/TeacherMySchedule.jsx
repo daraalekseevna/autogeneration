@@ -25,10 +25,12 @@ const TeacherMySchedule = () => {
     const [schedule, setSchedule] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [teacherColor, setTeacherColor] = useState('#21435A');
 
     useEffect(() => {
         updateCurrentDate();
         loadSchedule();
+        loadTeacherInfo();
         const interval = setInterval(updateCurrentDate, 60000);
         return () => clearInterval(interval);
     }, []);
@@ -43,6 +45,20 @@ const TeacherMySchedule = () => {
         };
         const dateString = now.toLocaleDateString('ru-RU', options);
         setCurrentDate(dateString.charAt(0).toUpperCase() + dateString.slice(1));
+    };
+
+    const loadTeacherInfo = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${API_URL}/teacher/my-info`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (response.data && response.data.color) {
+                setTeacherColor(response.data.color);
+            }
+        } catch (err) {
+            console.error('Error loading teacher info:', err);
+        }
     };
 
     const loadSchedule = async () => {
@@ -70,10 +86,12 @@ const TeacherMySchedule = () => {
 
     const weekDays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
 
-    // ✅ Функция для получения цвета - ВОЗВРАЩАЕТ ЦВЕТ
+    // ✅ Функция для получения цвета урока
     const getLessonColor = (lesson) => {
+        // Приоритет: цвет из урока -> цвет учителя из БД -> дефолтный
         if (lesson && lesson.color) return lesson.color;
         if (lesson && lesson.teacherColor) return lesson.teacherColor;
+        if (teacherColor) return teacherColor;
         return '#21435A';
     };
 
@@ -107,30 +125,42 @@ const TeacherMySchedule = () => {
                                     return (
                                         <tr key={index} className={styles.scheduleRow}>
                                             <td className={styles.lessonNumCell}>
-                                                <div className={styles.lessonNumber}>{lesson.number}</div>
+                                                <div 
+                                                    className={styles.lessonNumber}
+                                                    style={{ 
+                                                        backgroundColor: color,
+                                                        color: '#ffffff'
+                                                    }}
+                                                >
+                                                    {lesson.number}
+                                                </div>
                                             </td>
                                             <td className={styles.lessonContentCell}>
                                                 <div 
                                                     className={styles.lessonItem}
                                                     style={{ 
                                                         borderLeftColor: color,
-                                                        backgroundColor: `${color}10`
+                                                        backgroundColor: `${color}15`
                                                     }}
                                                 >
                                                     <div className={styles.lessonInfo}>
                                                         <div className={styles.lessonSubject}>
-                                                            <FaBook />
-                                                            <span>{lesson.subject}</span>
+                                                            <FaBook style={{ color: color }} />
+                                                            <span style={{ color: color }}>{lesson.subject}</span>
                                                         </div>
                                                         <div className={styles.lessonClass}>
-                                                            <FaUserGraduate />
+                                                            <FaUserGraduate style={{ color: color }} />
                                                             <span>{lesson.className}</span>
                                                         </div>
                                                         <div className={styles.lessonRoom}>
-                                                            <FaMapMarkerAlt />
+                                                            <FaMapMarkerAlt style={{ color: color }} />
                                                             <span>Каб. {lesson.room}</span>
                                                         </div>
                                                     </div>
+                                                    <div 
+                                                        className={styles.lessonColorDot}
+                                                        style={{ backgroundColor: color }}
+                                                    />
                                                 </div>
                                             </td>
                                         </tr>
@@ -195,7 +225,10 @@ const TeacherMySchedule = () => {
             <main className={styles.container}>
                 <div className={styles.scheduleHeader}>
                     <div className={styles.teacherInfo}>
-                        <div className={styles.teacherIcon}>
+                        <div 
+                            className={styles.teacherIcon}
+                            style={{ backgroundColor: teacherColor }}
+                        >
                             <FaChalkboardTeacher />
                         </div>
                         <div>
