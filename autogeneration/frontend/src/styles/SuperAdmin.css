@@ -1268,3 +1268,711 @@
         font-size: 0.6rem;
     }
 }
+/* Добавьте в конец файла SuperAdmin.css */
+
+/* ========== СПАРИВАНИЕ УРОКОВ ========== */
+.superadmin-dashboard .pairing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .superadmin-dashboard .pairing-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.superadmin-dashboard .pairing-form {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.superadmin-dashboard .pairing-form .form-group {
+    margin-bottom: 14px;
+}
+
+.superadmin-dashboard .pairing-form label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.superadmin-dashboard .pairing-form select,
+.superadmin-dashboard .pairing-form input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-solid);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .pairing-form select:focus,
+.superadmin-dashboard .pairing-form input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
+}
+
+.superadmin-dashboard .pairing-form .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.superadmin-dashboard .pairing-form .checkbox-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.superadmin-dashboard .pairing-form .checkbox-group label {
+    margin: 0;
+    cursor: pointer;
+}
+
+.superadmin-dashboard .pairing-list {
+    background: var(--bg-secondary);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.superadmin-dashboard .pairing-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .pairing-item:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.superadmin-dashboard .pairing-item .pairing-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.superadmin-dashboard .pairing-item .pairing-info .main {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.superadmin-dashboard .pairing-item .pairing-info .sub {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.superadmin-dashboard .pairing-item .pairing-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.superadmin-dashboard .pairing-item .pairing-actions button {
+    padding: 4px 10px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .pairing-item .pairing-actions .edit-btn {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--info);
+}
+
+.superadmin-dashboard .pairing-item .pairing-actions .edit-btn:hover {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.superadmin-dashboard .pairing-item .pairing-actions .delete-btn {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.superadmin-dashboard .pairing-item .pairing-actions .delete-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.superadmin-dashboard .pairing-item .badge {
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.superadmin-dashboard .pairing-item .badge.mandatory {
+    background: #fefcbf;
+    color: #975a16;
+}
+
+.superadmin-dashboard .pairing-item .badge.optional {
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+}
+
+/* ========== ГРУППОВЫЕ ЗАНЯТИЯ ========== */
+.superadmin-dashboard .group-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .superadmin-dashboard .group-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.superadmin-dashboard .group-form {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.superadmin-dashboard .group-form .form-group {
+    margin-bottom: 14px;
+}
+
+.superadmin-dashboard .group-form label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.superadmin-dashboard .group-form select,
+.superadmin-dashboard .group-form input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-solid);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .group-form select:focus,
+.superadmin-dashboard .group-form input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
+}
+
+.superadmin-dashboard .group-form .multi-select {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-solid);
+    border-radius: var(--radius-sm);
+    min-height: 44px;
+}
+
+.superadmin-dashboard .group-form .multi-select .tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(33, 67, 90, 0.1);
+    color: var(--primary);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+}
+
+.superadmin-dashboard .group-form .multi-select .tag .remove {
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.superadmin-dashboard .group-form .multi-select .tag .remove:hover {
+    color: var(--danger);
+}
+
+.superadmin-dashboard .group-list {
+    background: var(--bg-secondary);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.superadmin-dashboard .group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .group-item:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.superadmin-dashboard .group-item .group-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.superadmin-dashboard .group-item .group-info .main {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.superadmin-dashboard .group-item .group-info .sub {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.superadmin-dashboard .group-item .group-info .teachers {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.superadmin-dashboard .group-item .group-info .teachers .teacher-tag {
+    padding: 1px 8px;
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+    border-radius: 3px;
+    font-size: 11px;
+}
+
+.superadmin-dashboard .group-item .group-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.superadmin-dashboard .group-item .group-actions button {
+    padding: 4px 10px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .group-item .group-actions .edit-btn {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--info);
+}
+
+.superadmin-dashboard .group-item .group-actions .edit-btn:hover {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.superadmin-dashboard .group-item .group-actions .delete-btn {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.superadmin-dashboard .group-item .group-actions .delete-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* ========== СИНХРОНИЗАЦИЯ ========== */
+.superadmin-dashboard .sync-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .superadmin-dashboard .sync-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.superadmin-dashboard .sync-form {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.superadmin-dashboard .sync-form .form-group {
+    margin-bottom: 14px;
+}
+
+.superadmin-dashboard .sync-form label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.superadmin-dashboard .sync-form select,
+.superadmin-dashboard .sync-form input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-solid);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .sync-form select:focus,
+.superadmin-dashboard .sync-form input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
+}
+
+.superadmin-dashboard .sync-form .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.superadmin-dashboard .sync-form .checkbox-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.superadmin-dashboard .sync-form .checkbox-group label {
+    margin: 0;
+    cursor: pointer;
+}
+
+.superadmin-dashboard .sync-list {
+    background: var(--bg-secondary);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.superadmin-dashboard .sync-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .sync-item:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.superadmin-dashboard .sync-item .sync-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.superadmin-dashboard .sync-item .sync-info .main {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.superadmin-dashboard .sync-item .sync-info .sub {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.superadmin-dashboard .sync-item .sync-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.superadmin-dashboard .sync-item .sync-actions button {
+    padding: 4px 10px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .sync-item .sync-actions .edit-btn {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--info);
+}
+
+.superadmin-dashboard .sync-item .sync-actions .edit-btn:hover {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.superadmin-dashboard .sync-item .sync-actions .delete-btn {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.superadmin-dashboard .sync-item .sync-actions .delete-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.superadmin-dashboard .sync-item .badge {
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.superadmin-dashboard .sync-item .badge.sync {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+}
+
+/* ========== ЗАПРЕЩЁННЫЕ ПОСЛЕДОВАТЕЛЬНОСТИ ========== */
+.superadmin-dashboard .forbidden-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .superadmin-dashboard .forbidden-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.superadmin-dashboard .forbidden-form {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.superadmin-dashboard .forbidden-form .form-group {
+    margin-bottom: 14px;
+}
+
+.superadmin-dashboard .forbidden-form label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.superadmin-dashboard .forbidden-form select,
+.superadmin-dashboard .forbidden-form input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-solid);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .forbidden-form select:focus,
+.superadmin-dashboard .forbidden-form input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
+}
+
+.superadmin-dashboard .forbidden-list {
+    background: var(--bg-secondary);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.superadmin-dashboard .forbidden-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .forbidden-item:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.superadmin-dashboard .forbidden-item .forbidden-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.superadmin-dashboard .forbidden-item .forbidden-info .main {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.superadmin-dashboard .forbidden-item .forbidden-info .sub {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.superadmin-dashboard .forbidden-item .forbidden-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.superadmin-dashboard .forbidden-item .forbidden-actions button {
+    padding: 4px 10px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .forbidden-item .forbidden-actions .edit-btn {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--info);
+}
+
+.superadmin-dashboard .forbidden-item .forbidden-actions .edit-btn:hover {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.superadmin-dashboard .forbidden-item .forbidden-actions .delete-btn {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.superadmin-dashboard .forbidden-item .forbidden-actions .delete-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.superadmin-dashboard .forbidden-item .severity {
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.superadmin-dashboard .forbidden-item .severity.error {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+}
+
+.superadmin-dashboard .forbidden-item .severity.warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--warning);
+}
+
+/* ========== ОБЩИЕ КНОПКИ ДЛЯ ВКЛАДОК ========== */
+.superadmin-dashboard .btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.superadmin-dashboard .btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.superadmin-dashboard .btn-primary:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(33, 67, 90, 0.3);
+}
+
+.superadmin-dashboard .btn-success {
+    background: var(--success);
+    color: white;
+}
+
+.superadmin-dashboard .btn-success:hover {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.superadmin-dashboard .btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.superadmin-dashboard .btn-danger:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.superadmin-dashboard .btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.superadmin-dashboard .btn-secondary:hover {
+    background: var(--bg-hover);
+}
+
+/* ========== ПУСТЫЕ СОСТОЯНИЯ ДЛЯ ВКЛАДОК ========== */
+.superadmin-dashboard .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+
+.superadmin-dashboard .empty-state svg {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: var(--border-solid);
+}
+
+.superadmin-dashboard .empty-state h4 {
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.superadmin-dashboard .empty-state p {
+    font-size: 14px;
+    color: var(--text-muted);
+}
