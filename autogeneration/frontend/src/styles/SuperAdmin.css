@@ -1268,42 +1268,86 @@
         font-size: 0.6rem;
     }
 }
-/* Добавьте в конец файла SuperAdmin.css */
+/* ============================================================
+   ВКЛАДКА "СПАРИВАНИЕ УРОКОВ" - ПОЛНЫЕ СТИЛИ
+   ============================================================ */
 
-/* ========== СПАРИВАНИЕ УРОКОВ ========== */
+/* --- Контейнер вкладки --- */
+.superadmin-dashboard .pairing-tab-content {
+    padding: 20px 0;
+}
+
+/* --- Заголовок секции --- */
+.superadmin-dashboard .pairing-section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.superadmin-dashboard .pairing-section-title svg {
+    color: var(--primary);
+}
+
+/* --- Сетка формы и списка --- */
 .superadmin-dashboard .pairing-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 24px;
+    margin-top: 16px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .superadmin-dashboard .pairing-grid {
         grid-template-columns: 1fr;
+        gap: 20px;
     }
 }
 
-.superadmin-dashboard .pairing-form {
-    background: var(--bg-secondary);
+/* --- Карточка формы --- */
+.superadmin-dashboard .pairing-form-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
     padding: 20px;
-    border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
 }
 
-.superadmin-dashboard .pairing-form .form-group {
+.superadmin-dashboard .pairing-form-card .form-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.superadmin-dashboard .pairing-form-card .form-title svg {
+    color: var(--primary);
+}
+
+/* --- Поля формы --- */
+.superadmin-dashboard .pairing-form-group {
     margin-bottom: 14px;
 }
 
-.superadmin-dashboard .pairing-form label {
+.superadmin-dashboard .pairing-form-group label {
     display: block;
     font-size: 13px;
     font-weight: 500;
     color: var(--text-secondary);
-    margin-bottom: 4px;
+    margin-bottom: 5px;
 }
 
-.superadmin-dashboard .pairing-form select,
-.superadmin-dashboard .pairing-form input {
+.superadmin-dashboard .pairing-form-group select,
+.superadmin-dashboard .pairing-form-group input[type="text"],
+.superadmin-dashboard .pairing-form-group input[type="number"] {
     width: 100%;
     padding: 8px 12px;
     border: 1px solid var(--border-solid);
@@ -1314,592 +1358,311 @@
     transition: var(--transition);
 }
 
-.superadmin-dashboard .pairing-form select:focus,
-.superadmin-dashboard .pairing-form input:focus {
+.superadmin-dashboard .pairing-form-group select:focus,
+.superadmin-dashboard .pairing-form-group input:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
 }
 
-.superadmin-dashboard .pairing-form .checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.superadmin-dashboard .pairing-form .checkbox-group input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
+.superadmin-dashboard .pairing-form-group select {
+    appearance: auto;
     cursor: pointer;
 }
 
-.superadmin-dashboard .pairing-form .checkbox-group label {
+/* --- Чекбокс --- */
+.superadmin-dashboard .pairing-checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 0;
+}
+
+.superadmin-dashboard .pairing-checkbox-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+.superadmin-dashboard .pairing-checkbox-group label {
     margin: 0;
     cursor: pointer;
+    font-size: 14px;
+    color: var(--text-secondary);
 }
 
-.superadmin-dashboard .pairing-list {
-    background: var(--bg-secondary);
-    padding: 16px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.superadmin-dashboard .pairing-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 14px;
-    background: var(--bg-card);
-    border-radius: var(--radius-sm);
-    margin-bottom: 8px;
-    border: 1px solid var(--border-color);
-    transition: var(--transition);
-}
-
-.superadmin-dashboard .pairing-item:hover {
-    border-color: var(--primary);
-    box-shadow: var(--shadow-sm);
-}
-
-.superadmin-dashboard .pairing-item .pairing-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.superadmin-dashboard .pairing-item .pairing-info .main {
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.superadmin-dashboard .pairing-item .pairing-info .sub {
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
-.superadmin-dashboard .pairing-item .pairing-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.superadmin-dashboard .pairing-item .pairing-actions button {
-    padding: 4px 10px;
+/* --- Кнопка добавления --- */
+.superadmin-dashboard .pairing-add-btn {
+    width: 100%;
+    padding: 10px;
+    background: var(--primary);
+    color: white;
     border: none;
     border-radius: var(--radius-sm);
-    font-size: 12px;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.superadmin-dashboard .pairing-item .pairing-actions .edit-btn {
-    background: rgba(59, 130, 246, 0.1);
-    color: var(--info);
-}
-
-.superadmin-dashboard .pairing-item .pairing-actions .edit-btn:hover {
-    background: rgba(59, 130, 246, 0.2);
-}
-
-.superadmin-dashboard .pairing-item .pairing-actions .delete-btn {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--danger);
-}
-
-.superadmin-dashboard .pairing-item .pairing-actions .delete-btn:hover {
-    background: rgba(239, 68, 68, 0.2);
-}
-
-.superadmin-dashboard .pairing-item .badge {
-    padding: 2px 10px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 600;
-}
-
-.superadmin-dashboard .pairing-item .badge.mandatory {
-    background: #fefcbf;
-    color: #975a16;
-}
-
-.superadmin-dashboard .pairing-item .badge.optional {
-    background: var(--bg-secondary);
-    color: var(--text-muted);
-}
-
-/* ========== ГРУППОВЫЕ ЗАНЯТИЯ ========== */
-.superadmin-dashboard .group-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-@media (max-width: 768px) {
-    .superadmin-dashboard .group-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.superadmin-dashboard .group-form {
-    background: var(--bg-secondary);
-    padding: 20px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-}
-
-.superadmin-dashboard .group-form .form-group {
-    margin-bottom: 14px;
-}
-
-.superadmin-dashboard .group-form label {
-    display: block;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-}
-
-.superadmin-dashboard .group-form select,
-.superadmin-dashboard .group-form input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid var(--border-solid);
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    background: var(--bg-input);
-    color: var(--text-primary);
-    transition: var(--transition);
-}
-
-.superadmin-dashboard .group-form select:focus,
-.superadmin-dashboard .group-form input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
-}
-
-.superadmin-dashboard .group-form .multi-select {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 8px;
-    background: var(--bg-input);
-    border: 1px solid var(--border-solid);
-    border-radius: var(--radius-sm);
-    min-height: 44px;
-}
-
-.superadmin-dashboard .group-form .multi-select .tag {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    background: rgba(33, 67, 90, 0.1);
-    color: var(--primary);
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-}
-
-.superadmin-dashboard .group-form .multi-select .tag .remove {
     cursor: pointer;
-    font-size: 14px;
-    color: var(--text-muted);
-}
-
-.superadmin-dashboard .group-form .multi-select .tag .remove:hover {
-    color: var(--danger);
-}
-
-.superadmin-dashboard .group-list {
-    background: var(--bg-secondary);
-    padding: 16px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.superadmin-dashboard .group-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 14px;
-    background: var(--bg-card);
-    border-radius: var(--radius-sm);
-    margin-bottom: 8px;
-    border: 1px solid var(--border-color);
     transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
 }
 
-.superadmin-dashboard .group-item:hover {
-    border-color: var(--primary);
+.superadmin-dashboard .pairing-add-btn:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(33, 67, 90, 0.3);
+}
+
+.superadmin-dashboard .pairing-add-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* --- Карточка списка --- */
+.superadmin-dashboard .pairing-list-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    border: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
 }
 
-.superadmin-dashboard .group-item .group-info {
+.superadmin-dashboard .pairing-list-card .list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.superadmin-dashboard .pairing-list-card .list-header .list-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.superadmin-dashboard .pairing-list-card .list-header .list-count {
+    background: var(--bg-secondary);
+    padding: 2px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* --- Элемент списка --- */
+.superadmin-dashboard .pairing-list {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 8px;
+    max-height: 450px;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
-.superadmin-dashboard .group-item .group-info .main {
+.superadmin-dashboard .pairing-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .pairing-list-item:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+    background: var(--bg-hover);
+}
+
+.superadmin-dashboard .pairing-list-item .item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+}
+
+.superadmin-dashboard .pairing-list-item .item-info .item-main {
     font-weight: 500;
     color: var(--text-primary);
+    font-size: 14px;
 }
 
-.superadmin-dashboard .group-item .group-info .sub {
+.superadmin-dashboard .pairing-list-item .item-info .item-sub {
     font-size: 12px;
     color: var(--text-muted);
 }
 
-.superadmin-dashboard .group-item .group-info .teachers {
+.superadmin-dashboard .pairing-list-item .item-info .item-tags {
     display: flex;
-    gap: 4px;
+    gap: 6px;
     flex-wrap: wrap;
     margin-top: 4px;
 }
 
-.superadmin-dashboard .group-item .group-info .teachers .teacher-tag {
-    padding: 1px 8px;
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--success);
-    border-radius: 3px;
+.superadmin-dashboard .pairing-list-item .item-info .item-tags .tag {
+    padding: 1px 10px;
+    border-radius: 12px;
     font-size: 11px;
+    font-weight: 500;
 }
 
-.superadmin-dashboard .group-item .group-actions {
+.superadmin-dashboard .pairing-list-item .item-info .item-tags .tag-mandatory {
+    background: #fefcbf;
+    color: #975a16;
+}
+
+.superadmin-dashboard .pairing-list-item .item-info .item-tags .tag-optional {
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
+.superadmin-dashboard .pairing-list-item .item-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
+    flex-shrink: 0;
 }
 
-.superadmin-dashboard .group-item .group-actions button {
-    padding: 4px 10px;
+.superadmin-dashboard .pairing-list-item .item-actions button {
+    padding: 5px 12px;
     border: none;
     border-radius: var(--radius-sm);
     font-size: 12px;
     cursor: pointer;
     transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
-.superadmin-dashboard .group-item .group-actions .edit-btn {
+.superadmin-dashboard .pairing-list-item .item-actions .btn-edit {
     background: rgba(59, 130, 246, 0.1);
     color: var(--info);
 }
 
-.superadmin-dashboard .group-item .group-actions .edit-btn:hover {
+.superadmin-dashboard .pairing-list-item .item-actions .btn-edit:hover {
     background: rgba(59, 130, 246, 0.2);
 }
 
-.superadmin-dashboard .group-item .group-actions .delete-btn {
+.superadmin-dashboard .pairing-list-item .item-actions .btn-delete {
     background: rgba(239, 68, 68, 0.1);
     color: var(--danger);
 }
 
-.superadmin-dashboard .group-item .group-actions .delete-btn:hover {
+.superadmin-dashboard .pairing-list-item .item-actions .btn-delete:hover {
     background: rgba(239, 68, 68, 0.2);
 }
 
-/* ========== СИНХРОНИЗАЦИЯ ========== */
-.superadmin-dashboard .sync-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-@media (max-width: 768px) {
-    .superadmin-dashboard .sync-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.superadmin-dashboard .sync-form {
-    background: var(--bg-secondary);
-    padding: 20px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-}
-
-.superadmin-dashboard .sync-form .form-group {
-    margin-bottom: 14px;
-}
-
-.superadmin-dashboard .sync-form label {
-    display: block;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-}
-
-.superadmin-dashboard .sync-form select,
-.superadmin-dashboard .sync-form input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid var(--border-solid);
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    background: var(--bg-input);
-    color: var(--text-primary);
-    transition: var(--transition);
-}
-
-.superadmin-dashboard .sync-form select:focus,
-.superadmin-dashboard .sync-form input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
-}
-
-.superadmin-dashboard .sync-form .checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.superadmin-dashboard .sync-form .checkbox-group input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-}
-
-.superadmin-dashboard .sync-form .checkbox-group label {
-    margin: 0;
-    cursor: pointer;
-}
-
-.superadmin-dashboard .sync-list {
-    background: var(--bg-secondary);
-    padding: 16px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.superadmin-dashboard .sync-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 14px;
-    background: var(--bg-card);
-    border-radius: var(--radius-sm);
-    margin-bottom: 8px;
-    border: 1px solid var(--border-color);
-    transition: var(--transition);
-}
-
-.superadmin-dashboard .sync-item:hover {
-    border-color: var(--primary);
-    box-shadow: var(--shadow-sm);
-}
-
-.superadmin-dashboard .sync-item .sync-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.superadmin-dashboard .sync-item .sync-info .main {
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.superadmin-dashboard .sync-item .sync-info .sub {
-    font-size: 12px;
+/* --- Пустое состояние --- */
+.superadmin-dashboard .pairing-empty {
+    text-align: center;
+    padding: 40px 20px;
     color: var(--text-muted);
 }
 
-.superadmin-dashboard .sync-item .sync-actions {
-    display: flex;
-    gap: 8px;
+.superadmin-dashboard .pairing-empty svg {
+    font-size: 48px;
+    color: var(--border-solid);
+    margin-bottom: 12px;
 }
 
-.superadmin-dashboard .sync-item .sync-actions button {
-    padding: 4px 10px;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.superadmin-dashboard .sync-item .sync-actions .edit-btn {
-    background: rgba(59, 130, 246, 0.1);
-    color: var(--info);
-}
-
-.superadmin-dashboard .sync-item .sync-actions .edit-btn:hover {
-    background: rgba(59, 130, 246, 0.2);
-}
-
-.superadmin-dashboard .sync-item .sync-actions .delete-btn {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--danger);
-}
-
-.superadmin-dashboard .sync-item .sync-actions .delete-btn:hover {
-    background: rgba(239, 68, 68, 0.2);
-}
-
-.superadmin-dashboard .sync-item .badge {
-    padding: 2px 10px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 600;
-}
-
-.superadmin-dashboard .sync-item .badge.sync {
-    background: rgba(16, 185, 129, 0.15);
-    color: var(--success);
-}
-
-/* ========== ЗАПРЕЩЁННЫЕ ПОСЛЕДОВАТЕЛЬНОСТИ ========== */
-.superadmin-dashboard .forbidden-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-@media (max-width: 768px) {
-    .superadmin-dashboard .forbidden-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.superadmin-dashboard .forbidden-form {
-    background: var(--bg-secondary);
-    padding: 20px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-}
-
-.superadmin-dashboard .forbidden-form .form-group {
-    margin-bottom: 14px;
-}
-
-.superadmin-dashboard .forbidden-form label {
-    display: block;
-    font-size: 13px;
-    font-weight: 500;
+.superadmin-dashboard .pairing-empty h4 {
     color: var(--text-secondary);
-    margin-bottom: 4px;
+    margin-bottom: 6px;
+    font-size: 16px;
 }
 
-.superadmin-dashboard .forbidden-form select,
-.superadmin-dashboard .forbidden-form input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid var(--border-solid);
-    border-radius: var(--radius-sm);
+.superadmin-dashboard .pairing-empty p {
     font-size: 14px;
-    background: var(--bg-input);
-    color: var(--text-primary);
-    transition: var(--transition);
-}
-
-.superadmin-dashboard .forbidden-form select:focus,
-.superadmin-dashboard .forbidden-form input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
-}
-
-.superadmin-dashboard .forbidden-list {
-    background: var(--bg-secondary);
-    padding: 16px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.superadmin-dashboard .forbidden-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 14px;
-    background: var(--bg-card);
-    border-radius: var(--radius-sm);
-    margin-bottom: 8px;
-    border: 1px solid var(--border-color);
-    transition: var(--transition);
-}
-
-.superadmin-dashboard .forbidden-item:hover {
-    border-color: var(--primary);
-    box-shadow: var(--shadow-sm);
-}
-
-.superadmin-dashboard .forbidden-item .forbidden-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.superadmin-dashboard .forbidden-item .forbidden-info .main {
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.superadmin-dashboard .forbidden-item .forbidden-info .sub {
-    font-size: 12px;
     color: var(--text-muted);
 }
 
-.superadmin-dashboard .forbidden-item .forbidden-actions {
-    display: flex;
-    gap: 8px;
+/* --- Скроллбар --- */
+.superadmin-dashboard .pairing-list::-webkit-scrollbar {
+    width: 4px;
 }
 
-.superadmin-dashboard .forbidden-item .forbidden-actions button {
-    padding: 4px 10px;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    cursor: pointer;
-    transition: var(--transition);
+.superadmin-dashboard .pairing-list::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 4px;
 }
 
-.superadmin-dashboard .forbidden-item .forbidden-actions .edit-btn {
-    background: rgba(59, 130, 246, 0.1);
-    color: var(--info);
+.superadmin-dashboard .pairing-list::-webkit-scrollbar-thumb {
+    background: var(--border-solid);
+    border-radius: 4px;
 }
 
-.superadmin-dashboard .forbidden-item .forbidden-actions .edit-btn:hover {
-    background: rgba(59, 130, 246, 0.2);
+.superadmin-dashboard .pairing-list::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
 }
 
-.superadmin-dashboard .forbidden-item .forbidden-actions .delete-btn {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--danger);
+/* ============================================================
+   АДАПТАЦИЯ ДЛЯ МОБИЛЬНЫХ
+   ============================================================ */
+
+@media (max-width: 768px) {
+    .superadmin-dashboard .pairing-list-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .superadmin-dashboard .pairing-list-item .item-actions {
+        justify-content: flex-end;
+        padding-top: 8px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .superadmin-dashboard .pairing-form-card,
+    .superadmin-dashboard .pairing-list-card {
+        padding: 16px;
+    }
+
+    .superadmin-dashboard .pairing-list-item .item-info .item-tags {
+        flex-wrap: wrap;
+    }
 }
 
-.superadmin-dashboard .forbidden-item .forbidden-actions .delete-btn:hover {
-    background: rgba(239, 68, 68, 0.2);
+@media (max-width: 480px) {
+    .superadmin-dashboard .pairing-grid {
+        gap: 16px;
+    }
+
+    .superadmin-dashboard .pairing-list-item .item-actions {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .superadmin-dashboard .pairing-list-item .item-actions button {
+        flex: 1;
+        justify-content: center;
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+}
+/* ============================================================
+   ВКЛАДКА "СПАРИВАНИЕ УРОКОВ" (PairingRulesTab)
+   ============================================================ */
+
+/* --- Контейнер вкладки --- */
+.superadmin-dashboard .pairing-rules-tab {
+    padding: 8px 0;
 }
 
-.superadmin-dashboard .forbidden-item .severity {
-    padding: 2px 10px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 600;
-}
-
-.superadmin-dashboard .forbidden-item .severity.error {
-    background: rgba(239, 68, 68, 0.15);
-    color: var(--danger);
-}
-
-.superadmin-dashboard .forbidden-item .severity.warning {
-    background: rgba(245, 158, 11, 0.15);
-    color: var(--warning);
-}
-
-/* ========== ОБЩИЕ КНОПКИ ДЛЯ ВКЛАДОК ========== */
-.superadmin-dashboard .btn {
-    padding: 8px 16px;
+/* --- Кнопка добавления --- */
+.superadmin-dashboard .pairing-rules-tab .add-room-btn {
+    padding: 8px 18px;
+    background: var(--primary);
+    color: white;
     border: none;
     border-radius: var(--radius-sm);
     font-size: 14px;
@@ -1911,68 +1674,1503 @@
     gap: 8px;
 }
 
-.superadmin-dashboard .btn-primary {
-    background: var(--primary);
-    color: white;
-}
-
-.superadmin-dashboard .btn-primary:hover {
+.superadmin-dashboard .pairing-rules-tab .add-room-btn:hover {
     background: var(--primary-light);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(33, 67, 90, 0.3);
 }
 
-.superadmin-dashboard .btn-success {
-    background: var(--success);
-    color: white;
+.superadmin-dashboard .pairing-rules-tab .add-room-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
 }
 
-.superadmin-dashboard .btn-success:hover {
-    background: #059669;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+/* --- Контейнер таблицы --- */
+.superadmin-dashboard .pairing-rules-table-container {
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    margin-top: 16px;
 }
 
-.superadmin-dashboard .btn-danger {
-    background: var(--danger);
-    color: white;
+/* --- Таблица --- */
+.superadmin-dashboard .pairing-rules-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 700px;
 }
 
-.superadmin-dashboard .btn-danger:hover {
-    background: #dc2626;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+/* --- Заголовок таблицы --- */
+.superadmin-dashboard .pairing-rules-table thead {
+    background: var(--bg-table-header);
 }
 
-.superadmin-dashboard .btn-secondary {
+.superadmin-dashboard .pairing-rules-table thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    background: var(--bg-table-header);
+    z-index: 5;
+}
+
+/* --- Ячейки таблицы --- */
+.superadmin-dashboard .pairing-rules-table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+
+.superadmin-dashboard .pairing-rules-table tbody tr {
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .pairing-rules-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+.superadmin-dashboard .pairing-rules-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* --- Класс --- */
+.superadmin-dashboard .pairing-rules-table .class-cell,
+.superadmin-dashboard .pairing-rules-table td:first-child strong {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+/* --- Учитель --- */
+.superadmin-dashboard .pairing-rules-table td:nth-child(2) span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.superadmin-dashboard .pairing-rules-table td:nth-child(2) svg {
+    color: var(--primary);
+    font-size: 14px;
+}
+
+/* --- Предметы --- */
+.superadmin-dashboard .pairing-rules-table td:nth-child(3),
+.superadmin-dashboard .pairing-rules-table td:nth-child(4) {
+    font-weight: 500;
+}
+
+/* --- Обязательно --- */
+.superadmin-dashboard .pairing-mandatory-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.superadmin-dashboard .pairing-mandatory-badge.yes {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--success);
+}
+
+.superadmin-dashboard .pairing-mandatory-badge.no {
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--text-muted);
+}
+
+/* --- День недели --- */
+.superadmin-dashboard .pairing-day-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
     background: var(--bg-secondary);
     color: var(--text-secondary);
     border: 1px solid var(--border-color);
 }
 
-.superadmin-dashboard .btn-secondary:hover {
-    background: var(--bg-hover);
+/* --- Слоты --- */
+.superadmin-dashboard .pairing-slots {
+    display: inline-block;
+    padding: 2px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    background: rgba(33, 67, 90, 0.06);
+    color: var(--primary);
+    min-width: 36px;
+    text-align: center;
 }
 
-/* ========== ПУСТЫЕ СОСТОЯНИЯ ДЛЯ ВКЛАДОК ========== */
-.superadmin-dashboard .empty-state {
+/* --- Ячейка действий --- */
+.superadmin-dashboard .pairing-rules-table .action-cell {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.superadmin-dashboard .pairing-rules-table .action-button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.superadmin-dashboard .pairing-rules-table .action-button.edit-button {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--info);
+}
+
+.superadmin-dashboard .pairing-rules-table .action-button.edit-button:hover {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.superadmin-dashboard .pairing-rules-table .action-button.delete-button {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.superadmin-dashboard .pairing-rules-table .action-button.delete-button:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* --- Пустая строка --- */
+.superadmin-dashboard .pairing-rules-table .empty-row td {
     text-align: center;
     padding: 40px 20px;
     color: var(--text-muted);
 }
 
-.superadmin-dashboard .empty-state svg {
-    font-size: 48px;
-    margin-bottom: 16px;
-    color: var(--border-solid);
+/* --- Модальное окно --- */
+.superadmin-dashboard .pairing-rules-tab .modal-overlay-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
 }
 
-.superadmin-dashboard .empty-state h4 {
+.superadmin-dashboard .pairing-rules-tab .modal-content-fixed {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 600px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: slideUp 0.2s ease;
+}
+
+.superadmin-dashboard .pairing-rules-tab .modal-header-fixed {
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--primary);
+    color: white;
+}
+
+.superadmin-dashboard .pairing-rules-tab .modal-header-fixed h3 {
+    margin: 0;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+}
+
+.superadmin-dashboard .pairing-rules-tab .modal-close-fixed {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .pairing-rules-tab .modal-close-fixed:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: rotate(90deg);
+}
+
+.superadmin-dashboard .pairing-rules-tab .modal-body-fixed {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.superadmin-dashboard .pairing-rules-tab .modal-footer-fixed {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background: var(--bg-secondary);
+}
+
+.superadmin-dashboard .pairing-rules-tab .btn-cancel-modal {
+    padding: 8px 18px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
     color: var(--text-secondary);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .pairing-rules-tab .btn-cancel-modal:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: white;
+}
+
+.superadmin-dashboard .pairing-rules-tab .btn-save-modal {
+    padding: 8px 20px;
+    background: var(--success);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.superadmin-dashboard .pairing-rules-tab .btn-save-modal:hover {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.superadmin-dashboard .pairing-rules-tab .btn-save-modal:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* --- Форма в модалке --- */
+.superadmin-dashboard .pairing-rules-tab .form-group {
+    margin-bottom: 14px;
+}
+
+.superadmin-dashboard .pairing-rules-tab .form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.superadmin-dashboard .pairing-rules-tab .form-group select,
+.superadmin-dashboard .pairing-rules-tab .form-group input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-solid);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .pairing-rules-tab .form-group select:focus,
+.superadmin-dashboard .pairing-rules-tab .form-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
+}
+
+.superadmin-dashboard .pairing-rules-tab .form-group small {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.superadmin-dashboard .pairing-rules-tab .form-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+.superadmin-dashboard .pairing-rules-tab .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+@media (max-width: 480px) {
+    .superadmin-dashboard .pairing-rules-tab .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+}
+
+/* --- Информационная карточка внизу --- */
+.superadmin-dashboard .pairing-rules-tab .info-box {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: #f0f9ff;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid #0284c7;
+}
+
+.superadmin-dashboard .pairing-rules-tab .info-box .info-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.superadmin-dashboard .pairing-rules-tab .info-box .info-header svg {
+    color: #0284c7;
+}
+
+.superadmin-dashboard .pairing-rules-tab .info-box .info-header strong {
+    color: #0284c7;
+}
+
+.superadmin-dashboard .pairing-rules-tab .info-box ul {
+    margin: 4px 0 0 20px;
+    padding: 0;
+    font-size: 13px;
+    color: #475569;
+}
+
+.superadmin-dashboard .pairing-rules-tab .info-box ul li {
+    margin-bottom: 2px;
+}
+
+/* --- Анимация --- */
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* --- Адаптация --- */
+@media (max-width: 768px) {
+    .superadmin-dashboard .pairing-rules-table {
+        font-size: 13px;
+        min-width: 600px;
+    }
+
+    .superadmin-dashboard .pairing-rules-table thead th,
+    .superadmin-dashboard .pairing-rules-table tbody td {
+        padding: 10px 12px;
+    }
+
+    .superadmin-dashboard .pairing-rules-tab .modal-content-fixed {
+        width: 95%;
+        max-width: 95%;
+    }
+
+    .superadmin-dashboard .pairing-rules-tab .add-room-btn {
+        padding: 6px 14px;
+        font-size: 13px;
+    }
+
+    .superadmin-dashboard .pairing-rules-table .action-button {
+        padding: 4px 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .superadmin-dashboard .pairing-rules-table {
+        font-size: 12px;
+        min-width: 500px;
+    }
+
+    .superadmin-dashboard .pairing-rules-table thead th,
+    .superadmin-dashboard .pairing-rules-table tbody td {
+        padding: 8px 10px;
+    }
+
+    .superadmin-dashboard .pairing-mandatory-badge,
+    .superadmin-dashboard .pairing-day-badge {
+        font-size: 10px;
+        padding: 2px 8px;
+    }
+
+    .superadmin-dashboard .pairing-slots {
+        font-size: 11px;
+        padding: 2px 8px;
+    }
+
+    .superadmin-dashboard .pairing-rules-tab .modal-body-fixed {
+        padding: 14px;
+    }
+
+    .superadmin-dashboard .pairing-rules-tab .modal-footer-fixed {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .superadmin-dashboard .pairing-rules-tab .btn-cancel-modal,
+    .superadmin-dashboard .pairing-rules-tab .btn-save-modal {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .superadmin-dashboard .pairing-rules-table .action-cell {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .superadmin-dashboard .pairing-rules-table .action-button {
+        font-size: 11px;
+        padding: 4px 8px;
+        justify-content: center;
+    }
+}
+/* ============================================================
+   ВКЛАДКА "СИНХРОНИЗАЦИЯ" (ParallelSyncTab)
+   ============================================================ */
+
+/* --- Контейнер вкладки --- */
+.superadmin-dashboard .parallel-sync-tab {
+    padding: 8px 0;
+}
+
+/* --- Кнопка добавления --- */
+.superadmin-dashboard .parallel-sync-tab .add-room-btn {
+    padding: 8px 18px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.superadmin-dashboard .parallel-sync-tab .add-room-btn:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(33, 67, 90, 0.3);
+}
+
+.superadmin-dashboard .parallel-sync-tab .add-room-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* --- Контейнер таблицы --- */
+.superadmin-dashboard .parallel-sync-table-container {
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    margin-top: 16px;
+}
+
+/* --- Таблица --- */
+.superadmin-dashboard .parallel-sync-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 500px;
+}
+
+/* --- Заголовок таблицы --- */
+.superadmin-dashboard .parallel-sync-table thead {
+    background: var(--bg-table-header);
+}
+
+.superadmin-dashboard .parallel-sync-table thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    background: var(--bg-table-header);
+    z-index: 5;
+}
+
+/* --- Ячейки таблицы --- */
+.superadmin-dashboard .parallel-sync-table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+
+.superadmin-dashboard .parallel-sync-table tbody tr {
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .parallel-sync-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+.superadmin-dashboard .parallel-sync-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* --- Бейдж класса --- */
+.superadmin-dashboard .parallel-sync-table .grade-badge {
+    display: inline-block;
+    padding: 3px 14px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 600;
+    background: rgba(33, 67, 90, 0.08);
+    color: var(--primary);
+}
+
+/* --- Название предмета --- */
+.superadmin-dashboard .parallel-sync-table td:nth-child(2) {
+    font-weight: 500;
+}
+
+/* --- Бейдж обязательности --- */
+.superadmin-dashboard .sync-required-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.superadmin-dashboard .sync-required-badge.yes {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--success);
+}
+
+.superadmin-dashboard .sync-required-badge.no {
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--text-muted);
+}
+
+/* --- Ячейка действий --- */
+.superadmin-dashboard .parallel-sync-table .action-cell {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.superadmin-dashboard .parallel-sync-table .action-button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.superadmin-dashboard .parallel-sync-table .action-button.delete-button {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.superadmin-dashboard .parallel-sync-table .action-button.delete-button:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* --- Пустая строка --- */
+.superadmin-dashboard .parallel-sync-table .empty-row td {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+
+/* --- Информационная карточка --- */
+.superadmin-dashboard .parallel-sync-tab .info-box {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: #f0f9ff;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid #0284c7;
+}
+
+.superadmin-dashboard .parallel-sync-tab .info-box .info-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.superadmin-dashboard .parallel-sync-tab .info-box .info-header svg {
+    color: #0284c7;
+}
+
+.superadmin-dashboard .parallel-sync-tab .info-box .info-header strong {
+    color: #0284c7;
+}
+
+.superadmin-dashboard .parallel-sync-tab .info-box ul {
+    margin: 4px 0 0 20px;
+    padding: 0;
+    font-size: 13px;
+    color: #475569;
+}
+
+.superadmin-dashboard .parallel-sync-tab .info-box ul li {
+    margin-bottom: 2px;
+}
+
+/* --- Модальное окно --- */
+.superadmin-dashboard .parallel-sync-tab .modal-overlay-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+}
+
+.superadmin-dashboard .parallel-sync-tab .modal-content-fixed {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 500px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: slideUp 0.2s ease;
+}
+
+.superadmin-dashboard .parallel-sync-tab .modal-header-fixed {
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--primary);
+    color: white;
+}
+
+.superadmin-dashboard .parallel-sync-tab .modal-header-fixed h3 {
+    margin: 0;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+}
+
+.superadmin-dashboard .parallel-sync-tab .modal-close-fixed {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .parallel-sync-tab .modal-close-fixed:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: rotate(90deg);
+}
+
+.superadmin-dashboard .parallel-sync-tab .modal-body-fixed {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.superadmin-dashboard .parallel-sync-tab .modal-footer-fixed {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background: var(--bg-secondary);
+}
+
+.superadmin-dashboard .parallel-sync-tab .btn-cancel-modal {
+    padding: 8px 18px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .parallel-sync-tab .btn-cancel-modal:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: white;
+}
+
+.superadmin-dashboard .parallel-sync-tab .btn-save-modal {
+    padding: 8px 20px;
+    background: var(--success);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.superadmin-dashboard .parallel-sync-tab .btn-save-modal:hover {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.superadmin-dashboard .parallel-sync-tab .btn-save-modal:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* --- Форма в модалке --- */
+.superadmin-dashboard .parallel-sync-tab .form-group {
+    margin-bottom: 14px;
+}
+
+.superadmin-dashboard .parallel-sync-tab .form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.superadmin-dashboard .parallel-sync-tab .form-group select,
+.superadmin-dashboard .parallel-sync-tab .form-group input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-solid);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .parallel-sync-tab .form-group select:focus,
+.superadmin-dashboard .parallel-sync-tab .form-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
+}
+
+.superadmin-dashboard .parallel-sync-tab .form-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+/* --- Адаптация --- */
+@media (max-width: 768px) {
+    .superadmin-dashboard .parallel-sync-table {
+        font-size: 13px;
+        min-width: 400px;
+    }
+
+    .superadmin-dashboard .parallel-sync-table thead th,
+    .superadmin-dashboard .parallel-sync-table tbody td {
+        padding: 10px 12px;
+    }
+
+    .superadmin-dashboard .parallel-sync-tab .modal-content-fixed {
+        width: 95%;
+        max-width: 95%;
+    }
+
+    .superadmin-dashboard .parallel-sync-tab .add-room-btn {
+        padding: 6px 14px;
+        font-size: 13px;
+    }
+
+    .superadmin-dashboard .parallel-sync-table .action-button {
+        padding: 4px 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .superadmin-dashboard .parallel-sync-table {
+        font-size: 12px;
+        min-width: 350px;
+    }
+
+    .superadmin-dashboard .parallel-sync-table thead th,
+    .superadmin-dashboard .parallel-sync-table tbody td {
+        padding: 8px 10px;
+    }
+
+    .superadmin-dashboard .parallel-sync-table .grade-badge {
+        font-size: 11px;
+        padding: 2px 10px;
+    }
+
+    .superadmin-dashboard .sync-required-badge {
+        font-size: 10px;
+        padding: 2px 8px;
+    }
+
+    .superadmin-dashboard .parallel-sync-tab .modal-body-fixed {
+        padding: 14px;
+    }
+
+    .superadmin-dashboard .parallel-sync-tab .modal-footer-fixed {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .superadmin-dashboard .parallel-sync-tab .btn-cancel-modal,
+    .superadmin-dashboard .parallel-sync-tab .btn-save-modal {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .superadmin-dashboard .parallel-sync-table .action-cell {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .superadmin-dashboard .parallel-sync-table .action-button {
+        font-size: 11px;
+        padding: 4px 8px;
+        justify-content: center;
+    }
+
+    .superadmin-dashboard .parallel-sync-tab .info-box ul {
+        font-size: 12px;
+        padding-left: 16px;
+    }
+}
+/* ============================================================
+   ВКЛАДКА "ЗАПРЕЩЁННЫЕ ПОСЛЕДОВАТЕЛЬНОСТИ" (ForbiddenSequencesTab)
+   ============================================================ */
+
+/* --- Контейнер вкладки --- */
+.superadmin-dashboard .forbidden-sequences-tab {
+    padding: 8px 0;
+}
+
+/* --- Уведомление --- */
+.superadmin-dashboard .forbidden-sequences-tab .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: var(--radius-md);
+    background: var(--primary);
+    color: white;
+    box-shadow: var(--shadow-lg);
+    z-index: 2100;
+    animation: slideInRight 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .notification.notification-info {
+    background: #0284c7;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* --- Кнопка добавления --- */
+.superadmin-dashboard .forbidden-sequences-tab .add-room-btn {
+    padding: 8px 18px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .add-room-btn:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(33, 67, 90, 0.3);
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .add-room-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .add-room-btn.btn-small {
+    padding: 6px 14px;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+/* --- Количество правил --- */
+.superadmin-dashboard .forbidden-sequences-tab .count-badge {
+    font-size: 0.7rem;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    padding: 2px 10px;
+    border-radius: 20px;
+    margin-left: 8px;
+}
+
+/* --- Контейнер таблицы --- */
+.superadmin-dashboard .forbidden-sequences-tab .table-container {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    overflow: hidden;
+    margin-top: 16px;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .table-responsive {
+    overflow-x: auto;
+}
+
+/* --- Таблица --- */
+.superadmin-dashboard .forbidden-sequences-tab .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 600px;
+}
+
+/* --- Заголовок таблицы --- */
+.superadmin-dashboard .forbidden-sequences-tab .data-table thead {
+    background: var(--bg-table-header);
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .data-table thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    background: var(--bg-table-header);
+    z-index: 5;
+}
+
+/* --- Ячейки таблицы --- */
+.superadmin-dashboard .forbidden-sequences-tab .data-table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .data-table tbody tr {
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .data-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* --- Описание правила --- */
+.superadmin-dashboard .forbidden-sequences-tab .rule-description {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* --- Бейджи серьёзности --- */
+.superadmin-dashboard .forbidden-sequences-tab .severity-badge-error {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .severity-badge-warning {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    background: #fef3c7;
+    color: #f59e0b;
+}
+
+/* --- Ячейка действий --- */
+.superadmin-dashboard .forbidden-sequences-tab .action-cell {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .action-button {
+    padding: 5px 12px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .action-button.edit-button {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--info);
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .action-button.edit-button:hover {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .action-button.delete-button {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .action-button.delete-button:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* --- Пустая строка --- */
+.superadmin-dashboard .forbidden-sequences-tab .empty-row td {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .empty-row svg {
+    font-size: 48px;
+    color: var(--border-solid);
+    margin-bottom: 12px;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .empty-row p {
+    font-size: 14px;
+    color: var(--text-muted);
     margin-bottom: 8px;
 }
 
-.superadmin-dashboard .empty-state p {
+/* --- Информационная карточка --- */
+.superadmin-dashboard .forbidden-sequences-tab .sanpin-info-card {
+    margin-top: 16px;
+    padding: 16px 20px;
+    background: #f0f9ff;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid #0284c7;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .sanpin-info-card h4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px 0;
     font-size: 14px;
+    color: #0284c7;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .sanpin-info-card ul {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 13px;
+    color: #475569;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .sanpin-info-card ul li {
+    margin-bottom: 4px;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .sanpin-info-card ul li strong {
+    color: #1e293b;
+}
+
+/* --- Модальное окно --- */
+.superadmin-dashboard .forbidden-sequences-tab .modal-overlay-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .modal-content-fixed {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 550px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: slideUp 0.2s ease;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .modal-header-fixed {
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--primary);
+    color: white;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .modal-header-fixed h3 {
+    margin: 0;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .modal-header-fixed h3 svg {
+    color: white;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .modal-close-fixed {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .modal-close-fixed:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: rotate(90deg);
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .modal-close-fixed:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .modal-body-fixed {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .modal-footer-fixed {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background: var(--bg-secondary);
+}
+
+/* --- Кнопки модалки --- */
+.superadmin-dashboard .forbidden-sequences-tab .btn-cancel {
+    padding: 8px 18px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .btn-cancel:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: white;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .btn-save {
+    padding: 8px 20px;
+    background: var(--success);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .btn-save:hover {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .btn-save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* --- Форма в модалке --- */
+.superadmin-dashboard .forbidden-sequences-tab .form-group {
+    margin-bottom: 14px;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .form-group select,
+.superadmin-dashboard .forbidden-sequences-tab .form-group input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-solid);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .form-group select:focus,
+.superadmin-dashboard .forbidden-sequences-tab .form-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(33, 67, 90, 0.1);
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .form-group select:disabled,
+.superadmin-dashboard .forbidden-sequences-tab .form-group input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .form-group small {
+    display: block;
+    font-size: 12px;
     color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* --- Загрузка --- */
+.superadmin-dashboard .forbidden-sequences-tab .loading-state {
+    text-align: center;
+    padding: 40px;
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .loading-state .spinner {
+    animation: spin 1s linear infinite;
+    font-size: 2rem;
+    color: var(--primary);
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.superadmin-dashboard .forbidden-sequences-tab .loading-state p {
+    margin-top: 8px;
+    color: var(--text-muted);
+}
+
+/* --- Адаптация --- */
+@media (max-width: 768px) {
+    .superadmin-dashboard .forbidden-sequences-tab .data-table {
+        font-size: 13px;
+        min-width: 500px;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .data-table thead th,
+    .superadmin-dashboard .forbidden-sequences-tab .data-table tbody td {
+        padding: 10px 12px;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .modal-content-fixed {
+        width: 95%;
+        max-width: 95%;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .add-room-btn {
+        padding: 6px 14px;
+        font-size: 13px;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .action-button {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .severity-badge-error,
+    .superadmin-dashboard .forbidden-sequences-tab .severity-badge-warning {
+        font-size: 11px;
+        padding: 3px 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .superadmin-dashboard .forbidden-sequences-tab .data-table {
+        font-size: 12px;
+        min-width: 400px;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .data-table thead th,
+    .superadmin-dashboard .forbidden-sequences-tab .data-table tbody td {
+        padding: 8px 10px;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .modal-body-fixed {
+        padding: 14px;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .modal-footer-fixed {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .btn-cancel,
+    .superadmin-dashboard .forbidden-sequences-tab .btn-save {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .action-cell {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .action-button {
+        font-size: 11px;
+        padding: 4px 8px;
+        justify-content: center;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .sanpin-info-card ul {
+        font-size: 12px;
+        padding-left: 16px;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .sanpin-info-card {
+        padding: 12px 14px;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .rule-description {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 360px) {
+    .superadmin-dashboard .forbidden-sequences-tab .data-table {
+        font-size: 11px;
+        min-width: 350px;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .data-table thead th,
+    .superadmin-dashboard .forbidden-sequences-tab .data-table tbody td {
+        padding: 6px 8px;
+    }
+
+    .superadmin-dashboard .forbidden-sequences-tab .action-button {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
 }

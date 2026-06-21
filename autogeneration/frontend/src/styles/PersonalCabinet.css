@@ -49,6 +49,7 @@ body.dark-theme {
     align-items: center;
     z-index: 9999;
     animation: fadeIn 0.25s ease;
+    padding: 20px;
 }
 
 @keyframes fadeIn {
@@ -61,10 +62,26 @@ body.dark-theme {
     border-radius: 28px;
     width: 90%;
     max-width: 400px;
-    overflow: hidden;
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: hidden;
     box-shadow: var(--cabinet-shadow);
     animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     transition: var(--cabinet-transition);
+}
+
+.personal-cabinet-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.personal-cabinet-content::-webkit-scrollbar-track {
+    background: var(--cabinet-border);
+    border-radius: 4px;
+}
+
+.personal-cabinet-content::-webkit-scrollbar-thumb {
+    background: var(--cabinet-header-bg);
+    border-radius: 4px;
 }
 
 @keyframes slideUp {
@@ -85,17 +102,24 @@ body.dark-theme {
     align-items: center;
     padding: 16px 20px;
     background: linear-gradient(135deg, var(--cabinet-header-bg), #2c5475);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-radius: 28px 28px 0 0;
 }
 
 .cabinet-title {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex: 1;
+    min-width: 0;
 }
 
 .cabinet-icon {
     font-size: 18px;
     color: white;
+    flex-shrink: 0;
 }
 
 .cabinet-title h2 {
@@ -104,12 +128,16 @@ body.dark-theme {
     font-weight: 600;
     color: white;
     letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .cabinet-header-actions {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-shrink: 0;
 }
 
 .theme-toggle-cabinet {
@@ -173,6 +201,7 @@ body.dark-theme {
     border: 4px solid var(--cabinet-bg-content);
     box-shadow: 0 8px 20px rgba(33, 67, 90, 0.25);
     transition: var(--cabinet-transition);
+    flex-shrink: 0;
 }
 
 .avatar:hover {
@@ -196,6 +225,7 @@ body.dark-theme {
     color: var(--cabinet-text-primary);
     margin-bottom: 8px;
     line-height: 1.3;
+    word-break: break-word;
 }
 
 .user-role {
@@ -257,10 +287,12 @@ body.dark-theme {
     color: var(--cabinet-text-primary);
     font-size: 14px;
     transition: var(--cabinet-transition);
+    flex-shrink: 0;
 }
 
 .info-text {
     flex: 1;
+    min-width: 0;
 }
 
 .info-label {
@@ -277,6 +309,7 @@ body.dark-theme {
     font-size: 14px;
     font-weight: 600;
     color: var(--cabinet-text-secondary);
+    word-break: break-word;
 }
 
 /* ===== ДЕТАЛИ ===== */
@@ -314,6 +347,7 @@ body.dark-theme {
     color: var(--cabinet-text-primary);
     font-size: 18px;
     transition: var(--cabinet-transition);
+    flex-shrink: 0;
 }
 
 .detail-icon:hover {
@@ -322,6 +356,7 @@ body.dark-theme {
 
 .detail-info {
     flex: 1;
+    min-width: 0;
 }
 
 .detail-label {
@@ -374,6 +409,7 @@ body.dark-theme {
     padding: 16px 24px;
     border-top: 1px solid var(--cabinet-border);
     background: var(--cabinet-bg-content);
+    border-radius: 0 0 28px 28px;
 }
 
 .close-btn {
@@ -402,17 +438,86 @@ body.dark-theme {
     transform: translateY(0);
 }
 
-/* ========== ПОЛНАЯ АДАПТАЦИЯ ========== */
+/* ===== АНИМАЦИЯ ===== */
+.personal-cabinet-content > * {
+    animation: fadeInUp 0.4s ease backwards;
+}
 
-/* Планшеты (600px - 768px) */
-@media (max-width: 768px) {
+.cabinet-header { animation-delay: 0.05s; }
+.cabinet-body { animation-delay: 0.1s; }
+.cabinet-footer { animation-delay: 0.15s; }
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.info-card, .additional-info-card, .details-list {
+    transition: var(--cabinet-transition);
+}
+
+/* ============================================================
+   ТЕМНАЯ ТЕМА - ДОПОЛНИТЕЛЬНЫЕ СТИЛИ
+   ============================================================ */
+body.dark-theme .detail-icon {
+    background: #2a2a2a;
+}
+
+body.dark-theme .info-icon {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+body.dark-theme .additional-info-card {
+    background: #2a2a2a;
+}
+
+body.dark-theme .detail-row:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    margin: 0 -8px;
+    padding: 10px 8px;
+}
+
+/* ============================================================
+   ПОЛНАЯ АДАПТАЦИЯ
+   ============================================================ */
+
+/* --- 1024px - Маленькие ноутбуки --- */
+@media (max-width: 1024px) {
     .personal-cabinet-content {
-        max-width: 380px;
+        max-width: 420px;
         border-radius: 24px;
     }
     
     .cabinet-header {
+        border-radius: 24px 24px 0 0;
+    }
+    
+    .cabinet-footer {
+        border-radius: 0 0 24px 24px;
+    }
+}
+
+/* --- 768px - Планшеты --- */
+@media (max-width: 768px) {
+    .personal-cabinet-modal {
+        padding: 16px;
+    }
+    
+    .personal-cabinet-content {
+        max-width: 400px;
+        border-radius: 22px;
+    }
+    
+    .cabinet-header {
         padding: 14px 18px;
+        border-radius: 22px 22px 0 0;
     }
     
     .cabinet-body {
@@ -421,6 +526,7 @@ body.dark-theme {
     
     .cabinet-footer {
         padding: 14px 20px;
+        border-radius: 0 0 22px 22px;
     }
     
     .avatar {
@@ -437,11 +543,16 @@ body.dark-theme {
     }
 }
 
-/* Маленькие планшеты и большие телефоны (480px - 600px) */
+/* --- 600px - Большие телефоны --- */
 @media (max-width: 600px) {
     .personal-cabinet-content {
-        max-width: 360px;
-        border-radius: 22px;
+        max-width: 380px;
+        border-radius: 20px;
+    }
+    
+    .cabinet-header {
+        padding: 12px 16px;
+        border-radius: 20px 20px 0 0;
     }
     
     .cabinet-body {
@@ -450,6 +561,7 @@ body.dark-theme {
     
     .cabinet-footer {
         padding: 12px 16px;
+        border-radius: 0 0 20px 20px;
     }
     
     .avatar {
@@ -482,16 +594,35 @@ body.dark-theme {
     }
 }
 
-/* Телефоны (до 480px) */
+/* --- 480px - Телефоны --- */
 @media (max-width: 480px) {
+    .personal-cabinet-modal {
+        padding: 12px;
+        align-items: flex-end;
+    }
+    
     .personal-cabinet-content {
-        width: 92%;
-        max-width: none;
-        border-radius: 20px;
+        width: 100%;
+        max-width: 100%;
+        max-height: 92vh;
+        border-radius: 18px 18px 0 0;
+        animation: slideUpMobile 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @keyframes slideUpMobile {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
     }
     
     .cabinet-header {
         padding: 12px 16px;
+        border-radius: 18px 18px 0 0;
     }
     
     .cabinet-title h2 {
@@ -509,7 +640,7 @@ body.dark-theme {
     }
     
     .cabinet-body {
-        padding: 18px 14px;
+        padding: 18px 14px 14px;
     }
     
     .avatar-section {
@@ -519,6 +650,7 @@ body.dark-theme {
     .avatar {
         width: 70px;
         height: 70px;
+        border-width: 3px;
     }
     
     .avatar svg {
@@ -564,6 +696,7 @@ body.dark-theme {
     .logout-btn {
         padding: 10px;
         font-size: 13px;
+        margin-bottom: 10px;
     }
     
     .close-btn {
@@ -572,32 +705,48 @@ body.dark-theme {
     }
     
     .cabinet-footer {
-        padding: 12px 14px;
+        padding: 12px 14px 14px;
+        border-radius: 0;
     }
 }
 
-/* Очень маленькие телефоны (до 360px) */
-@media (max-width: 360px) {
+/* --- 400px - Маленькие телефоны --- */
+@media (max-width: 400px) {
+    .personal-cabinet-modal {
+        padding: 8px;
+    }
+    
     .personal-cabinet-content {
-        width: 95%;
-        border-radius: 18px;
+        max-height: 94vh;
+        border-radius: 16px 16px 0 0;
+    }
+    
+    .cabinet-header {
+        padding: 10px 14px;
+        border-radius: 16px 16px 0 0;
     }
     
     .cabinet-body {
-        padding: 16px 12px;
+        padding: 14px 12px 10px;
     }
     
     .avatar {
         width: 65px;
         height: 65px;
+        border-width: 3px;
     }
     
     .avatar svg {
-        font-size: 30px;
+        font-size: 28px;
     }
     
     .user-name {
         font-size: 15px;
+    }
+    
+    .detail-row {
+        gap: 8px;
+        padding: 8px 0;
     }
     
     .detail-icon {
@@ -615,69 +764,297 @@ body.dark-theme {
         width: 28px;
         height: 28px;
         font-size: 12px;
+        border-radius: 8px;
     }
     
     .info-value {
         font-size: 12px;
     }
-}
-
-/* Темная тема дополнительные стили */
-body.dark-theme .detail-icon {
-    background: #2a2a2a;
-}
-
-body.dark-theme .info-icon {
-    background: rgba(255, 255, 255, 0.08);
-}
-
-body.dark-theme .additional-info-card {
-    background: #2a2a2a;
-}
-
-body.dark-theme .detail-row:hover {
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 12px;
-    margin: 0 -8px;
-    padding: 10px 8px;
-}
-
-/* Анимация при открытии для каждого элемента */
-.personal-cabinet-content > * {
-    animation: fadeInUp 0.4s ease backwards;
-}
-
-.cabinet-header { animation-delay: 0.05s; }
-.cabinet-body { animation-delay: 0.1s; }
-.cabinet-footer { animation-delay: 0.15s; }
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
+    
+    .additional-info-card {
+        padding: 10px 12px;
+        border-radius: 12px;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    
+    .logout-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .close-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .cabinet-footer {
+        padding: 10px 12px 12px;
     }
 }
 
-/* Улучшенный hover эффект для карточек */
-.info-card, .additional-info-card, .details-list {
-    transition: var(--cabinet-transition);
+/* --- 360px - Очень маленькие телефоны --- */
+@media (max-width: 360px) {
+    .personal-cabinet-content {
+        width: 100%;
+        border-radius: 14px 14px 0 0;
+    }
+    
+    .cabinet-header {
+        padding: 8px 12px;
+        border-radius: 14px 14px 0 0;
+    }
+    
+    .cabinet-title h2 {
+        font-size: 12px;
+    }
+    
+    .cabinet-icon {
+        font-size: 14px;
+    }
+    
+    .theme-toggle-cabinet,
+    .close-button {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+    }
+    
+    .cabinet-body {
+        padding: 12px 10px 8px;
+    }
+    
+    .avatar {
+        width: 60px;
+        height: 60px;
+        border-width: 2px;
+    }
+    
+    .avatar svg {
+        font-size: 26px;
+    }
+    
+    .user-name {
+        font-size: 14px;
+    }
+    
+    .user-role {
+        font-size: 10px;
+        padding: 3px 10px;
+    }
+    
+    .detail-row {
+        gap: 6px;
+        padding: 6px 0;
+    }
+    
+    .detail-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+        border-radius: 6px;
+    }
+    
+    .detail-label {
+        font-size: 9px;
+        margin-bottom: 1px;
+    }
+    
+    .detail-value {
+        font-size: 11px;
+    }
+    
+    .info-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+        border-radius: 6px;
+    }
+    
+    .info-value {
+        font-size: 11px;
+    }
+    
+    .logout-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+        gap: 6px;
+    }
+    
+    .close-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+        gap: 6px;
+    }
 }
 
-/* Стили для скроллбара внутри модального окна */
-.personal-cabinet-content::-webkit-scrollbar {
-    width: 4px;
+/* --- Альбомная ориентация на телефонах --- */
+@media (max-height: 500px) and (orientation: landscape) {
+    .personal-cabinet-modal {
+        padding: 16px;
+        align-items: center;
+    }
+    
+    .personal-cabinet-content {
+        max-height: 85vh;
+        max-width: 500px;
+        border-radius: 20px;
+    }
+    
+    .cabinet-header {
+        border-radius: 20px 20px 0 0;
+        padding: 10px 16px;
+    }
+    
+    .cabinet-body {
+        padding: 16px 20px 12px;
+    }
+    
+    .avatar-section {
+        margin-bottom: 12px;
+    }
+    
+    .avatar {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .avatar svg {
+        font-size: 28px;
+    }
+    
+    .user-name {
+        font-size: 16px;
+        margin-bottom: 4px;
+    }
+    
+    .info-card {
+        margin-bottom: 14px;
+    }
+    
+    .details-list {
+        padding-top: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .detail-row {
+        padding: 6px 0;
+    }
+    
+    .detail-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+    
+    .logout-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+    
+    .cabinet-footer {
+        padding: 10px 20px 12px;
+        border-radius: 0 0 20px 20px;
+    }
+    
+    .close-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
 }
 
-.personal-cabinet-content::-webkit-scrollbar-track {
-    background: var(--cabinet-border);
-    border-radius: 4px;
+/* --- Отключение hover на touch-устройствах --- */
+@media (hover: none) {
+    .detail-row:hover {
+        transform: none !important;
+    }
+    
+    .avatar:hover {
+        transform: none !important;
+    }
+    
+    .theme-toggle-cabinet:hover,
+    .close-button:hover {
+        transform: none !important;
+    }
+    
+    .logout-btn:hover {
+        transform: none !important;
+    }
+    
+    .close-btn:hover {
+        transform: none !important;
+    }
+    
+    .detail-icon:hover {
+        transform: none !important;
+    }
+    
+    .theme-toggle-cabinet:active,
+    .close-button:active {
+        transform: scale(0.95) !important;
+    }
+    
+    .logout-btn:active,
+    .close-btn:active {
+        transform: scale(0.98) !important;
+    }
 }
 
-.personal-cabinet-content::-webkit-scrollbar-thumb {
-    background: var(--cabinet-header-bg);
-    border-radius: 4px;
+/* --- Безопасная зона iPhone --- */
+@supports (padding: max(0px)) {
+    .personal-cabinet-content {
+        padding-left: max(0px, env(safe-area-inset-left));
+        padding-right: max(0px, env(safe-area-inset-right));
+    }
+    
+    .cabinet-header {
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+    }
+    
+    .cabinet-body {
+        padding-left: max(24px, env(safe-area-inset-left));
+        padding-right: max(24px, env(safe-area-inset-right));
+    }
+    
+    .cabinet-footer {
+        padding-left: max(24px, env(safe-area-inset-left));
+        padding-right: max(24px, env(safe-area-inset-right));
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+}
+
+/* --- 4K и большие экраны --- */
+@media (min-width: 1920px) {
+    .personal-cabinet-content {
+        max-width: 450px;
+        border-radius: 32px;
+    }
+    
+    .cabinet-header {
+        padding: 20px 28px;
+        border-radius: 32px 32px 0 0;
+    }
+    
+    .cabinet-body {
+        padding: 32px 28px;
+    }
+    
+    .cabinet-footer {
+        padding: 20px 28px;
+        border-radius: 0 0 32px 32px;
+    }
+    
+    .avatar {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .avatar svg {
+        font-size: 48px;
+    }
+    
+    .user-name {
+        font-size: 22px;
+    }
 }

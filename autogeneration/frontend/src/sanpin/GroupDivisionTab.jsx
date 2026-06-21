@@ -8,6 +8,7 @@ import {
     FaUserTie, FaSearch, FaChevronLeft, FaChevronRight
 } from 'react-icons/fa';
 import styles from '../styles/GroupDivisionTab.module.css';
+import '../styles/SuperAdmin.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
