@@ -693,4 +693,5 @@ async function generateLocalSchedule() {
     return { schedule, totalLessons, classesProcessed };
 }
 
+
 module.exports = router;
