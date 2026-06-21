@@ -672,7 +672,6 @@ router.post('/classes', async (req, res) => {
         client.release();
     }
 });
-
 router.put('/classes/:id', async (req, res) => {
     const { id } = req.params;
     const { shift, teacherId, maxLessonsPerDay, login, password } = req.body;
@@ -682,6 +681,7 @@ router.put('/classes/:id', async (req, res) => {
     try {
         await client.query('BEGIN');
         
+        // Проверяем существование класса
         const classResult = await client.query('SELECT user_id FROM classes WHERE id = $1', [id]);
         if (classResult.rows.length === 0) {
             await client.query('ROLLBACK');
@@ -689,6 +689,7 @@ router.put('/classes/:id', async (req, res) => {
         }
         const userId = classResult.rows[0].user_id;
         
+        // Формируем запрос на обновление ТОЛЬКО с существующими полями
         const updates = [];
         const values = [];
         let paramIndex = 1;
@@ -700,20 +701,30 @@ router.put('/classes/:id', async (req, res) => {
         
         if (teacherId !== undefined) {
             updates.push(`teacher_id = $${paramIndex++}`);
-            values.push(teacherId === null || teacherId === '' ? null : parseInt(teacherId));
+            // Правильно обрабатываем null
+            const teacherIdValue = (teacherId === null || teacherId === '' || teacherId === 'null') 
+                ? null 
+                : parseInt(teacherId);
+            values.push(teacherIdValue);
         }
         
         if (maxLessonsPerDay !== undefined) {
             updates.push(`max_lessons_per_day = $${paramIndex++}`);
-            values.push(maxLessonsPerDay === null || maxLessonsPerDay === '' ? null : parseInt(maxLessonsPerDay));
+            const maxLessonsValue = (maxLessonsPerDay === null || maxLessonsPerDay === '' || maxLessonsPerDay === 'null')
+                ? null
+                : parseInt(maxLessonsPerDay);
+            values.push(maxLessonsValue);
         }
         
+        // Обновляем только если есть что обновлять
         if (updates.length > 0) {
             values.push(id);
-            const query = `UPDATE classes SET ${updates.join(', ')}, updated_at = NOW() WHERE id = $${paramIndex}`;
+            // ✅ НЕТ updated_at = NOW() - этого поля нет в таблице
+            const query = `UPDATE classes SET ${updates.join(', ')} WHERE id = $${paramIndex}`;
             await client.query(query, values);
         }
         
+        // Обновляем логин пользователя
         if (login !== undefined && login !== null && login.trim() !== '') {
             const trimmedLogin = login.trim();
             
@@ -730,15 +741,16 @@ router.put('/classes/:id', async (req, res) => {
             }
             
             await client.query(
-                'UPDATE users SET login = $1, updated_at = NOW() WHERE id = $2',
+                'UPDATE users SET login = $1 WHERE id = $2',
                 [trimmedLogin, userId]
             );
         }
         
+        // Обновляем пароль пользователя
         if (password !== undefined && password !== null && password.trim() !== '') {
             const passwordHash = await bcrypt.hash(password.trim(), 10);
             await client.query(
-                'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+                'UPDATE users SET password_hash = $1 WHERE id = $2',
                 [passwordHash, userId]
             );
         }
