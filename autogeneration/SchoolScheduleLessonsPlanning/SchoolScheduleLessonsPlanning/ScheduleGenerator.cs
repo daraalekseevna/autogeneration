@@ -94,7 +94,6 @@ namespace SchoolScheduleLessonsPlanning
         private List<SubjectHours> _subjectHours = new();
         private ScheduleSettings _settings = new();
         
-        // Кэши для быстрого доступа
         private Dictionary<int, List<Teacher>> _teachersByClass = new();
         private Dictionary<(int classId, int lessonId), List<Teacher>> _teacherCache = new();
         private Dictionary<int, string> _roomMap = new();
@@ -150,11 +149,9 @@ namespace SchoolScheduleLessonsPlanning
                 if (data?.ContainsKey("scheduleSettings") == true)
                     _settings = JsonSerializer.Deserialize<ScheduleSettings>(data["scheduleSettings"].ToString()!, options) ?? new();
                 
-                // ✅ Строим кэши
                 _lessonMap = _lessons.ToDictionary(l => l.Id, l => l);
                 _roomMap = _rooms.ToDictionary(r => r.Id, r => r.Number);
                 
-                // ✅ Группируем учителей по классам
                 _teachersByClass = new Dictionary<int, List<Teacher>>();
                 foreach (var cls in _classes)
                 {
@@ -163,7 +160,6 @@ namespace SchoolScheduleLessonsPlanning
                         .ToList();
                 }
                 
-                // ✅ Очищаем кэш учителей
                 _teacherCache.Clear();
                 
                 Console.WriteLine($"✅ Загружено: классы={_classes.Count}, учителя={_teachers.Count}, предметы={_lessons.Count}, часы={_subjectHours.Count}");
@@ -196,7 +192,6 @@ namespace SchoolScheduleLessonsPlanning
             int totalLessons = 0;
             int classesProcessed = 0;
             
-            // ✅ Предварительно группируем часы по классам
             var hoursByGrade = _subjectHours
                 .GroupBy(h => h.Grade)
                 .ToDictionary(g => g.Key, g => g.ToList());
@@ -215,17 +210,13 @@ namespace SchoolScheduleLessonsPlanning
                 foreach (var day in workDays)
                     classSchedule[day] = new List<Dictionary<string, object>>();
                 
-                // ✅ Сортируем предметы по нагрузке (сначала больше)
-                var sortedHours = classHours
-                    .OrderByDescending(h => h.HoursPerWeek)
-                    .ToList();
+                var sortedHours = classHours.OrderByDescending(h => h.HoursPerWeek).ToList();
                 
                 foreach (var hour in sortedHours)
                 {
                     var lesson = _lessonMap.GetValueOrDefault(hour.SubjectId);
                     if (lesson == null) continue;
                     
-                    // ✅ Кэшируем учителей для (класс, предмет)
                     var cacheKey = (cls.Id, hour.SubjectId);
                     if (!_teacherCache.ContainsKey(cacheKey))
                     {
@@ -241,7 +232,6 @@ namespace SchoolScheduleLessonsPlanning
                     int scheduled = 0;
                     int dayIndex = 0;
                     
-                    // ✅ Зацикленный обход дней без создания новых коллекций
                     while (scheduled < hoursNeeded && dayIndex < workDays.Count * 2)
                     {
                         var day = workDays[dayIndex % workDays.Count];
@@ -282,7 +272,6 @@ namespace SchoolScheduleLessonsPlanning
                     }
                 }
                 
-                // ✅ Обновляем номера уроков
                 foreach (var day in workDays)
                 {
                     var lessons = classSchedule[day];
@@ -310,4 +299,4 @@ namespace SchoolScheduleLessonsPlanning
             return result;
         }
     }
-}
+} 
