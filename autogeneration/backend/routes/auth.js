@@ -54,6 +54,7 @@ router.post('/login', async (req, res) => {
         };
 
         if (user.role === 'class') {
+            // ✅ ПЕРВЫЙ СПОСОБ: из логина формата class1A, class4B и т.д.
             const match = user.login.match(/class(\d+)([A-Za-z]+)/i);
             if (match) {
                 const number = match[1];
@@ -61,10 +62,36 @@ router.post('/login', async (req, res) => {
                 const russianLetter = englishToRussianLetter(englishLetter);
                 responseUser.gradeNumber = number;
                 responseUser.gradeLetter = russianLetter;
-                responseUser.name = `${number}${russianLetter} класс`;
-                responseUser.className = `${number}${russianLetter} класс`;
+                responseUser.name = `${number}${russianLetter}`;
+                responseUser.className = `${number}${russianLetter}`;
             } else {
-                responseUser.name = user.login;
+                // ✅ ВТОРОЙ СПОСОБ: Ищем класс в БД по user_id
+                try {
+                    const classResult = await db.query(
+                        `SELECT c.number, c.letter 
+                         FROM classes c 
+                         WHERE c.user_id = $1`,
+                        [user.id]
+                    );
+                    
+                    if (classResult.rows.length > 0) {
+                        const number = classResult.rows[0].number;
+                        const letter = classResult.rows[0].letter;
+                        responseUser.gradeNumber = number;
+                        responseUser.gradeLetter = letter;
+                        responseUser.name = `${number}${letter}`;
+                        responseUser.className = `${number}${letter}`;
+                        console.log('✅ Найден класс в БД:', `${number}${letter}`);
+                    } else {
+                        // ❌ Если класс не найден - используем логин
+                        responseUser.name = user.login;
+                        responseUser.className = user.login;
+                    }
+                } catch (err) {
+                    console.error('Ошибка получения класса из БД:', err);
+                    responseUser.name = user.login;
+                    responseUser.className = user.login;
+                }
             }
         }
         else if (user.role === 'teacher') {
@@ -126,14 +153,14 @@ router.post('/login', async (req, res) => {
             `Успешная авторизация`
         );
 
-        console.log('Login response:', responseUser);
+        console.log('✅ Login response:', responseUser);
 
         res.json({
             token,
             user: responseUser
         });
     } catch (err) {
-        console.error('Login error:', err);
+        console.error('❌ Login error:', err);
         res.status(500).json({ message: 'Ошибка сервера' });
     }
 });
