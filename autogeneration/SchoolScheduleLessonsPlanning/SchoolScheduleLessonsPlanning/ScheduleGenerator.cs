@@ -208,13 +208,20 @@ namespace SchoolScheduleLessonsPlanning
             {
                 Console.WriteLine($"\n📚 Обработка класса {cls.Name}");
                 
-                var classTeachers = _teachers.Where(t => _teacherClasses.GetValueOrDefault(t.Id, new List<int>()).Contains(cls.Id)).ToList();
+                // ✅ 1. Находим учителей, которые ведут в этом классе
+                var classTeachers = _teachers
+                    .Where(t => t.ClassIds != null && t.ClassIds.Contains(cls.Id))
+                    .ToList();
+                
                 if (!classTeachers.Any())
                 {
-                    Console.WriteLine($"   ⚠️ Нет учителей для класса");
+                    Console.WriteLine($"   ⚠️ Нет учителей для класса {cls.Name}");
                     continue;
                 }
                 
+                Console.WriteLine($"   👨‍🏫 Найдено {classTeachers.Count} учителей для класса");
+                
+                // ✅ 2. Получаем часы нагрузки
                 var classHours = _subjectHours.Where(h => h.Grade == cls.Number).ToList();
                 if (!classHours.Any())
                 {
@@ -244,12 +251,21 @@ namespace SchoolScheduleLessonsPlanning
                         continue;
                     }
                     
-                    var availableTeachers = classTeachers.Where(t => _teacherLessons.GetValueOrDefault(t.Id, new List<int>()).Contains(hour.SubjectId)).ToList();
+                    // ✅ 3. Ищем учителей, которые:
+                    //    - ведут этот предмет (lesson_ids)
+                    //    - ведут в этом классе (class_ids)
+                    var availableTeachers = classTeachers
+                        .Where(t => t.LessonIds != null && t.LessonIds.Contains(hour.SubjectId))
+                        .Where(t => t.ClassIds != null && t.ClassIds.Contains(cls.Id))
+                        .ToList();
+                    
                     if (!availableTeachers.Any())
                     {
-                        Console.WriteLine($"   ⚠️ Для предмета '{lesson.Name}' нет учителей");
+                        Console.WriteLine($"   ⚠️ Для предмета '{lesson.Name}' нет учителей, которые ведут его в этом классе");
                         continue;
                     }
+                    
+                    Console.WriteLine($"   📚 Предмет '{lesson.Name}': найдено {availableTeachers.Count} учителей");
                     
                     int scheduled = 0;
                     int dayIndex = 0;
@@ -265,9 +281,19 @@ namespace SchoolScheduleLessonsPlanning
                             continue;
                         }
                         
+                        // ✅ 4. Выбираем учителя из доступных
                         var teacher = availableTeachers[_random.Next(availableTeachers.Count)];
-                        var roomIds = _teacherRooms.GetValueOrDefault(teacher.Id, new List<int>());
-                        var room = roomIds.Count > 0 ? _roomMap.GetValueOrDefault(roomIds.First(), "") : "";
+                        
+                        // ✅ 5. Ищем кабинет, привязанный к этому учителю
+                        var roomIds = teacher.RoomIds ?? new List<int>();
+                        var room = "";
+                        if (roomIds.Any())
+                        {
+                            var roomId = roomIds[_random.Next(roomIds.Count)];
+                            room = _roomMap.GetValueOrDefault(roomId, "");
+                        }
+                        
+                        // Если у учителя нет кабинетов — берем любой
                         if (string.IsNullOrEmpty(room) && roomNumbers.Any())
                             room = roomNumbers[_random.Next(roomNumbers.Count)];
                         
@@ -277,10 +303,14 @@ namespace SchoolScheduleLessonsPlanning
                             ["subject"] = lesson.Name,
                             ["teacher"] = $"{teacher.LastName} {teacher.FirstName}".Trim(),
                             ["office"] = room,
-                            ["teacherColor"] = teacher.Color ?? "#3b82f6"
+                            ["teacherColor"] = teacher.Color ?? "#3b82f6",
+                            ["teacherId"] = teacher.Id,
+                            ["lessonId"] = lesson.Id
                         };
                         
                         classSchedule[day].Add(lessonDict);
+                        
+                        Console.WriteLine($"      ✅ {day} {classSchedule[day].Count} урок: {lesson.Name} -> {teacher.LastName} (каб.{room})");
                         
                         scheduled++;
                         totalLessons++;
@@ -293,6 +323,7 @@ namespace SchoolScheduleLessonsPlanning
                     }
                 }
                 
+                // ✅ 6. Обновляем номера уроков
                 foreach (var day in workDays)
                 {
                     var lessons = classSchedule[day];
@@ -304,7 +335,7 @@ namespace SchoolScheduleLessonsPlanning
                 
                 schedule[cls.Name] = classSchedule;
                 classesProcessed++;
-                Console.WriteLine($"   ✅ {classSchedule.Sum(d => d.Value.Count)} уроков");
+                Console.WriteLine($"   ✅ {classSchedule.Sum(d => d.Value.Count)} уроков для класса {cls.Name}");
             }
             
             result.Schedule = schedule;
