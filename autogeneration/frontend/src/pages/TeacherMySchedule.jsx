@@ -1,13 +1,12 @@
-// TeacherClassManagement.jsx
 import React, { useState, useEffect } from 'react';
 import { 
-    FaUsers, 
-    FaUserGraduate,
-    FaRegCalendarAlt,
+    FaCalendarAlt,
+    FaClock,
     FaBook,
     FaChalkboardTeacher,
     FaMapMarkerAlt,
-    FaRegClock
+    FaUserGraduate,
+    FaSpinner
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -15,75 +14,88 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import ThemeToggle from '../components/ThemeToggle';
 import BackButton from '../components/BackButton';
-import styles from '../styles/TeacherClassManagement.module.css';
+import '../styles/MainContent.css';
+import styles from '../styles/TeacherMySchedule.module.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const TeacherClassManagement = () => {
+const TeacherMySchedule = () => {
     const navigate = useNavigate();
-    const [myClass, setMyClass] = useState(null);
+    const [currentDate, setCurrentDate] = useState('');
     const [schedule, setSchedule] = useState({});
     const [loading, setLoading] = useState(true);
-
-    const getAuthHeaders = () => {
-        const token = localStorage.getItem('token');
-        return {
-            headers: { Authorization: `Bearer ${token}` }
-        };
-    };
+    const [error, setError] = useState(null);
+    const [teacherName, setTeacherName] = useState('');
+    const [teacherColor, setTeacherColor] = useState('#21435A');
 
     useEffect(() => {
-        loadClassData();
+        updateCurrentDate();
+        loadSchedule();
+        loadTeacherInfo();
+        const interval = setInterval(updateCurrentDate, 60000);
+        return () => clearInterval(interval);
     }, []);
 
-    const loadClassData = async () => {
-        setLoading(true);
+    const updateCurrentDate = () => {
+        const now = new Date();
+        const options = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        };
+        const dateString = now.toLocaleDateString('ru-RU', options);
+        setCurrentDate(dateString.charAt(0).toUpperCase() + dateString.slice(1));
+    };
+
+    const loadTeacherInfo = async () => {
         try {
-            const classResponse = await axios.get(`${API_URL}/teacher/my-class`, getAuthHeaders());
-            
-            if (classResponse.data.hasClass) {
-                setMyClass(classResponse.data.classData);
-                
-                const scheduleResponse = await axios.get(`${API_URL}/teacher/my-class/schedule`, getAuthHeaders());
-                console.log('Schedule response:', scheduleResponse.data);
-                setSchedule(scheduleResponse.data.schedule || {});
-            } else {
-                setMyClass(null);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${API_URL}/teacher/my-info`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (response.data) {
+                setTeacherName(response.data.fullName || 'Учитель');
+                if (response.data.color) {
+                    setTeacherColor(response.data.color);
+                }
             }
-        } catch (error) {
-            console.error('Error loading class data:', error);
+        } catch (err) {
+            console.error('Error loading teacher info:', err);
+        }
+    };
+
+    const loadSchedule = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${API_URL}/teacher/my-schedule`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            if (response.data.schedule) {
+                setSchedule(response.data.schedule);
+            } else {
+                setSchedule({});
+            }
+        } catch (err) {
+            console.error('Error loading schedule:', err);
+            setError('Не удалось загрузить расписание');
+            setSchedule({});
         } finally {
             setLoading(false);
         }
     };
 
-    // Функция для получения цвета учителя
-    const getTeacherColor = (lesson) => {
-        if (lesson && lesson.color) return lesson.color;
-        if (lesson && lesson.teacherColor) return lesson.teacherColor;
-        return '#21435A'; // цвет по умолчанию
-    };
-
     const weekDays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-    const topRowDays = weekDays.slice(0, 3);
-    const bottomRowDays = weekDays.slice(3, 6);
 
-    const timeSlots = [
-        { number: 1, time: '08:30' },
-        { number: 2, time: '09:25' },
-        { number: 3, time: '10:20' },
-        { number: 4, time: '11:15' },
-        { number: 5, time: '12:10' },
-        { number: 6, time: '13:05' },
-        { number: 7, time: '14:00' }
-    ];
-
-    const DayScheduleTable = ({ dayName }) => {
-        const dayLessons = schedule[dayName] || [];
-
+    const DaySchedule = ({ dayName }) => {
+        const lessons = schedule[dayName] || [];
+        
         return (
-            <div className={styles.dayTableWrapper}>
-                <div className={styles.dayTableHeader}>
+            <div className={styles.dayColumn}>
+                <div className={styles.dayHeader}>
                     <span className={styles.dayShort}>
                         {dayName === 'Понедельник' ? 'ПН' : 
                          dayName === 'Вторник' ? 'ВТ' : 
@@ -93,64 +105,40 @@ const TeacherClassManagement = () => {
                     </span>
                     <span className={styles.dayFull}>{dayName}</span>
                 </div>
-                <div className={styles.dayTableContainer}>
-                    <table className={styles.scheduleTable}>
-                        <thead>
-                            <tr>
-                                <th className={styles.timeCol}>Урок</th>
-                                <th className={styles.timeColFull}>Время</th>
-                                <th className={styles.contentCol}>Занятие</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {timeSlots.map((slot) => {
-                                const lesson = dayLessons.find(l => l.number === slot.number);
-                                const teacherColor = getTeacherColor(lesson);
-                                
-                                return (
-                                    <tr key={slot.number} className={styles.scheduleRow}>
-                                        <td className={styles.lessonNumCell}>
-                                            <div className={styles.lessonNumber}>{slot.number}</div>
-                                        </td>
-                                        <td className={styles.lessonTimeCell}>
-                                            <div className={styles.lessonTime}>
-                                                <FaRegClock />
-                                                <span>{slot.time}</span>
-                                            </div>
-                                        </td>
-                                        <td className={styles.lessonContentCell}>
-                                            {lesson ? (
-                                                <div 
-                                                    className={styles.lessonItem}
-                                                    style={{ 
-                                                        borderLeftColor: teacherColor,
-                                                        backgroundColor: `${teacherColor}10`
-                                                    }}
-                                                >
-                                                    <div className={styles.lessonInfo}>
-                                                        <div className={styles.lessonSubject}>
-                                                            <FaBook />
-                                                            <span>{lesson.subject}</span>
-                                                        </div>
-                                                        <div className={styles.lessonTeacher}>
-                                                            <FaChalkboardTeacher />
-                                                            <span>{lesson.teacher}</span>
-                                                        </div>
-                                                        <div className={styles.lessonRoom}>
-                                                            <FaMapMarkerAlt />
-                                                            <span>Каб. {lesson.room}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className={styles.emptySlot}>—</div>
-                                            )}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                <div className={styles.lessonsList}>
+                    {lessons.length > 0 ? (
+                        lessons.map((lesson, index) => {
+                            const color = lesson.teacherColor || teacherColor || '#21435A';
+                            return (
+                                <div 
+                                    key={index} 
+                                    className={styles.lessonCard}
+                                    style={{ 
+                                        borderLeftColor: color,
+                                        backgroundColor: `${color}10`
+                                    }}
+                                >
+                                    <div className={styles.lessonNumber}>{lesson.number}</div>
+                                    <div className={styles.lessonContent}>
+                                        <div className={styles.lessonSubject}>
+                                            <FaBook />
+                                            <span>{lesson.subject}</span>
+                                        </div>
+                                        <div className={styles.lessonClass}>
+                                            <FaUserGraduate />
+                                            <span>{lesson.className}</span>
+                                        </div>
+                                        <div className={styles.lessonRoom}>
+                                            <FaMapMarkerAlt />
+                                            <span>Каб. {lesson.room}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    ) : (
+                        <div className={styles.emptyLessons}>—</div>
+                    )}
                 </div>
             </div>
         );
@@ -158,14 +146,14 @@ const TeacherClassManagement = () => {
 
     if (loading) {
         return (
-            <div className={styles.page}>
+            <div className="main-content-page">
                 <ThemeToggle />
                 <BackButton fallbackPath="/teacher" />
                 <Header />
                 <main className={styles.container}>
                     <div className={styles.loader}>
-                        <div className={styles.spinner}></div>
-                        <p>Загрузка...</p>
+                        <FaSpinner className={styles.spinner} />
+                        <p>Загрузка расписания...</p>
                     </div>
                 </main>
                 <Footer />
@@ -173,20 +161,16 @@ const TeacherClassManagement = () => {
         );
     }
 
-    if (!myClass) {
+    if (error) {
         return (
-            <div className={styles.page}>
+            <div className="main-content-page">
                 <ThemeToggle />
                 <BackButton fallbackPath="/teacher" />
                 <Header />
                 <main className={styles.container}>
-                    <div className={styles.disabledCard}>
-                        <FaUsers className={styles.disabledIcon} />
-                        <h2>Доступ ограничен</h2>
-                        <p>Вы не являетесь классным руководителем.<br />Эта страница доступна только классным руководителям.</p>
-                        <button className={styles.backToTeacherBtn} onClick={() => navigate('/teacher')}>
-                            Вернуться назад
-                        </button>
+                    <div className={styles.errorContainer}>
+                        <p>{error}</p>
+                        <button onClick={loadSchedule}>Повторить</button>
                     </div>
                 </main>
                 <Footer />
@@ -195,44 +179,42 @@ const TeacherClassManagement = () => {
     }
 
     return (
-        <div className={styles.page}>
+        <div className="main-content-page">
             <ThemeToggle />
             <BackButton fallbackPath="/teacher" />
-
+            
             <Header />
-
+            
             <main className={styles.container}>
-                <div className={styles.classHeader}>
-                    <div className={styles.classIcon}>
-                        <FaUsers />
-                    </div>
-                    <div className={styles.classInfo}>
-                        <h1>{myClass.name} класс</h1>
-                        <p>Классный руководитель: {myClass.teacherName}</p>
-                        <p>Смена: {myClass.shift}</p>
+                <div className={styles.scheduleHeader}>
+                    <div className={styles.teacherInfo}>
+                        <div 
+                            className={styles.teacherAvatar}
+                            style={{ backgroundColor: teacherColor }}
+                        >
+                            <FaChalkboardTeacher />
+                        </div>
+                        <div>
+                            <h1>Моё расписание</h1>
+                            <p className={styles.teacherName}>{teacherName}</p>
+                            <p className={styles.currentDate}>
+                                <FaCalendarAlt />
+                                <span>{currentDate}</span>
+                            </p>
+                        </div>
                     </div>
                 </div>
 
-                <div className={styles.scheduleSection}>
-                    <h2><FaRegCalendarAlt /> Расписание класса</h2>
-                    <div className={styles.scheduleGrid}>
-                        <div className={styles.topRow}>
-                            {topRowDays.map(day => (
-                                <DayScheduleTable key={day} dayName={day} />
-                            ))}
-                        </div>
-                        <div className={styles.bottomRow}>
-                            {bottomRowDays.map(day => (
-                                <DayScheduleTable key={day} dayName={day} />
-                            ))}
-                        </div>
-                    </div>
+                <div className={styles.scheduleGrid}>
+                    {weekDays.map(day => (
+                        <DaySchedule key={day} dayName={day} />
+                    ))}
                 </div>
             </main>
-
+            
             <Footer />
         </div>
     );
 };
 
-export default TeacherClassManagement;
+export default TeacherMySchedule;

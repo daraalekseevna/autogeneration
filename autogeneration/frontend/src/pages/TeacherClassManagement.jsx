@@ -1,4 +1,3 @@
-// TeacherClassManagement.jsx
 import React, { useState, useEffect } from 'react';
 import { 
     FaUsers, 
@@ -17,7 +16,6 @@ import ThemeToggle from '../components/ThemeToggle';
 import BackButton from '../components/BackButton';
 import styles from '../styles/TeacherClassManagement.module.css';
 
-// ИСПРАВЛЕНО: используем переменную окружения
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const TeacherClassManagement = () => {
@@ -40,19 +38,23 @@ const TeacherClassManagement = () => {
     const loadClassData = async () => {
         setLoading(true);
         try {
+            // ✅ Пытаемся получить класс
             const classResponse = await axios.get(`${API_URL}/teacher/my-class`, getAuthHeaders());
             
             if (classResponse.data.hasClass) {
                 setMyClass(classResponse.data.classData);
                 
+                // ✅ Загружаем расписание класса
                 const scheduleResponse = await axios.get(`${API_URL}/teacher/my-class/schedule`, getAuthHeaders());
-                console.log('Schedule response:', scheduleResponse.data);
                 setSchedule(scheduleResponse.data.schedule || {});
             } else {
+                // ✅ Учитель не классный руководитель
                 setMyClass(null);
             }
         } catch (error) {
             console.error('Error loading class data:', error);
+            // ✅ Если ошибка - просто показываем, что нет класса
+            setMyClass(null);
         } finally {
             setLoading(false);
         }
@@ -62,7 +64,7 @@ const TeacherClassManagement = () => {
     const getTeacherColor = (lesson) => {
         if (lesson && lesson.color) return lesson.color;
         if (lesson && lesson.teacherColor) return lesson.teacherColor;
-        return '#21435A'; // цвет по умолчанию
+        return '#21435A';
     };
 
     const weekDays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
@@ -174,6 +176,7 @@ const TeacherClassManagement = () => {
         );
     }
 
+    // ✅ Если учитель не классный руководитель - показываем сообщение
     if (!myClass) {
         return (
             <div className={styles.page}>
@@ -183,8 +186,9 @@ const TeacherClassManagement = () => {
                 <main className={styles.container}>
                     <div className={styles.disabledCard}>
                         <FaUsers className={styles.disabledIcon} />
-                        <h2>Доступ ограничен</h2>
-                        <p>Вы не являетесь классным руководителем.<br />Эта страница доступна только классным руководителям.</p>
+                        <h2>Вы не назначены классным руководителем</h2>
+                        <p>Для доступа к этой странице необходимо быть классным руководителем.</p>
+                        <p className={styles.hint}>Вы можете просматривать своё личное расписание в разделе "Моё расписание".</p>
                         <button className={styles.backToTeacherBtn} onClick={() => navigate('/teacher')}>
                             Вернуться назад
                         </button>
