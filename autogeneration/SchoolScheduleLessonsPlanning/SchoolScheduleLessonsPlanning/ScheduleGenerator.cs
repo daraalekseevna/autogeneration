@@ -171,7 +171,7 @@ namespace SchoolScheduleLessonsPlanning
                 
                 // Строим кэши
                 _teacherMap = _teachers.ToDictionary(t => t.Id, t => t);
-                _roomMap = _rooms.ToDictionary(r => r.Id, r => r.Number);
+                _roomMap = _rooms.ToDictionary(r => r.Id, r => r);
                 _lessonMap = _lessons.ToDictionary(l => l.Id, l => l);
                 
                 // Группируем учителей по классам
@@ -334,7 +334,8 @@ namespace SchoolScheduleLessonsPlanning
                         if (teacher.RoomIds != null && teacher.RoomIds.Any())
                         {
                             var roomId = teacher.RoomIds[_random.Next(teacher.RoomIds.Count)];
-                            room = _roomMap.GetValueOrDefault(roomId, "");
+                            if (_roomMap.TryGetValue(roomId, out var roomData))
+                                room = roomData.Number;
                         }
                         
                         if (string.IsNullOrEmpty(room) && roomNumbers.Any())
