@@ -16,10 +16,22 @@ async function getClassIdByName(className) {
     
     console.log('🔍 Поиск класса:', className);
     
+    // ✅ Сначала ищем по логину пользователя
     let result = await db.query(
-        `SELECT id FROM classes WHERE CONCAT(number, letter) = $1 OR CONCAT(number, letter) || ' класс' = $1`,
+        `SELECT c.id 
+         FROM classes c
+         JOIN users u ON c.user_id = u.id
+         WHERE u.login = $1`,
         [className]
     );
+    
+    // Если не нашли по логину, ищем по имени класса
+    if (result.rows.length === 0) {
+        result = await db.query(
+            `SELECT id FROM classes WHERE CONCAT(number, letter) = $1 OR CONCAT(number, letter) || ' класс' = $1`,
+            [className]
+        );
+    }
     
     if (result.rows.length === 0) {
         const number = parseInt(className.match(/\d+/)?.[0] || '0');
@@ -685,7 +697,7 @@ router.get('/draft', authenticateToken, async (req, res) => {
     }
 });
 
-// ========== ПОЛУЧЕНИЕ РАСПИСАНИЯ КЛАССА ==========
+// ========== ПОЛУЧЕНИЕ РАСПИСАНИЯ КЛАССА (ИСПРАВЛЕНО) ==========
 
 router.get('/class/:className', authenticateToken, async (req, res) => {
     try {
@@ -693,36 +705,76 @@ router.get('/class/:className', authenticateToken, async (req, res) => {
         console.log('🔍 Запрос расписания для класса:', className);
         
         let classId = null;
+        let classData = null;
         
-        const classResult = await db.query(`
-            SELECT id, number, letter 
-            FROM classes 
-            WHERE CONCAT(number, letter) = $1 OR CONCAT(number, letter) || ' класс' = $1
+        // ✅ СПОСОБ 1: Ищем класс по логину пользователя
+        const userResult = await db.query(`
+            SELECT u.id as user_id, u.login, c.id as class_id, c.number, c.letter
+            FROM users u
+            LEFT JOIN classes c ON u.id = c.user_id
+            WHERE u.login = $1
         `, [className]);
         
-        if (classResult.rows.length > 0) {
-            classId = classResult.rows[0].id;
-            console.log('✅ Найден класс:', classResult.rows[0]);
-        } else {
+        if (userResult.rows.length > 0 && userResult.rows[0].class_id) {
+            classId = userResult.rows[0].class_id;
+            classData = userResult.rows[0];
+            console.log('✅ Найден класс по логину пользователя:', { 
+                login: className, 
+                classId, 
+                className: `${classData.number}${classData.letter}` 
+            });
+        }
+        
+        // ✅ СПОСОБ 2: Если не нашли по логину, ищем по имени класса
+        if (!classId) {
+            const classResult = await db.query(`
+                SELECT id, number, letter 
+                FROM classes 
+                WHERE CONCAT(number, letter) = $1 OR CONCAT(number, letter) || ' класс' = $1
+            `, [className]);
+            
+            if (classResult.rows.length > 0) {
+                classId = classResult.rows[0].id;
+                classData = classResult.rows[0];
+                console.log('✅ Найден класс по имени:', { 
+                    className, 
+                    classId,
+                    name: `${classData.number}${classData.letter}`
+                });
+            }
+        }
+        
+        // ✅ СПОСОБ 3: Пробуем найти по номеру и букве
+        if (!classId) {
             const number = parseInt(className.match(/\d+/)?.[0] || '0');
             const letter = className.match(/[А-Я]/)?.[0] || '';
             
             if (number && letter) {
                 const result = await db.query(
-                    'SELECT id FROM classes WHERE number = $1 AND letter = $2',
+                    'SELECT id, number, letter FROM classes WHERE number = $1 AND letter = $2',
                     [number, letter]
                 );
                 if (result.rows.length > 0) {
                     classId = result.rows[0].id;
+                    classData = result.rows[0];
+                    console.log('✅ Найден класс по номеру и букве:', { 
+                        number, 
+                        letter, 
+                        classId 
+                    });
                 }
             }
         }
         
         if (!classId) {
             console.log('❌ Класс не найден:', className);
-            return res.status(404).json({ message: 'Класс не найден' });
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Класс не найден' 
+            });
         }
         
+        // Получаем расписание
         const scheduleResult = await db.query(`
             SELECT 
                 ls.day_of_week,
@@ -740,7 +792,7 @@ router.get('/class/:className', authenticateToken, async (req, res) => {
             ORDER BY ls.day_of_week, ls.lesson_number
         `, [classId]);
         
-        console.log(`📚 Найдено ${scheduleResult.rows.length} уроков для класса ${className}`);
+        console.log(`📚 Найдено ${scheduleResult.rows.length} уроков для класса`);
         
         const dayMap = {
             1: 'Понедельник',
@@ -774,11 +826,21 @@ router.get('/class/:className', authenticateToken, async (req, res) => {
             }
         });
         
-        res.json({ success: true, schedule, className });
+        const displayName = classData ? `${classData.number}${classData.letter}` : className;
+        
+        res.json({ 
+            success: true, 
+            schedule, 
+            className: displayName,
+            classId: classId
+        });
         
     } catch (err) {
         console.error('❌ Ошибка получения расписания класса:', err);
-        res.status(500).json({ message: 'Ошибка сервера: ' + err.message });
+        res.status(500).json({ 
+            success: false, 
+            message: 'Ошибка сервера: ' + err.message 
+        });
     }
 });
 
@@ -1908,6 +1970,7 @@ router.get('/debug/data', authenticateToken, async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 // ========== ПОЛУЧЕНИЕ РАСПИСАНИЯ ПО ID КЛАССА ==========
 
 router.get('/class/:classId', authenticateToken, async (req, res) => {
@@ -2049,4 +2112,5 @@ router.get('/class-info/:classId', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Ошибка загрузки информации о классе' });
     }
 });
+
 module.exports = router;
