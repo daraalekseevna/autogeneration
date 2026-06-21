@@ -147,6 +147,7 @@ const ExcelGenerator = () => {
         }
     }, [settings, token]);
     
+    // ✅ ИСПРАВЛЕННАЯ ФУНКЦИЯ ГЕНЕРАЦИИ - БЕЗ ТАЙМАУТА
     const handleGenerate = useCallback(async () => {
         if (!token) {
             alert('Требуется авторизация');
@@ -171,9 +172,10 @@ const ExcelGenerator = () => {
                 setProgress(prev => Math.min(prev + 6, 95));
             }, 180);
 
+            // ✅ УБРАЛ ТАЙМАУТ
             const response = await axios.post(`${API_URL}/admin/generate-schedule`, {}, {
-                headers: { Authorization: `Bearer ${token}` },
-                timeout: 300000
+                headers: { Authorization: `Bearer ${token}` }
+                // timeout: 300000  // ← ЗАКОММЕНТИРОВАНО
             });
 
             clearInterval(interval);
