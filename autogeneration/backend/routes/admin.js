@@ -327,7 +327,7 @@ router.get('/generation-rules', async (req, res) => {
     }
 });
 
-// ============= ИСПРАВЛЕННЫЙ ЭНДПОИНТ ГЕНЕРАЦИИ (С ТАЙМАУТОМ) =============
+// ============= ИСПРАВЛЕННЫЙ ЭНДПОИНТ ГЕНЕРАЦИИ =============
 
 router.post('/generate-schedule', async (req, res) => {
     console.log('\n🚀 ========== ЗАПУСК ГЕНЕРАЦИИ РАСПИСАНИЯ ==========\n');
@@ -337,8 +337,7 @@ router.post('/generate-schedule', async (req, res) => {
         return res.status(401).json({ success: false, message: 'Нет токена' });
     }
 
-    // Устанавливаем таймаут для всего запроса
-    req.setTimeout(600000); // 10 минут
+    req.setTimeout(600000);
 
     try {
         const generatorUrl = process.env.GENERATOR_URL || process.env.SCHEDULE_GENERATOR_URL || 'http://localhost:5001';
@@ -347,9 +346,8 @@ router.post('/generate-schedule', async (req, res) => {
         
         let useLocalGeneration = false;
         try {
-            const healthCheck = await axios.get(`${generatorUrl}/health`, { 
-                timeout: 5000 
-            });
+            // ✅ ИСПРАВЛЕНО: проверяем корневой путь вместо /health
+            await axios.get(`${generatorUrl}/`, { timeout: 5000 });
             console.log('✅ Генератор доступен');
         } catch (healthError) {
             console.log('❌ Генератор НЕ доступен, используем локальную генерацию...');
@@ -362,7 +360,6 @@ router.post('/generate-schedule', async (req, res) => {
         let generationMessage = '';
         
         if (useLocalGeneration) {
-            // Локальная генерация
             console.log('🔄 Запуск локальной генерации...');
             const localResult = await generateLocalSchedule();
             if (localResult && localResult.schedule) {
@@ -377,7 +374,6 @@ router.post('/generate-schedule', async (req, res) => {
                 });
             }
         } else {
-            // C# генератор с таймаутом
             console.log('📡 Отправка запроса к C# генератору...');
             
             try {
@@ -389,7 +385,7 @@ router.post('/generate-schedule', async (req, res) => {
                     token: token
                 }, {
                     headers: { 'Content-Type': 'application/json' },
-                    timeout: 300000 // 5 минут
+                    timeout: 300000
                 });
                 
                 if (!response.data?.success) {
@@ -413,7 +409,6 @@ router.post('/generate-schedule', async (req, res) => {
                 
             } catch (genError) {
                 console.error('❌ Ошибка C# генератора:', genError.message);
-                // Fallback на локальную генерацию
                 console.log('🔄 Пробуем локальную генерацию...');
                 const localResult = await generateLocalSchedule();
                 if (localResult && localResult.schedule) {
@@ -433,7 +428,6 @@ router.post('/generate-schedule', async (req, res) => {
         
         console.log(`📊 Получено расписание для ${classesProcessed} классов, ${totalLessons} уроков`);
         
-        // Сохраняем в БД
         console.log('💾 Сохранение в БД...');
         const saved = await saveScheduleToDB(schedule);
         
@@ -450,7 +444,6 @@ router.post('/generate-schedule', async (req, res) => {
     } catch (error) {
         console.error('❌ Ошибка генерации:', error);
         
-        // Пробуем локальную генерацию как последний шанс
         try {
             console.log('🔄 Последняя попытка - локальная генерация...');
             const localResult = await generateLocalSchedule();
@@ -470,7 +463,8 @@ router.post('/generate-schedule', async (req, res) => {
         
         res.status(500).json({ 
             success: false, 
-            message: error.message || 'Ошибка генерации расписания'
+            message: error.message || 'Ошибка генерации расписания',
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
@@ -497,7 +491,6 @@ async function saveScheduleToDB(schedule) {
         console.log('📝 Начинаем сохранение расписания...');
         console.log('📋 Классы в расписании:', Object.keys(schedule));
         
-        // Получаем все классы из БД для быстрого поиска
         const allClasses = await client.query('SELECT id, CONCAT(number, letter) as name, number, letter FROM classes');
         const classMap = {};
         for (const cls of allClasses.rows) {
@@ -508,11 +501,9 @@ async function saveScheduleToDB(schedule) {
         for (const [className, days] of Object.entries(schedule)) {
             console.log(`📝 Обработка класса: "${className}"`);
             
-            // Поиск ID класса
             let classId = null;
             const cleanName = className.replace(/\s/g, '');
             
-            // 1. Прямой поиск по имени
             if (classMap[className]) {
                 classId = classMap[className];
             } else if (classMap[cleanName]) {
@@ -521,7 +512,6 @@ async function saveScheduleToDB(schedule) {
                 classId = classMap[className.toLowerCase()];
             }
             
-            // 2. Поиск по номеру и букве
             if (!classId) {
                 const match = className.match(/^(\d+)([А-ЯA-Z])/);
                 if (match) {
@@ -536,7 +526,6 @@ async function saveScheduleToDB(schedule) {
                 }
             }
             
-            // 3. Поиск по части имени
             if (!classId) {
                 for (const cls of allClasses.rows) {
                     if (className.includes(cls.name) || cls.name.includes(className)) {
@@ -580,7 +569,6 @@ async function saveScheduleToDB(schedule) {
                         continue;
                     }
                     
-                    // Поиск предмета
                     const subjectResult = await client.query(
                         'SELECT id FROM lessons WHERE LOWER(name) = LOWER($1) OR LOWER(short_name) = LOWER($1)',
                         [subjectName]
@@ -591,7 +579,6 @@ async function saveScheduleToDB(schedule) {
                     }
                     const subjectId = subjectResult.rows[0].id;
                     
-                    // Поиск учителя
                     let teacherId = null;
                     if (teacherName && teacherName.trim()) {
                         const nameParts = teacherName.trim().split(/\s+/);
@@ -680,13 +667,11 @@ async function generateLocalSchedule() {
         schedule[cls.name] = {};
         classesProcessed++;
         
-        // Определяем количество уроков в день (4-6)
         const maxLessons = Math.min(4 + Math.floor(Math.random() * 3), lessons.rows.length);
         
         for (const day of days) {
             schedule[cls.name][day] = [];
             
-            // Перемешиваем предметы для разнообразия
             const shuffledLessons = [...lessons.rows].sort(() => Math.random() - 0.5);
             const numLessons = Math.min(maxLessons, shuffledLessons.length);
             
