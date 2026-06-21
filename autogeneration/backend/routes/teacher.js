@@ -47,7 +47,7 @@ router.get('/my-class', authenticateToken, async (req, res) => {
                 classroom: 'не указан',
                 studentsCount: parseInt(classData.students_count) || 0,
                 teacherName: `${teacher.last_name} ${teacher.first_name} ${teacher.middle_name || ''}`.trim(),
-                teacherColor: teacher.color || '#3b82f6'  // Добавляем цвет учителя
+                teacherColor: teacher.color || '#3b82f6'
             }
         });
         
@@ -57,12 +57,13 @@ router.get('/my-class', authenticateToken, async (req, res) => {
     }
 });
 
-// ИСПРАВЛЕННЫЙ ЭНДПОИНТ /my-schedule с цветом учителя
+// ✅ ИСПРАВЛЕННЫЙ ЭНДПОИНТ /my-schedule
 router.get('/my-schedule', authenticateToken, async (req, res) => {
     try {
         console.log('=== /my-schedule called ===');
+        console.log('User ID:', req.user.id);
         
-        // Получаем учителя и ЕГО ЦВЕТ из БД
+        // Получаем учителя
         const teacherResult = await db.query(
             'SELECT id, color FROM teachers WHERE user_id = $1',
             [req.user.id]
@@ -74,15 +75,23 @@ router.get('/my-schedule', authenticateToken, async (req, res) => {
         }
         
         const teacherId = teacherResult.rows[0].id;
-        const teacherColor = teacherResult.rows[0].color || '#3b82f6';  // ← Берем цвет из БД
+        const teacherColor = teacherResult.rows[0].color || '#3b82f6';
         
         console.log('Teacher ID:', teacherId, 'Color from DB:', teacherColor);
+        
+        // ✅ ПРОВЕРЯЕМ, ЕСТЬ ЛИ УРОКИ В lesson_schedule
+        const checkResult = await db.query(
+            'SELECT COUNT(*) FROM lesson_schedule WHERE teacher_id = $1',
+            [teacherId]
+        );
+        console.log('Total lessons for teacher:', parseInt(checkResult.rows[0].count));
         
         const scheduleResult = await db.query(
             `SELECT ls.day_of_week, ls.lesson_number, ls.room,
                     l.name as subject_name,
                     c.number as class_number, c.letter as class_letter,
-                    t.last_name, t.first_name, t.middle_name
+                    t.last_name, t.first_name, t.middle_name,
+                    t.color as teacher_color
              FROM lesson_schedule ls
              JOIN lessons l ON ls.subject_id = l.id
              JOIN classes c ON ls.class_id = c.id
@@ -121,8 +130,8 @@ router.get('/my-schedule', authenticateToken, async (req, res) => {
                     className: `${lesson.class_number}${lesson.class_letter}`,
                     room: lesson.room || '—',
                     teacherName: `${lesson.last_name} ${lesson.first_name.charAt(0)}.${lesson.middle_name ? lesson.middle_name.charAt(0) + '.' : ''}`,
-                    color: teacherColor,  // ← ДОБАВЛЯЕМ ЦВЕТ УЧИТЕЛЯ
-                    teacherColor: teacherColor  // ← ДУБЛИРУЕМ ДЛЯ НАДЕЖНОСТИ
+                    color: lesson.teacher_color || teacherColor,
+                    teacherColor: lesson.teacher_color || teacherColor
                 });
             }
         });
@@ -131,7 +140,11 @@ router.get('/my-schedule', authenticateToken, async (req, res) => {
             schedule[day].sort((a, b) => a.number - b.number);
         });
         
+        // ✅ ЛОГИРУЕМ РЕЗУЛЬТАТ
+        const totalLessons = Object.values(schedule).reduce((sum, day) => sum + day.length, 0);
+        console.log('Total lessons in schedule:', totalLessons);
         console.log('Schedule prepared, first lesson color:', schedule['Понедельник'][0]?.color);
+        
         res.json({ schedule });
         
     } catch (err) {
@@ -144,7 +157,6 @@ router.get('/my-extracurricular', authenticateToken, async (req, res) => {
     try {
         console.log('=== /my-extracurricular called ===');
         
-        // Получаем учителя
         const teacherResult = await db.query(
             'SELECT id, color FROM teachers WHERE user_id = $1',
             [req.user.id]
@@ -160,7 +172,6 @@ router.get('/my-extracurricular', authenticateToken, async (req, res) => {
         
         console.log('Teacher ID:', teacherId);
         
-        // Получаем дополнительные занятия для учителя по teacher_id
         const activitiesResult = await db.query(`
             SELECT 
                 id, 
@@ -188,33 +199,18 @@ router.get('/my-extracurricular', authenticateToken, async (req, res) => {
         daysArray.forEach(day => { activities[day] = []; });
         
         activitiesResult.rows.forEach(act => {
-            console.log('Processing activity:', act.id, act.title);
-            console.log('Type of days:', typeof act.days);
-            console.log('Days value:', act.days);
-            
-            // Обработка days - может быть строкой или массивом
             let daysList = [];
             
             if (Array.isArray(act.days)) {
-                // Уже массив
                 daysList = act.days;
-                console.log('Days is array:', daysList);
             } else if (typeof act.days === 'string') {
-                // Строка, возможно с скобками
-                let daysStr = act.days;
-                // Удаляем скобки если есть
-                daysStr = daysStr.replace(/[()]/g, '');
+                let daysStr = act.days.replace(/[()]/g, '');
                 daysList = daysStr.split(',').map(d => d.trim());
-                console.log('Parsed from string:', daysList);
             } else if (act.days && typeof act.days === 'object') {
-                // Если это объект PostgreSQL array
                 daysList = act.days;
-                console.log('PostgreSQL array:', daysList);
             }
             
-            // Добавляем занятие в каждый день недели
             daysList.forEach(dayName => {
-                // Нормализуем название дня
                 let normalizedDay = dayName;
                 if (dayName === 'ПН' || dayName === 'Пн') normalizedDay = 'Понедельник';
                 if (dayName === 'ВТ' || dayName === 'Вт') normalizedDay = 'Вторник';
@@ -237,7 +233,6 @@ router.get('/my-extracurricular', authenticateToken, async (req, res) => {
             });
         });
         
-        // Сортируем занятия по времени
         daysArray.forEach(day => {
             activities[day].sort((a, b) => {
                 if (!a.startTime) return 1;
@@ -246,11 +241,6 @@ router.get('/my-extracurricular', authenticateToken, async (req, res) => {
             });
         });
         
-        console.log('Final activities counts:', daysArray.map(day => ({
-            day,
-            count: activities[day].length
-        })));
-        
         res.json({ activities });
         
     } catch (err) {
@@ -258,6 +248,7 @@ router.get('/my-extracurricular', authenticateToken, async (req, res) => {
         res.status(500).json({ message: 'Ошибка сервера', error: err.message });
     }
 });
+
 router.get('/my-class/schedule', authenticateToken, async (req, res) => {
     try {
         console.log('=== /my-class/schedule called ===');
