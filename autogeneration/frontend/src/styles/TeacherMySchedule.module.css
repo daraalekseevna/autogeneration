@@ -255,7 +255,7 @@ body.dark-theme .lessonNumCell {
     padding: 5px 8px;
 }
 
-/* ========== КАРТОЧКА УРОКА (как в TeacherClassManagement) ========== */
+/* ========== КАРТОЧКА УРОКА ========== */
 .lessonItem {
     background: var(--bg-card-solid);
     border-radius: 7px;
@@ -332,11 +332,6 @@ body.dark-theme .lessonNumCell {
     border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
-}
-
-.loadingText {
-    color: var(--text-muted);
-    font-size: 14px;
 }
 
 @keyframes spin {

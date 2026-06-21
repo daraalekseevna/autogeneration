@@ -131,7 +131,7 @@ const TeacherMySchedule = () => {
                                                         color: '#ffffff'
                                                     }}
                                                 >
-                                                    {lesson.number}
+                                                    {index + 1}
                                                 </div>
                                             </td>
                                             <td className={styles.lessonContentCell}>
