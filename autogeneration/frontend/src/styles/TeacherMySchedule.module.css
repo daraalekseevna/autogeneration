@@ -88,16 +88,50 @@
     box-sizing: border-box;
 }
 
+/* ========== ШАПКА С ИКОНКОЙ УЧИТЕЛЯ ========== */
 .scheduleHeader {
     margin-bottom: 20px;
 }
 
-.scheduleHeader h1 {
+.teacherInfo {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: transparent;
+    padding: 0 0 20px 0;
+    margin-bottom: 20px;
+    border: none;
+}
+
+.teacherIcon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+    flex-shrink: 0;
+    transition: background-color 0.3s ease;
+}
+
+.teacherInfo h1 {
+    font-size: 24px;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.currentDate {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 1.3rem;
-    color: var(--text-primary);
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.currentDate svg {
+    color: var(--primary);
 }
 
 /* ========== СЕТКА ДНЕЙ ========== */
@@ -182,12 +216,6 @@
     text-align: center;
 }
 
-.timeColFull {
-    width: 72px;
-    min-width: 72px;
-    text-align: center;
-}
-
 .contentCol {
     text-align: left;
     width: auto;
@@ -205,45 +233,21 @@
     background: rgba(0, 0, 0, 0.02);
 }
 
-body.dark-theme .lessonNumCell,
-body.dark-theme .lessonTimeCell {
+body.dark-theme .lessonNumCell {
     background: rgba(255, 255, 255, 0.03);
 }
 
 .lessonNumber {
     font-weight: 700;
     font-size: 0.75rem;
-    color: var(--text-primary);
+    color: #ffffff;
     display: inline-block;
-    background: var(--primary-soft);
     width: 24px;
     height: 24px;
     line-height: 24px;
     border-radius: 50%;
-}
-
-.lessonTimeCell {
     text-align: center;
-    vertical-align: middle;
-    background: rgba(0, 0, 0, 0.02);
-    width: 65px;
-    min-width: 65px;
-}
-
-.lessonTime {
-    font-size: 0.65rem;
-    color: var(--text-muted);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    line-height: 1.2;
-}
-
-.lessonTime svg {
-    font-size: 0.5rem;
-    opacity: 0.6;
+    transition: background-color 0.3s ease;
 }
 
 .lessonContentCell {
@@ -251,123 +255,54 @@ body.dark-theme .lessonTimeCell {
     padding: 5px 8px;
 }
 
-/* ========== КАРТОЧКИ УРОКОВ ========== */
-.lessonCard {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 10px;
-    border-radius: 8px;
+/* ========== КАРТОЧКА УРОКА (как в TeacherClassManagement) ========== */
+.lessonItem {
+    background: var(--bg-card-solid);
+    border-radius: 7px;
+    padding: 7px 8px;
     border-left: 3px solid;
-    transition: all 0.2s ease;
-    gap: 12px;
+    transition: all 0.2s;
 }
 
-.lessonCard:hover {
-    transform: translateX(3px);
-    box-shadow: var(--shadow);
+.lessonItem:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.lessonCardSubject {
+.lessonInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.lessonSubject {
     display: flex;
     align-items: center;
     gap: 6px;
     font-weight: 600;
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     color: var(--text-primary);
 }
 
-.lessonCardSubject svg {
-    font-size: 0.7rem;
-}
-
-.lessonCardRoom {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    white-space: nowrap;
-}
-
-/* ========== ДОПОЛНИТЕЛЬНЫЕ ЗАНЯТИЯ ========== */
-.extracurricularSection {
-    margin-top: 12px;
-    padding: 12px;
-    border-top: 1px solid var(--border-color);
-}
-
-.extracurricularTitle {
+.lessonClass {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--warning);
-    margin-bottom: 10px;
-}
-
-.extracurricularCard {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 10px;
-    margin-bottom: 8px;
-    border-radius: 8px;
-    border-left: 3px solid;
-    transition: all 0.2s ease;
-    gap: 12px;
-}
-
-.extracurricularCard:hover {
-    transform: translateX(3px);
-    box-shadow: var(--shadow);
-}
-
-.extracurricularCardTime {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     color: var(--text-muted);
-    min-width: 85px;
-    white-space: nowrap;
 }
 
-.extracurricularCardTime svg {
-    font-size: 0.55rem;
-}
-
-.extracurricularCardInfo {
-    flex: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.extracurricularCardHeader {
+.lessonRoom {
     display: flex;
     align-items: center;
     gap: 6px;
-}
-
-.extracurricularStar {
-    font-size: 0.7rem;
-}
-
-.extracurricularCardName {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.extracurricularCardRoom {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.7rem;
+    font-size: 0.62rem;
     color: var(--text-muted);
-    white-space: nowrap;
+}
+
+.lessonClass svg, .lessonRoom svg {
+    font-size: 0.58rem;
+    opacity: 0.7;
 }
 
 .emptySlot {
@@ -408,6 +343,31 @@ body.dark-theme .lessonTimeCell {
     to { transform: rotate(360deg); }
 }
 
+/* ========== ОШИБКА ========== */
+.errorContainer {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.errorContainer p {
+    color: var(--error);
+    margin-bottom: 16px;
+}
+
+.errorContainer button {
+    padding: 10px 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.errorContainer button:hover {
+    background: var(--primary-light);
+}
+
 /* ========== АДАПТАЦИЯ ========== */
 @media (max-width: 1024px) {
     .topRow, .bottomRow {
@@ -421,18 +381,20 @@ body.dark-theme .lessonTimeCell {
         padding: 65px 16px 16px 16px;
     }
     
+    .teacherInfo {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+        padding: 0 0 16px 0;
+    }
+    
     .topRow, .bottomRow {
         grid-template-columns: 1fr;
         gap: 16px;
     }
     
-    .timeCol {
-        width: 40px;
-    }
-    
-    .timeColFull {
-        width: 65px;
-    }
+    .timeCol { width: 40px; }
+    .dayTableContainer { max-height: 420px; }
     
     .topBar {
         top: 12px;
@@ -445,28 +407,6 @@ body.dark-theme .lessonTimeCell {
         padding: 0 14px;
         font-size: 13px;
     }
-    
-    .lessonCard {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-    }
-    
-    .extracurricularCard {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-    }
-    
-    .extracurricularCardInfo {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-    }
-    
-    .dayTableContainer {
-        max-height: 420px;
-    }
 }
 
 @media (max-width: 576px) {
@@ -474,21 +414,13 @@ body.dark-theme .lessonTimeCell {
         padding: 60px 12px 12px 12px;
     }
     
-    .scheduleHeader h1 {
-        font-size: 1.1rem;
-    }
-    
-    .timeCol {
-        width: 36px;
-    }
-    
-    .timeColFull {
-        width: 58px;
-    }
-    
-    .lessonTime {
-        font-size: 0.55rem;
-    }
+    .teacherInfo h1 { font-size: 18px; }
+    .currentDate { font-size: 12px; }
+    .timeCol { width: 36px; }
+    .lessonSubject { font-size: 0.68rem; }
+    .lessonClass, .lessonRoom { font-size: 0.58rem; }
+    .lessonNumber { width: 22px; height: 22px; line-height: 22px; font-size: 0.7rem; }
+    .dayTableContainer { max-height: 380px; }
     
     .topBar {
         top: 10px;
@@ -504,24 +436,5 @@ body.dark-theme .lessonTimeCell {
         width: 38px;
         padding: 0;
         justify-content: center;
-    }
-    
-    .lessonNumber {
-        width: 22px;
-        height: 22px;
-        line-height: 22px;
-        font-size: 0.7rem;
-    }
-    
-    .lessonCardSubject {
-        font-size: 0.75rem;
-    }
-    
-    .lessonCardRoom {
-        font-size: 0.65rem;
-    }
-    
-    .extracurricularCardName {
-        font-size: 0.75rem;
     }
 }
