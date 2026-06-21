@@ -95,6 +95,7 @@ const ClassSchedule = () => {
     
     const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+    // ✅ ЕДИНСТВЕННЫЙ useEffect для получения имени класса
     useEffect(() => {
         if (!user || !user.id) {
             navigate('/login');
@@ -102,13 +103,21 @@ const ClassSchedule = () => {
         }
         
         let name = '';
+        
+        // Приоритет: gradeNumber/gradeLetter > className > name > 'Класс'
         if (user.gradeNumber && user.gradeLetter) {
             name = `${user.gradeNumber}${user.gradeLetter}`;
+        } else if (user.className) {
+            // Убираем слово "класс" если оно есть
+            name = user.className.replace(/ класс$/, '');
         } else if (user.name) {
-            name = user.name;
+            // Убираем слово "класс" если оно есть
+            name = user.name.replace(/ класс$/, '');
         } else {
             name = 'Класс';
         }
+        
+        console.log('📌 Имя класса:', name);
         setClassName(name);
     }, [user, navigate]);
 
@@ -177,32 +186,31 @@ const ClassSchedule = () => {
         }
     };
 
-const loadSchedule = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-        const token = localStorage.getItem('token');
-        // ✅ ИСПРАВЛЕНО: используем /schedule/class/ (без superadmin)
-        const response = await axios.get(`${API_URL}/schedule/class/${className}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        console.log('Schedule response:', response.data);
-        
-        if (response.data.success) {
-            setSchedule(response.data.schedule || {});
-        } else {
+    const loadSchedule = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${API_URL}/schedule/class/${className}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            console.log('Schedule response:', response.data);
+            
+            if (response.data.success) {
+                setSchedule(response.data.schedule || {});
+            } else {
+                setSchedule({});
+                setError('Не удалось загрузить расписание');
+            }
+        } catch (err) {
+            console.error('Error loading schedule:', err);
+            setError(err.response?.data?.message || 'Ошибка загрузки расписания');
             setSchedule({});
-            setError('Не удалось загрузить расписание');
+        } finally {
+            setLoading(false);
         }
-    } catch (err) {
-        console.error('Error loading schedule:', err);
-        setError(err.response?.data?.message || 'Ошибка загрузки расписания');
-        setSchedule({});
-    } finally {
-        setLoading(false);
-    }
-};
+    };
 
     useEffect(() => {
         if (scheduleSettings) {
