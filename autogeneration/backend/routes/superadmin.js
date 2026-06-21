@@ -2017,4 +2017,209 @@ router.get('/sanpin/subject-hours', async (req, res) => {
         res.status(500).json({ error: 'Ошибка загрузки нагрузки по часам' });
     }
 });
+// ============= РАСПИСАНИЕ ДЛЯ КЛАССА (ДОБАВИТЬ В superadmin.js) =============
+
+// Получить расписание для класса по ID или логину
+router.get('/schedule/class/:classId', async (req, res) => {
+    try {
+        const { classId } = req.params;
+        console.log('🔍 Запрос расписания для класса по ID/логину:', classId);
+        
+        // Ищем класс по ID или по логину пользователя
+        let classResult = await db.query(`
+            SELECT 
+                c.id, 
+                c.number, 
+                c.letter,
+                c.shift,
+                u.login
+            FROM classes c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.id = $1 OR u.login = $1
+        `, [classId]);
+        
+        // Если не нашли, пробуем найти по user_id
+        if (classResult.rows.length === 0) {
+            classResult = await db.query(`
+                SELECT 
+                    c.id, 
+                    c.number, 
+                    c.letter,
+                    c.shift,
+                    u.login
+                FROM classes c
+                JOIN users u ON c.user_id = u.id
+                WHERE c.user_id = $1
+            `, [classId]);
+        }
+        
+        if (classResult.rows.length === 0) {
+            console.log('❌ Класс не найден для ID:', classId);
+            return res.json({
+                success: false,
+                message: 'Класс не найден',
+                schedule: {
+                    'Понедельник': {},
+                    'Вторник': {},
+                    'Среда': {},
+                    'Четверг': {},
+                    'Пятница': {},
+                    'Суббота': {}
+                }
+            });
+        }
+        
+        const classData = classResult.rows[0];
+        const classIdNum = classData.id;
+        const className = `${classData.number}${classData.letter}`;
+        
+        console.log('✅ Найден класс:', { id: classIdNum, name: className, login: classData.login });
+        
+        // Получаем расписание для класса
+        const scheduleResult = await db.query(`
+            SELECT 
+                ls.id,
+                ls.day_of_week,
+                ls.lesson_number,
+                l.name as subject,
+                l.short_name as subject_short,
+                CONCAT(t.last_name, ' ', t.first_name) as teacher,
+                ls.room,
+                l.id as lesson_id,
+                t.id as teacher_id,
+                t.color as teacher_color
+            FROM lesson_schedule ls
+            JOIN lessons l ON ls.subject_id = l.id
+            JOIN teachers t ON ls.teacher_id = t.id
+            WHERE ls.class_id = $1
+            ORDER BY ls.day_of_week, ls.lesson_number
+        `, [classIdNum]);
+        
+        console.log(`📚 Найдено ${scheduleResult.rows.length} уроков для класса ${className}`);
+        
+        const dayMap = {
+            1: 'Понедельник',
+            2: 'Вторник',
+            3: 'Среда',
+            4: 'Четверг',
+            5: 'Пятница',
+            6: 'Суббота'
+        };
+        
+        const schedule = {
+            'Понедельник': {},
+            'Вторник': {},
+            'Среда': {},
+            'Четверг': {},
+            'Пятница': {},
+            'Суббота': {}
+        };
+        
+        scheduleResult.rows.forEach(row => {
+            const dayName = dayMap[row.day_of_week];
+            if (dayName) {
+                schedule[dayName][row.lesson_number] = {
+                    subject: row.subject,
+                    subjectShort: row.subject_short || row.subject,
+                    teacher: row.teacher,
+                    room: row.room,
+                    lesson_id: row.lesson_id,
+                    teacher_id: row.teacher_id,
+                    teacherColor: row.teacher_color || '#b8e2ff'
+                };
+            }
+        });
+        
+        res.json({
+            success: true,
+            schedule,
+            className,
+            classId: classIdNum,
+            shift: classData.shift || 1,
+            login: classData.login
+        });
+        
+    } catch (err) {
+        console.error('❌ Ошибка получения расписания класса:', err);
+        res.status(500).json({
+            success: false,
+            message: 'Ошибка сервера: ' + err.message,
+            schedule: {
+                'Понедельник': {},
+                'Вторник': {},
+                'Среда': {},
+                'Четверг': {},
+                'Пятница': {},
+                'Суббота': {}
+            }
+        });
+    }
+});
+
+// Получить информацию о классе по ID или логину
+router.get('/schedule/class-info/:classId', async (req, res) => {
+    try {
+        const { classId } = req.params;
+        
+        const result = await db.query(`
+            SELECT 
+                c.id,
+                c.number || c.letter as name,
+                c.number,
+                c.letter,
+                c.shift,
+                c.max_lessons_per_day,
+                c.teacher_id,
+                CONCAT(t.last_name, ' ', t.first_name, ' ', COALESCE(t.middle_name, '')) as teacher_name,
+                u.login
+            FROM classes c
+            LEFT JOIN teachers t ON c.teacher_id = t.id
+            JOIN users u ON c.user_id = u.id
+            WHERE c.id = $1 OR u.login = $1 OR c.user_id = $1
+        `, [classId]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Класс не найден' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('GET /schedule/class-info error:', error);
+        res.status(500).json({ error: 'Ошибка загрузки информации о классе' });
+    }
+});
+
+// Получить класс текущего пользователя
+router.get('/schedule/my-class', async (req, res) => {
+    try {
+        const userId = req.user.id;
+        console.log('🔍 Запрос класса для пользователя:', userId);
+        
+        const result = await db.query(`
+            SELECT 
+                c.id,
+                c.number || c.letter as name,
+                c.number,
+                c.letter,
+                c.shift,
+                c.max_lessons_per_day,
+                c.teacher_id,
+                CONCAT(t.last_name, ' ', t.first_name, ' ', COALESCE(t.middle_name, '')) as teacher_name,
+                u.login
+            FROM classes c
+            LEFT JOIN teachers t ON c.teacher_id = t.id
+            JOIN users u ON c.user_id = u.id
+            WHERE c.user_id = $1
+        `, [userId]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Класс не найден для этого пользователя' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('GET /schedule/my-class error:', error);
+        res.status(500).json({ error: 'Ошибка загрузки класса' });
+    }
+});
 module.exports = router;
