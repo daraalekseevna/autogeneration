@@ -151,40 +151,40 @@ const ClassSchedule = () => {
         }
     };
 
-const loadSettings = async () => {
-    try {
-        const token = localStorage.getItem('token');
-        // ИСПРАВЛЕНО: используем публичный эндпоинт
-        const response = await axios.get(`${API_URL}/schedule/public-settings`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        console.log('Settings loaded:', response.data);
-        setScheduleSettings(response.data);
-    } catch (err) {
-        console.error('Error loading settings:', err);
-        // Настройки по умолчанию
-        setScheduleSettings({
-            startTime: '08:00',
-            lessonDuration: 40,
-            maxLessonsPerDay: 7,
-            shortBreakDuration: 10,
-            breaks: [],
-            secondShift: false,
-            secondShiftStart: '14:00',
-            secondShiftLessonDuration: 40,
-            secondShiftMaxLessonsPerDay: 6,
-            secondShiftShortBreakDuration: 10,
-            secondShiftBreaks: []
-        });
-    }
-};;
+    const loadSettings = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${API_URL}/schedule/public-settings`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            console.log('Settings loaded:', response.data);
+            setScheduleSettings(response.data);
+        } catch (err) {
+            console.error('Error loading settings:', err);
+            setScheduleSettings({
+                startTime: '08:00',
+                lessonDuration: 40,
+                maxLessonsPerDay: 7,
+                shortBreakDuration: 10,
+                breaks: [],
+                secondShift: false,
+                secondShiftStart: '14:00',
+                secondShiftLessonDuration: 40,
+                secondShiftMaxLessonsPerDay: 6,
+                secondShiftShortBreakDuration: 10,
+                secondShiftBreaks: []
+            });
+        }
+    };
 
+    // ✅ ИСПРАВЛЕННАЯ ФУНКЦИЯ
     const loadSchedule = async () => {
         setLoading(true);
         setError(null);
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${API_URL}/schedule/class/${className}`, {
+            // ✅ ИСПРАВЛЕНО: используем /superadmin/schedule/class/
+            const response = await axios.get(`${API_URL}/superadmin/schedule/class/${className}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
@@ -205,7 +205,6 @@ const loadSettings = async () => {
         }
     };
 
-    // Обновляем timeSlots при изменении настроек или смены
     useEffect(() => {
         if (scheduleSettings) {
             const slots = calculateTimeSlots(scheduleSettings, classShift);
