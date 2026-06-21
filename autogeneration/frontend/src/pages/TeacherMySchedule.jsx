@@ -86,9 +86,8 @@ const TeacherMySchedule = () => {
 
     const weekDays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
 
-    // ✅ Функция для получения цвета урока
-    const getLessonColor = (lesson) => {
-        // Приоритет: цвет из урока -> цвет учителя из БД -> дефолтный
+    // ✅ Функция для получения цвета учителя
+    const getTeacherColor = (lesson) => {
         if (lesson && lesson.color) return lesson.color;
         if (lesson && lesson.teacherColor) return lesson.teacherColor;
         if (teacherColor) return teacherColor;
@@ -121,7 +120,7 @@ const TeacherMySchedule = () => {
                         <tbody>
                             {lessons.length > 0 ? (
                                 lessons.map((lesson, index) => {
-                                    const color = getLessonColor(lesson);
+                                    const color = getTeacherColor(lesson);
                                     return (
                                         <tr key={index} className={styles.scheduleRow}>
                                             <td className={styles.lessonNumCell}>
@@ -140,27 +139,23 @@ const TeacherMySchedule = () => {
                                                     className={styles.lessonItem}
                                                     style={{ 
                                                         borderLeftColor: color,
-                                                        backgroundColor: `${color}15`
+                                                        backgroundColor: `${color}10`
                                                     }}
                                                 >
                                                     <div className={styles.lessonInfo}>
                                                         <div className={styles.lessonSubject}>
-                                                            <FaBook style={{ color: color }} />
-                                                            <span style={{ color: color }}>{lesson.subject}</span>
+                                                            <FaBook />
+                                                            <span>{lesson.subject}</span>
                                                         </div>
                                                         <div className={styles.lessonClass}>
-                                                            <FaUserGraduate style={{ color: color }} />
+                                                            <FaUserGraduate />
                                                             <span>{lesson.className}</span>
                                                         </div>
                                                         <div className={styles.lessonRoom}>
-                                                            <FaMapMarkerAlt style={{ color: color }} />
+                                                            <FaMapMarkerAlt />
                                                             <span>Каб. {lesson.room}</span>
                                                         </div>
                                                     </div>
-                                                    <div 
-                                                        className={styles.lessonColorDot}
-                                                        style={{ backgroundColor: color }}
-                                                    />
                                                 </div>
                                             </td>
                                         </tr>
