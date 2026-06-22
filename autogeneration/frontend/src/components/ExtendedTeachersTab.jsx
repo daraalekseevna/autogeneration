@@ -1,573 +1,999 @@
-// components/tabs/ExtendedTeachersTab.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
-  FaUserPlus, FaEdit, FaTrash, FaSchool, FaCheck, FaTimes, 
-  FaSpinner, FaGraduationCap, FaUsers, FaUniversity, 
-  FaPalette, FaInfoCircle, FaChalkboardTeacher, FaUserTie,
-  FaSun, FaMoon
+    FaPlus, 
+    FaUser, 
+    FaPalette, 
+    FaTrash, 
+    FaSave, 
+    FaTimes,
+    FaBook, 
+    FaSearch,
+    FaFilter,
+    FaChevronDown,
+    FaChevronUp,
+    FaRegCalendarAlt,
+    FaRegClock,
+    FaRegUser,
+    FaRegBuilding,
+    FaEdit,
+    FaExclamationTriangle,
+    FaCheck,
+    FaPrint,
+    FaBell,
+    FaUniversity
 } from 'react-icons/fa';
 import axios from 'axios';
-import '../styles/ExtendedTeachersTab.css';
-import '../styles/SuperAdmin.css';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import ThemeToggle from '../components/ThemeToggle';
+import BackButton from '../components/BackButton';
+import { extracurricularAPI } from '../services/extracurricularAPI';
+import { COLORS, WEEK_DAYS, TIME_SLOTS } from '../config/extracurricularData';
+import styles from '../styles/ExtracurricularActivities.module.css';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// Цвета для секций (только для внешних педагогов)
-const SECTION_COLORS = [
-    { name: 'Спортивный', value: '#ff6b6b' },
-    { name: 'Творческий', value: '#4ecdc4' },
-    { name: 'Научный', value: '#45b7d1' },
-    { name: 'Языковой', value: '#96ceb4' },
-    { name: 'Технический', value: '#feca57' },
-    { name: 'Музыкальный', value: '#ff9ff3' },
-    { name: 'Художественный', value: '#54a0ff' },
-    { name: 'Танцевальный', value: '#5f27cd' },
-    { name: 'Театральный', value: '#ff6348' },
-    { name: 'Шахматный', value: '#2ed573' },
-    { name: 'Робототехника', value: '#ffa502' },
-    { name: 'Медиа', value: '#7bed9f' }
-];
+const Notification = ({ message, type, onClose }) => {
+    useEffect(() => {
+        const timer = setTimeout(onClose, 3000);
+        return () => clearTimeout(timer);
+    }, [onClose]);
 
-const ExtendedTeachersTab = ({ token, onDataChange }) => {
-    const [extendedTeachers, setExtendedTeachers] = useState([]);
-    const [schoolTeachers, setSchoolTeachers] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [notification, setNotification] = useState({ message: '', type: 'success' });
-    const [modalOpen, setModalOpen] = useState(false);
-    const [editingTeacher, setEditingTeacher] = useState(null);
-    const [formData, setFormData] = useState({
-        lastName: '',
-        firstName: '',
-        middleName: '',
-        sectionName: '',
-        sectionColor: '#ff6b6b',
-        isSchoolTeacher: false,
-        schoolTeacherId: null
-    });
-    const [saving, setSaving] = useState(false);
-    const [colorPickerOpen, setColorPickerOpen] = useState(false);
-
-    const loadData = async () => {
-        if (!token) return;
-        setLoading(true);
-        try {
-            const extendedRes = await axios.get(`${API_URL}/superadmin/extended-teachers`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setExtendedTeachers(extendedRes.data || []);
-            
-            const teachersRes = await axios.get(`${API_URL}/superadmin/teachers`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const allTeachers = teachersRes.data || [];
-            const schoolOnly = allTeachers.filter(t => t.role !== 'superadmin');
-            setSchoolTeachers(schoolOnly);
-            
-        } catch (err) {
-            console.error('Error loading extended teachers:', err);
-            showNotification('Ошибка загрузки данных', 'error');
-        } finally {
-            setLoading(false);
-        }
+    const icons = {
+        success: <FaCheck />,
+        error: <FaExclamationTriangle />,
+        info: <FaBell />
     };
+
+    return (
+        <div className={`${styles.notification} ${styles[type]}`}>
+            <div className={styles.notificationContent}>
+                <span className={styles.notificationIcon}>{icons[type]}</span>
+                <span className={styles.notificationMessage}>{message}</span>
+            </div>
+            <button className={styles.notificationClose} onClick={onClose}>
+                <FaTimes />
+            </button>
+        </div>
+    );
+};
+
+const ActivityForm = ({ isOpen, onClose, onSubmit, initialData, extendedTeachers }) => {
+    const [form, setForm] = useState({
+        teacherId: '',
+        sectionId: '',
+        sectionName: '',
+        teacherName: '',
+        teacherColor: '#21435A',
+        days: [],
+        startTime: '15:00',
+        endTime: '16:00',
+        room: '',
+        description: ''
+    });
+    const [errors, setErrors] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [availableSections, setAvailableSections] = useState([]);
 
     useEffect(() => {
-        loadData();
-    }, [token]);
-
-    const showNotification = (message, type = 'success') => {
-        setNotification({ message, type });
-        setTimeout(() => setNotification({ message: '', type: '' }), 3000);
-    };
-
-    const openAddModal = () => {
-        setEditingTeacher(null);
-        setFormData({
-            lastName: '',
-            firstName: '',
-            middleName: '',
-            sectionName: '',
-            sectionColor: '#ff6b6b',
-            isSchoolTeacher: false,
-            schoolTeacherId: null
-        });
-        setModalOpen(true);
-    };
-
-    const openEditModal = (teacher) => {
-        setEditingTeacher(teacher);
-        const isSchoolTeacher = !!teacher.school_teacher_id;
-        
-        setFormData({
-            lastName: teacher.last_name || '',
-            firstName: teacher.first_name || '',
-            middleName: teacher.middle_name || '',
-            sectionName: teacher.section_name || '',
-            sectionColor: teacher.section_color || '#ff6b6b',
-            isSchoolTeacher: isSchoolTeacher,
-            schoolTeacherId: teacher.school_teacher_id || null
-        });
-        setModalOpen(true);
-    };
-
-    const handleSchoolTeacherSelect = (teacherId) => {
-        const selected = schoolTeachers.find(t => t.id === teacherId);
-        if (selected) {
-            setFormData({
-                ...formData,
-                schoolTeacherId: teacherId,
-                lastName: selected.lastName || '',
-                firstName: selected.firstName || '',
-                middleName: selected.middleName || '',
-                sectionColor: selected.color || '#ff6b6b'
-            });
-        }
-    };
-
-    const handleSave = async () => {
-        if (formData.isSchoolTeacher) {
-            if (!formData.schoolTeacherId) {
-                showNotification('Выберите учителя школы', 'error');
-                return;
-            }
-            if (!formData.sectionName || !formData.sectionName.trim()) {
-                showNotification('Укажите название секции/кружка', 'error');
-                return;
-            }
-        } else {
-            if (!formData.lastName || !formData.lastName.trim()) {
-                showNotification('Заполните фамилию', 'error');
-                return;
-            }
-            if (!formData.firstName || !formData.firstName.trim()) {
-                showNotification('Заполните имя', 'error');
-                return;
-            }
-            if (!formData.sectionName || !formData.sectionName.trim()) {
-                showNotification('Укажите название секции/кружка', 'error');
-                return;
-            }
-        }
-        
-        setSaving(true);
-        try {
-            const payload = {
-                lastName: formData.lastName,
-                firstName: formData.firstName,
-                middleName: formData.middleName || '',
-                sectionName: formData.sectionName.trim(),
-                sectionColor: formData.sectionColor,
-                schoolTeacherId: formData.isSchoolTeacher ? formData.schoolTeacherId : null
-            };
-            
-            if (editingTeacher) {
-                await axios.put(
-                    `${API_URL}/superadmin/extended-teachers/${editingTeacher.id}`,
-                    payload,
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-                showNotification('Данные обновлены');
+        if (form.teacherId && extendedTeachers) {
+            const teacher = extendedTeachers.find(t => t.id === parseInt(form.teacherId));
+            if (teacher && teacher.sections) {
+                setAvailableSections(teacher.sections);
             } else {
-                await axios.post(
-                    `${API_URL}/superadmin/extended-teachers`,
-                    payload,
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-                showNotification('Секция добавлена');
+                setAvailableSections([]);
             }
-            
-            setModalOpen(false);
-            await loadData();
-            if (onDataChange) onDataChange();
-            
-        } catch (err) {
-            console.error('Save error:', err);
-            const errorMessage = err.response?.data?.message || 'Ошибка сохранения';
-            showNotification(errorMessage, 'error');
-        } finally {
-            setSaving(false);
         }
-    };
+    }, [form.teacherId, extendedTeachers]);
 
-    const handleDelete = async (teacher) => {
-        const message = `Удалить секцию "${teacher.section_name}"?`;
-        if (!window.confirm(message)) return;
-        
-        try {
-            await axios.delete(`${API_URL}/superadmin/extended-teachers/${teacher.id}`, {
-                headers: { Authorization: `Bearer ${token}` }
+    useEffect(() => {
+        if (initialData) {
+            setForm({
+                teacherId: initialData.teacherId || '',
+                sectionId: initialData.sectionId || '',
+                sectionName: initialData.sectionName || '',
+                teacherName: initialData.teacherName || '',
+                teacherColor: initialData.teacherColor || '#21435A',
+                days: initialData.days || [],
+                startTime: initialData.startTime || '15:00',
+                endTime: initialData.endTime || '16:00',
+                room: initialData.room || '',
+                description: initialData.description || ''
             });
-            showNotification('Секция удалена');
-            await loadData();
-            if (onDataChange) onDataChange();
-        } catch (err) {
-            console.error('Delete error:', err);
-            showNotification('Ошибка удаления', 'error');
+        } else {
+            setForm({
+                teacherId: '',
+                sectionId: '',
+                sectionName: '',
+                teacherName: '',
+                teacherColor: '#21435A',
+                days: [],
+                startTime: '15:00',
+                endTime: '16:00',
+                room: '',
+                description: ''
+            });
+        }
+        setAvailableSections([]);
+        setErrors({});
+        setIsSubmitting(false);
+    }, [initialData, isOpen, extendedTeachers]);
+
+    const validate = () => {
+        const newErrors = {};
+        if (!form.teacherId) newErrors.teacherId = 'Выберите преподавателя';
+        if (!form.sectionId) newErrors.sectionId = 'Выберите секцию';
+        if (form.days.length === 0) newErrors.days = 'Выберите хотя бы один день недели';
+        if (!form.room.trim()) newErrors.room = 'Укажите кабинет или место проведения';
+        
+        const start = parseInt(form.startTime.replace(':', ''));
+        const end = parseInt(form.endTime.replace(':', ''));
+        if (end <= start) newErrors.time = 'Время окончания должно быть позже времени начала';
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (validate()) {
+            setIsSubmitting(true);
+            try {
+                const selectedTeacher = extendedTeachers?.find(t => t.id === parseInt(form.teacherId));
+                const selectedSection = availableSections.find(s => s.id === parseInt(form.sectionId));
+                
+                if (!selectedTeacher || !selectedSection) {
+                    console.error('Teacher or section not found', { selectedTeacher, selectedSection });
+                    throw new Error('Данные не найдены');
+                }
+                
+                const submitData = {
+                    teacherId: parseInt(form.teacherId),
+                    sectionId: parseInt(form.sectionId),
+                    sectionName: selectedSection.section_name,
+                    teacherName: selectedTeacher.name || `${selectedTeacher.lastName || ''} ${selectedTeacher.firstName || ''} ${selectedTeacher.middleName || ''}`.trim(),
+                    teacherColor: selectedTeacher.color || selectedSection.section_color || '#21435A',
+                    days: form.days,
+                    startTime: form.startTime,
+                    endTime: form.endTime,
+                    room: form.room,
+                    description: form.description,
+                    id: initialData?.id
+                };
+                
+                console.log('Submitting data:', submitData);
+                await onSubmit(submitData);
+                onClose();
+            } catch (error) {
+                console.error('Submit error:', error);
+            } finally {
+                setIsSubmitting(false);
+            }
         }
     };
 
-    const ColorPickerModal = ({ isOpen, onClose, selectedColor, onSelect }) => {
-        if (!isOpen) return null;
-        
-        return (
-            <div className="color-picker-modal" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-                <div className="color-picker-content">
-                    <div className="color-picker-header">
-                        <h4><FaPalette /> Выберите цвет секции</h4>
-                        <button className="color-picker-close" onClick={onClose}>
-                            <FaTimes />
+    const toggleDay = (day) => {
+        setForm(prev => ({
+            ...prev,
+            days: prev.days.includes(day)
+                ? prev.days.filter(d => d !== day)
+                : [...prev.days, day]
+        }));
+        if (errors.days) {
+            setErrors(prev => ({ ...prev, days: null }));
+        }
+    };
+
+    const handleTeacherChange = (teacherId) => {
+        const selectedTeacher = extendedTeachers?.find(t => t.id === parseInt(teacherId));
+        setForm(prev => ({
+            ...prev,
+            teacherId,
+            sectionId: '',
+            sectionName: '',
+            teacherName: selectedTeacher?.name || `${selectedTeacher?.lastName || ''} ${selectedTeacher?.firstName || ''} ${selectedTeacher?.middleName || ''}`.trim() || '',
+            teacherColor: selectedTeacher?.color || '#21435A'
+        }));
+        if (errors.teacherId) setErrors(prev => ({ ...prev, teacherId: null }));
+    };
+
+    const handleSectionChange = (sectionId) => {
+        const selected = availableSections.find(s => s.id === parseInt(sectionId));
+        setForm(prev => ({
+            ...prev,
+            sectionId,
+            sectionName: selected?.section_name || '',
+            teacherColor: selected?.section_color || prev.teacherColor
+        }));
+        if (errors.sectionId) setErrors(prev => ({ ...prev, sectionId: null }));
+    };
+
+    const formatTime = (time) => {
+        return time ? time.substring(0, 5) : time;
+    };
+
+    const uniqueTeachers = useMemo(() => {
+        const seen = new Set();
+        return (extendedTeachers || []).filter(t => {
+            if (seen.has(t.id)) return false;
+            seen.add(t.id);
+            return true;
+        });
+    }, [extendedTeachers]);
+
+    if (!isOpen) return null;
+
+    return (
+        <div className={styles.modalOverlay} onClick={onClose}>
+            <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+                <div className={styles.modalHeader}>
+                    <h2>
+                        {initialData ? 'Редактировать занятие' : 'Создать новое занятие'}
+                    </h2>
+                    <button className={styles.modalClose} onClick={onClose} disabled={isSubmitting}>
+                        <FaTimes />
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className={styles.form}>
+                    <div className={styles.formRow}>
+                        <div className={styles.formGroup}>
+                            <label>
+                                <FaUser className={styles.formIcon} />
+                                Преподаватель *
+                            </label>
+                            <select
+                                value={form.teacherId}
+                                onChange={e => handleTeacherChange(e.target.value)}
+                                className={errors.teacherId ? styles.error : ''}
+                                disabled={isSubmitting}
+                            >
+                                <option value="">Выберите преподавателя</option>
+                                {uniqueTeachers.map(t => (
+                                    <option key={t.id} value={t.id}>
+                                        {t.name || `${t.lastName || ''} ${t.firstName || ''} ${t.middleName || ''}`.trim() || 'Без имени'}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.teacherId && <span className={styles.errorText}>{errors.teacherId}</span>}
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>
+                                <FaUniversity className={styles.formIcon} />
+                                Секция / Кружок *
+                            </label>
+                            <select
+                                value={form.sectionId}
+                                onChange={e => handleSectionChange(e.target.value)}
+                                className={errors.sectionId ? styles.error : ''}
+                                disabled={isSubmitting || !form.teacherId}
+                            >
+                                <option value="">Выберите секцию</option>
+                                {availableSections.map(s => (
+                                    <option key={s.id} value={s.id}>{s.section_name}</option>
+                                ))}
+                            </select>
+                            {errors.sectionId && <span className={styles.errorText}>{errors.sectionId}</span>}
+                            {form.teacherId && availableSections.length === 0 && !isSubmitting && (
+                                <span className={styles.warningText}>У выбранного преподавателя нет секций</span>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className={styles.formGroup}>
+                        <label>
+                            <FaRegBuilding className={styles.formIcon} />
+                            Кабинет / Место *
+                        </label>
+                        <input
+                            type="text"
+                            value={form.room}
+                            onChange={e => setForm({...form, room: e.target.value})}
+                            placeholder="Каб. 203, Спортзал, Актовый зал"
+                            className={errors.room ? styles.error : ''}
+                            disabled={isSubmitting}
+                        />
+                        {errors.room && <span className={styles.errorText}>{errors.room}</span>}
+                    </div>
+
+                    <div className={styles.formGroup}>
+                        <label>
+                            <FaRegCalendarAlt className={styles.formIcon} />
+                            Дни недели *
+                        </label>
+                        <div className={styles.daysGrid}>
+                            {WEEK_DAYS.map(day => (
+                                <button
+                                    key={day.id}
+                                    type="button"
+                                    className={`${styles.dayBtn} ${form.days.includes(day.name) ? styles.selected : ''}`}
+                                    onClick={() => toggleDay(day.name)}
+                                    disabled={isSubmitting}
+                                >
+                                    {day.short}
+                                </button>
+                            ))}
+                        </div>
+                        {errors.days && <span className={styles.errorText}>{errors.days}</span>}
+                    </div>
+
+                    <div className={styles.formRow}>
+                        <div className={styles.formGroup}>
+                            <label>
+                                <FaRegClock className={styles.formIcon} />
+                                Время начала *
+                            </label>
+                            <select
+                                value={form.startTime}
+                                onChange={e => setForm({...form, startTime: e.target.value})}
+                                disabled={isSubmitting}
+                            >
+                                {TIME_SLOTS.map(slot => (
+                                    <option key={slot.id} value={slot.value}>
+                                        {formatTime(slot.value)}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>
+                                <FaRegClock className={styles.formIcon} />
+                                Время окончания *
+                            </label>
+                            <select
+                                value={form.endTime}
+                                onChange={e => setForm({...form, endTime: e.target.value})}
+                                disabled={isSubmitting}
+                            >
+                                {TIME_SLOTS.map(slot => (
+                                    <option key={slot.id} value={slot.value}>
+                                        {formatTime(slot.value)}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                    {errors.time && <span className={styles.errorText}>{errors.time}</span>}
+
+                    <div className={styles.formGroup}>
+                        <label>Описание</label>
+                        <textarea
+                            value={form.description}
+                            onChange={e => setForm({...form, description: e.target.value})}
+                            placeholder="Дополнительная информация о занятии"
+                            rows="3"
+                            disabled={isSubmitting}
+                        />
+                    </div>
+
+                    <div className={styles.formActions}>
+                        <button type="submit" className={styles.btnPrimary} disabled={isSubmitting}>
+                            {isSubmitting ? (
+                                'Сохранение...'
+                            ) : (
+                                <>
+                                    <FaSave /> {initialData ? 'Сохранить' : 'Создать'}
+                                </>
+                            )}
+                        </button>
+                        <button type="button" className={styles.btnSecondary} onClick={onClose} disabled={isSubmitting}>
+                            <FaTimes /> Отмена
                         </button>
                     </div>
-                    <div className="color-grid">
-                        {SECTION_COLORS.map(color => (
-                            <div
-                                key={color.value}
-                                className="color-option"
-                                onClick={() => {
-                                    onSelect(color.value);
-                                    onClose();
-                                }}
-                                style={{
-                                    backgroundColor: color.value,
-                                    border: selectedColor === color.value ? '3px solid #21435A' : '2px solid white',
-                                }}
-                                title={color.name}
-                            />
-                        ))}
-                    </div>
-                </div>
+                </form>
             </div>
-        );
+        </div>
+    );
+};
+
+const DeleteConfirmation = ({ onConfirm, onCancel, activityTitle }) => {
+    return (
+        <div className={styles.deleteConfirmation}>
+            <FaExclamationTriangle className={styles.deleteIcon} />
+            <p>Вы уверены, что хотите удалить занятие?</p>
+            <p className={styles.deleteWarning}>
+                <strong>"{activityTitle}"</strong> будет удалено
+            </p>
+            <div className={styles.deleteActions}>
+                <button className={styles.btnConfirm} onClick={onConfirm}>
+                    <FaTrash /> Удалить
+                </button>
+                <button className={styles.btnCancel} onClick={onCancel}>
+                    <FaTimes /> Отмена
+                </button>
+            </div>
+        </div>
+    );
+};
+
+const ActivityCard = React.memo(({ activity, onEdit, onDelete, canEdit }) => {
+    const [showConfirm, setShowConfirm] = useState(false);
+
+    const handleDeleteClick = (e) => {
+        e.stopPropagation();
+        setShowConfirm(true);
     };
 
-    if (loading) {
+    const handleConfirmDelete = (e) => {
+        e.stopPropagation();
+        onDelete(activity.id);
+        setShowConfirm(false);
+    };
+
+    const handleCancelDelete = (e) => {
+        e.stopPropagation();
+        setShowConfirm(false);
+    };
+
+    const handleEditClick = (e) => {
+        e.stopPropagation();
+        onEdit(activity);
+    };
+
+    const cardStyle = {
+        borderLeftColor: activity.teacherColor || '#21435A',
+        backgroundColor: `${activity.teacherColor || '#21435A'}08`
+    };
+
+    const formatTime = (time) => {
+        return time ? time.substring(0, 5) : time;
+    };
+
+    if (showConfirm) {
         return (
-            <div className="extended-loading">
-                <div className="spinner"></div>
-                <p>Загрузка данных...</p>
+            <div className={`${styles.activityCard} ${styles.deleteMode}`} style={cardStyle}>
+                <DeleteConfirmation 
+                    onConfirm={handleConfirmDelete}
+                    onCancel={handleCancelDelete}
+                    activityTitle={activity.sectionName || activity.title}
+                />
             </div>
         );
     }
 
     return (
-        <>
-            {notification.message && (
-                <div className={`extended-notification ${notification.type}`}>
-                    {notification.type === 'success' ? <FaCheck size={14} /> : <FaTimes size={14} />}
-                    <span>{notification.message}</span>
-                </div>
-            )}
-            
-            <div className="extended-container">
-                <div className="extended-header">
-                    <button className="extended-add-btn" onClick={openAddModal}>
-                        <FaUserPlus size={16} /> Добавить секцию / кружок
+        <div className={styles.activityCard} style={cardStyle}>
+            {canEdit && (
+                <div className={styles.cardActions}>
+                    <button className={styles.editBtn} onClick={handleEditClick} title="Редактировать">
+                        <FaEdit />
+                    </button>
+                    <button className={styles.deleteBtn} onClick={handleDeleteClick} title="Удалить">
+                        <FaTrash />
                     </button>
                 </div>
-                
-                <div className="extended-table-card">
-                    <div className="extended-table-header">
-                        <div className="extended-table-title">
-                            <FaGraduationCap />
-                            <h3>Секции и кружки</h3>
-                            <span className="extended-count-badge">{extendedTeachers.length}</span>
-                        </div>
-                    </div>
-                    
-                    <div className="extended-table-wrapper">
-                        <table className="extended-table">
-                            <thead>
-                                <tr>
-                                    <th>ФИО руководителя</th>
-                                    <th>Тип</th>
-                                    <th>Цвет</th>
-                                    <th>Секция / Кружок</th>
-                                    <th style={{ width: '160px' }}>Действия</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {extendedTeachers.map(teacher => {
-                                    const isSchoolTeacher = !!teacher.school_teacher_id;
-                                    const displayColor = teacher.color || teacher.section_color || '#ff6b6b';
-                                    
-                                    return (
-                                        <tr key={teacher.id} className="extended-row">
-                                            <td className="teacher-name-cell">{teacher.name}</td>
-                                            <td>
-                                                <span className={`type-badge ${isSchoolTeacher ? 'school' : 'external'}`}>
-                                                    {isSchoolTeacher ? <FaChalkboardTeacher size={12} /> : <FaUserTie size={12} />}
-                                                    {isSchoolTeacher ? 'Школьный учитель' : 'Внешний педагог'}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div 
-                                                    className="color-indicator"
-                                                    style={{ backgroundColor: displayColor }}
-                                                    title="Цвет секции"
-                                                />
-                                            </td>
-                                            <td>
-                                                <span 
-                                                    className="section-badge"
-                                                    style={{ background: `linear-gradient(135deg, ${displayColor} 0%, ${displayColor}cc 100%)` }}
-                                                >
-                                                    <FaUniversity size={12} />
-                                                    {teacher.section_name}
-                                                </span>
-                                            </td>
-                                            <td className="extended-actions-cell">
-                                                <button 
-                                                    onClick={() => openEditModal(teacher)} 
-                                                    className="extended-action-btn edit"
-                                                >
-                                                    <FaEdit size={12} /> Изменить
-                                                </button>
-                                                <button 
-                                                    onClick={() => handleDelete(teacher)} 
-                                                    className="extended-action-btn delete"
-                                                >
-                                                    <FaTrash size={12} /> Удалить
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                                {extendedTeachers.length === 0 && (
-                                    <tr className="extended-empty-row">
-                                        <td colSpan="5">
-                                            <div className="extended-empty-state">
-                                                <div className="extended-empty-icon">
-                                                    <FaUsers size={48} />
-                                                </div>
-                                                <h4>Нет добавленных секций и кружков</h4>
-                                                <p>Добавьте первую секцию, нажав кнопку выше</p>
-                                                <button className="extended-empty-btn" onClick={openAddModal}>
-                                                    <FaUserPlus /> Добавить секцию
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+            )}
+            <h4 className={styles.activityTitle}>{activity.sectionName || activity.title}</h4>
+            <div className={styles.activityInfo}>
+                <div><FaRegUser /> {activity.teacherName}</div>
+                <div><FaRegClock /> {formatTime(activity.startTime)} — {formatTime(activity.endTime)}</div>
+                <div><FaRegBuilding /> {activity.room}</div>
+            </div>
+        </div>
+    );
+});
+
+const DayColumn = React.memo(({ day, activities, onEdit, onDelete, canEdit }) => {
+    const dayActivities = useMemo(() => 
+        activities
+            .filter(a => a.days && a.days.includes(day.name))
+            .sort((a, b) => a.startTime.localeCompare(b.startTime)),
+        [activities, day.name]
+    );
+
+    return (
+        <div className={styles.dayColumn}>
+            <div className={styles.dayHeader}>
+                <div className={styles.dayHeaderLeft}>
+                    <span className={styles.dayShort}>{day.short}</span>
+                    <span className={styles.dayFull}>{day.full}</span>
                 </div>
+                <span className={styles.dayCount}>{dayActivities.length}</span>
             </div>
             
-            {/* Модалка добавления/редактирования */}
-            {modalOpen && (
-                <div className="extended-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget && !saving) setModalOpen(false); }}>
-                    <div className="extended-modal-content">
-                        <div className="extended-modal-header">
-                            <FaUserPlus />
-                            <h3>{editingTeacher ? 'Редактировать секцию' : 'Добавить секцию / кружок'}</h3>
-                            <button className="extended-modal-close" onClick={() => !saving && setModalOpen(false)} disabled={saving}>
-                                <FaTimes />
-                            </button>
-                        </div>
-                        
-                        <div className="extended-modal-body">
-                            {/* Тип руководителя */}
-                            <div className="extended-form-group">
-                                <label>Тип руководителя</label>
-                                <div className="type-toggle-container">
-                                    <div className="type-option">
-                                        <input
-                                            type="radio"
-                                            id="external"
-                                            name="teacherType"
-                                            checked={!formData.isSchoolTeacher}
-                                            onChange={() => {
-                                                setFormData({
-                                                    ...formData,
-                                                    isSchoolTeacher: false,
-                                                    schoolTeacherId: null,
-                                                    lastName: '',
-                                                    firstName: '',
-                                                    middleName: '',
-                                                    sectionColor: '#ff6b6b'
-                                                });
-                                            }}
-                                            disabled={saving}
-                                        />
-                                        <label htmlFor="external">
-                                            🎯 Внешний педагог (только секция)
-                                        </label>
+            <div className={styles.dayContent}>
+                {dayActivities.length === 0 ? (
+                    <div className={styles.dayEmpty}>
+                        <FaRegCalendarAlt className={styles.emptyIconSmall} />
+                        <span>Нет занятий</span>
+                    </div>
+                ) : (
+                    dayActivities.map(activity => (
+                        <ActivityCard
+                            key={activity.id}
+                            activity={activity}
+                            onEdit={onEdit}
+                            onDelete={onDelete}
+                            canEdit={canEdit}
+                        />
+                    ))
+                )}
+            </div>
+        </div>
+    );
+});
+
+const ExtracurricularActivities = () => {
+    const navigate = useNavigate();
+    
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    const userRole = user?.role || 'guest';
+    const canEdit = userRole === 'admin' || userRole === 'superadmin';
+    
+    const [activities, setActivities] = useState([]);
+    const [extendedTeachers, setExtendedTeachers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [showForm, setShowForm] = useState(false);
+    const [editingActivity, setEditingActivity] = useState(null);
+    const [showFilters, setShowFilters] = useState(false);
+    const [search, setSearch] = useState('');
+    const [filterTeacher, setFilterTeacher] = useState('');
+    const [filterDay, setFilterDay] = useState('');
+    const [notifications, setNotifications] = useState([]);
+    
+    const searchTimeoutRef = useRef(null);
+
+    useEffect(() => {
+        loadData();
+        loadExtendedTeachers();
+    }, []);
+
+    const loadData = async () => {
+        setLoading(true);
+        try {
+            const data = await extracurricularAPI.getAll();
+            console.log('Loaded activities:', data);
+            setActivities(data);
+        } catch (error) {
+            console.error('Error loading data:', error);
+            showNotification('Ошибка при загрузке данных', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadExtendedTeachers = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            
+            // Используем axios как в ExtendedTeachersTab
+            const response = await axios.get(`${API_URL}/superadmin/extended-teachers`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            const data = response.data;
+            console.log('✅ Загружены педагоги доп. образования:', data);
+            
+            // Трансформируем данные: создаем поле name из ФИО и структурируем секции
+            const transformedTeachers = data.map(teacher => {
+                // Формируем полное имя
+                const fullName = `${teacher.last_name || ''} ${teacher.first_name || ''} ${teacher.middle_name || ''}`.trim();
+                
+                // Создаем секцию для этого педагога
+                const section = {
+                    id: teacher.id,
+                    section_name: teacher.section_name || '',
+                    section_color: teacher.section_color || '#ff6b6b'
+                };
+                
+                return {
+                    id: teacher.id,
+                    name: fullName || 'Без имени',
+                    lastName: teacher.last_name || '',
+                    firstName: teacher.first_name || '',
+                    middleName: teacher.middle_name || '',
+                    color: teacher.section_color || teacher.color || '#ff6b6b',
+                    sectionName: teacher.section_name || '',
+                    sectionColor: teacher.section_color || '#ff6b6b',
+                    schoolTeacherId: teacher.school_teacher_id || null,
+                    isSchoolTeacher: !!teacher.school_teacher_id,
+                    // Секции - массив с одной секцией (у каждого педагога может быть несколько)
+                    sections: teacher.sections || [section]
+                };
+            });
+            
+            setExtendedTeachers(transformedTeachers);
+        } catch (error) {
+            console.error('❌ Error loading extended teachers:', error);
+            // Если запрос не работает, пробуем через extracurricularAPI
+            try {
+                const teachers = await extracurricularAPI.getExtendedTeachers();
+                console.log('📋 Fallback teachers:', teachers);
+                const transformedFallback = teachers.map(teacher => {
+                    const fullName = teacher.name || `${teacher.last_name || ''} ${teacher.first_name || ''} ${teacher.middle_name || ''}`.trim();
+                    const section = {
+                        id: teacher.id,
+                        section_name: teacher.section_name || '',
+                        section_color: teacher.section_color || '#ff6b6b'
+                    };
+                    return {
+                        ...teacher,
+                        name: fullName || 'Без имени',
+                        color: teacher.section_color || teacher.color || '#ff6b6b',
+                        sections: teacher.sections || [section]
+                    };
+                });
+                setExtendedTeachers(transformedFallback);
+            } catch (fallbackError) {
+                console.error('❌ Fallback also failed:', fallbackError);
+                setExtendedTeachers([]);
+            }
+        }
+    };
+
+    const showNotification = (message, type = 'success') => {
+        const id = Date.now();
+        setNotifications(prev => [...prev, { id, message, type }]);
+        setTimeout(() => {
+            setNotifications(prev => prev.filter(n => n.id !== id));
+        }, 3000);
+    };
+
+    const handleCreate = useCallback(async (activityData) => {
+        if (!canEdit) return;
+        try {
+            const newActivity = await extracurricularAPI.create(activityData);
+            setActivities(prev => [...prev, newActivity]);
+            showNotification(`Занятие "${newActivity.sectionName}" создано`);
+            setShowForm(false);
+        } catch (error) {
+            console.error('Error creating activity:', error);
+            showNotification('Ошибка при создании', 'error');
+        }
+    }, [canEdit]);
+
+    const handleUpdate = useCallback(async (activityData) => {
+        if (!canEdit) return;
+        try {
+            const updatedActivity = await extracurricularAPI.update(activityData.id, activityData);
+            setActivities(prev => prev.map(a => a.id === updatedActivity.id ? updatedActivity : a));
+            showNotification(`Занятие "${updatedActivity.sectionName}" обновлено`);
+            setShowForm(false);
+            setEditingActivity(null);
+        } catch (error) {
+            console.error('Error updating activity:', error);
+            showNotification('Ошибка при обновлении', 'error');
+        }
+    }, [canEdit]);
+
+    const handleDelete = useCallback(async (id) => {
+        if (!canEdit) return;
+        const activity = activities.find(a => a.id === id);
+        if (!activity) return;
+        
+        try {
+            await extracurricularAPI.delete(id);
+            setActivities(prev => prev.filter(a => a.id !== id));
+            showNotification(`Занятие "${activity.sectionName}" удалено`, 'info');
+        } catch (error) {
+            console.error('Error deleting activity:', error);
+            showNotification('Ошибка при удалении', 'error');
+        }
+    }, [canEdit, activities]);
+
+    const handleEdit = useCallback((activity) => {
+        if (!canEdit) return;
+        setEditingActivity(activity);
+        setShowForm(true);
+    }, [canEdit]);
+
+    const handlePrint = () => {
+        const printHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Расписание внеурочной деятельности</title>
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { font-family: Arial, Helvetica, sans-serif; padding: 20px; background: white; }
+                    h1 { text-align: center; font-size: 18px; margin-bottom: 20px; color: #333; }
+                    .days-row { display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; }
+                    .day-column { flex: 0 0 calc(33.333% - 10px); border: 1px solid #ddd; border-radius: 12px; overflow: hidden; margin-bottom: 15px; background: white; }
+                    .day-header { background: #21435A; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; color: white; }
+                    .day-short { font-size: 16px; font-weight: bold; }
+                    .day-full { font-size: 11px; opacity: 0.8; }
+                    .day-count { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 20px; font-size: 11px; }
+                    .day-content { padding: 10px; }
+                    .activity-card { border-left: 3px solid; padding: 8px; margin-bottom: 8px; background: #fafafa; border-radius: 8px; break-inside: avoid; }
+                    .activity-title { font-weight: bold; font-size: 12px; margin-bottom: 5px; color: #333; }
+                    .activity-info { font-size: 10px; color: #666; }
+                    .activity-info div { margin-bottom: 2px; }
+                    .day-empty { text-align: center; padding: 20px; color: #999; font-size: 11px; }
+                    @media print { body { padding: 0; margin: 0; } .day-column { break-inside: avoid; } }
+                </style>
+            </head>
+            <body>
+                <h1>Расписание внеурочной деятельности</h1>
+                <div class="days-row">
+                    ${WEEK_DAYS.map(day => {
+                        const dayActivities = filteredActivities.filter(a => a.days && a.days.includes(day.name));
+                        return `
+                            <div class="day-column">
+                                <div class="day-header">
+                                    <div>
+                                        <div class="day-short">${day.short}</div>
+                                        <div class="day-full">${day.full}</div>
                                     </div>
-                                    <div className="type-option">
-                                        <input
-                                            type="radio"
-                                            id="school"
-                                            name="teacherType"
-                                            checked={formData.isSchoolTeacher}
-                                            onChange={() => {
-                                                setFormData({
-                                                    ...formData,
-                                                    isSchoolTeacher: true,
-                                                    schoolTeacherId: null,
-                                                    lastName: '',
-                                                    firstName: '',
-                                                    middleName: '',
-                                                    sectionColor: '#ff6b6b'
-                                                });
-                                            }}
-                                            disabled={saving}
-                                        />
-                                        <label htmlFor="school">
-                                            🏫 Школьный учитель (ведёт и уроки, и секцию)
-                                        </label>
-                                    </div>
+                                    <div class="day-count">${dayActivities.length}</div>
+                                </div>
+                                <div class="day-content">
+                                    ${dayActivities.length === 0 ? `
+                                        <div class="day-empty">Нет занятий</div>
+                                    ` : `
+                                        ${dayActivities.map(activity => `
+                                            <div class="activity-card" style="border-left-color: ${activity.teacherColor || '#21435A'}">
+                                                <div class="activity-title">${activity.sectionName}</div>
+                                                <div class="activity-info">
+                                                    <div>${activity.teacherName}</div>
+                                                    <div>${activity.startTime?.substring(0,5)} — ${activity.endTime?.substring(0,5)}</div>
+                                                    <div>${activity.room}</div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    `}
                                 </div>
                             </div>
-                            
-                            {/* Если школьный учитель - выбор из списка */}
-                            {formData.isSchoolTeacher && (
-                                <div className="extended-form-group">
-                                    <label><FaSchool /> Выберите учителя школы *</label>
-                                    <select 
-                                        value={formData.schoolTeacherId || ''} 
-                                        onChange={e => {
-                                            const teacherId = e.target.value ? parseInt(e.target.value) : null;
-                                            handleSchoolTeacherSelect(teacherId);
-                                        }}
-                                        disabled={saving}
-                                    >
-                                        <option value="">-- Выберите учителя --</option>
-                                        {schoolTeachers.map(t => (
-                                            <option key={t.id} value={t.id}>{t.name}</option>
-                                        ))}
-                                    </select>
-                                    <small>Учитель может вести несколько секций. Будет использован его цвет из профиля.</small>
-                                    
-                                    {formData.schoolTeacherId && (
-                                        <div className="selected-teacher-card">
-                                            <FaCheck size={12} />
-                                            <span>Выбран: {formData.lastName} {formData.firstName} {formData.middleName}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                            
-                            {/* Если внешний педагог - ввод ФИО */}
-                            {!formData.isSchoolTeacher && (
-                                <>
-                                    <div className="extended-form-row">
-                                        <div className="extended-form-group">
-                                            <label>Фамилия *</label>
-                                            <input 
-                                                type="text" 
-                                                value={formData.lastName} 
-                                                onChange={e => setFormData({...formData, lastName: e.target.value})}
-                                                disabled={saving}
-                                                placeholder="Иванов"
-                                            />
-                                        </div>
-                                        <div className="extended-form-group">
-                                            <label>Имя *</label>
-                                            <input 
-                                                type="text" 
-                                                value={formData.firstName} 
-                                                onChange={e => setFormData({...formData, firstName: e.target.value})}
-                                                disabled={saving}
-                                                placeholder="Иван"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="extended-form-group">
-                                        <label>Отчество</label>
-                                        <input 
-                                            type="text" 
-                                            value={formData.middleName} 
-                                            onChange={e => setFormData({...formData, middleName: e.target.value})}
-                                            disabled={saving}
-                                            placeholder="Иванович"
-                                        />
-                                    </div>
-                                    <div className="extended-info-block warning">
-                                        <FaInfoCircle size={14} />
-                                        Внешний педагог не имеет доступа в систему и не участвует в основном расписании
-                                    </div>
-                                </>
-                            )}
-                            
-                            {/* Название секции */}
-                            <div className="extended-form-group">
-                                <label><FaUniversity /> Название секции / кружка *</label>
-                                <input 
-                                    type="text" 
-                                    value={formData.sectionName} 
-                                    onChange={e => setFormData({...formData, sectionName: e.target.value})}
-                                    placeholder="Например: Шахматы, Волейбол, Робототехника..."
-                                    disabled={saving}
-                                />
-                            </div>
-                            
-                            {/* Цвет секции - только для внешних педагогов */}
-                            {!formData.isSchoolTeacher && (
-                                <div className="extended-form-group">
-                                    <label><FaPalette /> Цвет секции</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                        <div 
-                                            className="color-indicator"
-                                            style={{ 
-                                                backgroundColor: formData.sectionColor,
-                                                width: '56px',
-                                                height: '56px',
-                                                borderRadius: '14px',
-                                                cursor: 'pointer'
-                                            }}
-                                            onClick={() => setColorPickerOpen(true)}
-                                        />
-                                        <button 
-                                            type="button"
-                                            className="extended-modal-cancel"
-                                            onClick={() => setColorPickerOpen(true)}
-                                            style={{ margin: 0 }}
-                                        >
-                                            <FaPalette /> Выбрать цвет
-                                        </button>
-                                    </div>
-                                    <small>Цвет, которым будут выделяться занятия секции в расписании</small>
-                                </div>
-                            )}
-                            
-                            {formData.isSchoolTeacher && (
-                                <div className="extended-info-block info">
-                                    <FaCheck size={14} />
-                                    Для школьного учителя будет использован его цвет из вкладки "Учителя школы"
-                                </div>
-                            )}
-                        </div>
-                        
-                        <div className="extended-modal-footer">
-                            <button 
-                                type="button" 
-                                className="extended-modal-cancel" 
-                                onClick={() => !saving && setModalOpen(false)} 
-                                disabled={saving}
-                            >
-                                Отмена
-                            </button>
-                            <button 
-                                type="button" 
-                                className="extended-modal-save" 
-                                onClick={handleSave} 
-                                disabled={saving}
-                            >
-                                <FaCheck /> {saving ? 'Сохранение...' : (editingTeacher ? 'Сохранить' : 'Добавить')}
-                            </button>
-                        </div>
+                        `;
+                    }).join('')}
+                </div>
+            </body>
+            </html>
+        `;
+        
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printHtml);
+        printWindow.document.close();
+        
+        printWindow.onload = function() {
+            printWindow.print();
+        };
+    };
+
+    const handleSearchChange = (value) => {
+        setSearch(value);
+        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = setTimeout(() => {
+            localStorage.setItem('activities_filters', JSON.stringify({
+                search: value,
+                teacher: filterTeacher,
+                day: filterDay
+            }));
+        }, 300);
+    };
+
+    // Создаем список учителей из extendedTeachers
+    const teachersList = useMemo(() => {
+        const seen = new Set();
+        return (extendedTeachers || [])
+            .filter(t => {
+                if (seen.has(t.id)) return false;
+                seen.add(t.id);
+                return true;
+            })
+            .map(t => ({
+                ...t,
+                name: t.name || `${t.lastName || ''} ${t.firstName || ''} ${t.middleName || ''}`.trim() || 'Без имени'
+            }));
+    }, [extendedTeachers]);
+
+    const filteredActivities = useMemo(() => {
+        let filtered = [...activities];
+        
+        if (search) {
+            const searchLower = search.toLowerCase();
+            filtered = filtered.filter(a => 
+                a.sectionName?.toLowerCase().includes(searchLower) ||
+                a.teacherName?.toLowerCase().includes(searchLower) ||
+                a.description?.toLowerCase().includes(searchLower)
+            );
+        }
+        
+        if (filterTeacher) {
+            filtered = filtered.filter(a => a.teacherId === parseInt(filterTeacher));
+        }
+        
+        if (filterDay) {
+            filtered = filtered.filter(a => a.days?.includes(filterDay));
+        }
+        
+        return filtered;
+    }, [activities, search, filterTeacher, filterDay]);
+
+    const clearFilters = () => {
+        setSearch('');
+        setFilterTeacher('');
+        setFilterDay('');
+        showNotification('Фильтры сброшены', 'info');
+    };
+
+    const activeFiltersCount = (search ? 1 : 0) + (filterTeacher ? 1 : 0) + (filterDay ? 1 : 0);
+
+    if (loading) {
+        return (
+            <div className={styles.page}>
+                <ThemeToggle />
+                <BackButton fallbackPath="/" />
+                <Header />
+                <main className={styles.container}>
+                    <div className={styles.loader}>
+                        <div className={styles.spinner}></div>
+                        <p className={styles.loadingText}>Загрузка...</p>
+                    </div>
+                </main>
+                <Footer />
+            </div>
+        );
+    }
+
+    return (
+        <div className={styles.page}>
+            <ThemeToggle />
+            <BackButton fallbackPath="/" />
+            
+            <Header />
+
+            <main className={styles.container}>
+                {notifications.map((notif) => (
+                    <Notification
+                        key={notif.id}
+                        message={notif.message}
+                        type={notif.type}
+                        onClose={() => setNotifications((prev) => prev.filter((n) => n.id !== notif.id))}
+                    />
+                ))}
+
+                <div className={styles.headerCompact}>
+                    <div className={styles.headerTitle}>
+                        <h1>
+                            <FaRegCalendarAlt />
+                            Внешкольные занятия
+                        </h1>
+                    </div>
+                    
+                    <div className={styles.headerActions}>
+                        <button 
+                            className={styles.iconBtn}
+                            onClick={handlePrint}
+                            title="Распечатать расписание"
+                        >
+                            <FaPrint />
+                        </button>
+
+                        {canEdit && (
+                            <>
+                                <button 
+                                    className={`${styles.btnFilter} ${(showFilters || activeFiltersCount > 0) ? styles.active : ''}`}
+                                    onClick={() => setShowFilters(!showFilters)}
+                                >
+                                    <FaFilter />
+                                    {activeFiltersCount > 0 && <span className={styles.filterBadge}>{activeFiltersCount}</span>}
+                                </button>
+                                
+                                <button 
+                                    className={styles.btnPrimary}
+                                    onClick={() => {
+                                        setEditingActivity(null);
+                                        setShowForm(true);
+                                    }}
+                                >
+                                    <FaPlus />
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
-            )}
-            
-            <ColorPickerModal 
-                isOpen={colorPickerOpen}
-                onClose={() => setColorPickerOpen(false)}
-                selectedColor={formData.sectionColor}
-                onSelect={(color) => setFormData({...formData, sectionColor: color})}
-            />
-        </>
+
+                <div className={styles.statsCompact}>
+                    <span>Всего: {activities.length}</span>
+                    {filteredActivities.length !== activities.length && (
+                        <span>Показано: {filteredActivities.length}</span>
+                    )}
+                </div>
+
+                {canEdit && showFilters && (
+                    <div className={styles.filtersPanel}>
+                        <div className={styles.filterGroup}>
+                            <FaSearch className={styles.filterIcon} />
+                            <input
+                                type="text"
+                                placeholder="Поиск по названию секции..."
+                                value={search}
+                                onChange={e => handleSearchChange(e.target.value)}
+                                className={styles.filterInput}
+                            />
+                        </div>
+                        
+                        <div className={styles.filterGroup}>
+                            <FaUser className={styles.filterIcon} />
+                            <select
+                                value={filterTeacher}
+                                onChange={e => setFilterTeacher(e.target.value)}
+                                className={styles.filterSelect}
+                            >
+                                <option value="">Все преподаватели</option>
+                                {teachersList.map(t => (
+                                    <option key={t.id} value={t.id}>
+                                        {t.name || `${t.lastName || ''} ${t.firstName || ''} ${t.middleName || ''}`.trim() || 'Без имени'}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className={styles.filterGroup}>
+                            <FaRegCalendarAlt className={styles.filterIcon} />
+                            <select
+                                value={filterDay}
+                                onChange={e => setFilterDay(e.target.value)}
+                                className={styles.filterSelect}
+                            >
+                                <option value="">Все дни</option>
+                                {WEEK_DAYS.map(day => <option key={day.id} value={day.name}>{day.name}</option>)}
+                            </select>
+                        </div>
+
+                        {activeFiltersCount > 0 && (
+                            <button onClick={clearFilters} className={styles.btnClear}>
+                                <FaTimes /> Сброс
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                <ActivityForm
+                    isOpen={showForm}
+                    onClose={() => {
+                        setShowForm(false);
+                        setEditingActivity(null);
+                    }}
+                    onSubmit={editingActivity ? handleUpdate : handleCreate}
+                    initialData={editingActivity}
+                    extendedTeachers={extendedTeachers}
+                />
+
+                {filteredActivities.length === 0 ? (
+                    <div className={styles.emptyState}>
+                        <FaRegCalendarAlt className={styles.emptyIcon} />
+                        <h3>Нет занятий</h3>
+                        <p>
+                            {activeFiltersCount > 0
+                                ? 'Измените параметры поиска'
+                                : 'Нет добавленных занятий'}
+                        </p>
+                        {canEdit && activeFiltersCount > 0 && (
+                            <button onClick={clearFilters} className={styles.btnSecondary}>
+                                Сбросить фильтры
+                            </button>
+                        )}
+                        {canEdit && filteredActivities.length === 0 && activeFiltersCount === 0 && (
+                            <button onClick={() => setShowForm(true)} className={styles.btnPrimary}>
+                                <FaPlus /> Создать
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    <div className={styles.daysRow}>
+                        {WEEK_DAYS.map(day => (
+                            <DayColumn
+                                key={day.id}
+                                day={day}
+                                activities={filteredActivities}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                canEdit={canEdit}
+                            />
+                        ))}
+                    </div>
+                )}
+            </main>
+
+            <Footer />
+        </div>
     );
 };
 
-export default ExtendedTeachersTab;
+export default ExtracurricularActivities;

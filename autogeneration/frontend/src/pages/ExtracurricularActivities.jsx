@@ -23,6 +23,7 @@ import {
     FaBell,
     FaUniversity
 } from 'react-icons/fa';
+import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import ThemeToggle from '../components/ThemeToggle';
@@ -30,6 +31,8 @@ import BackButton from '../components/BackButton';
 import { extracurricularAPI } from '../services/extracurricularAPI';
 import { COLORS, WEEK_DAYS, TIME_SLOTS } from '../config/extracurricularData';
 import styles from '../styles/ExtracurricularActivities.module.css';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const Notification = ({ message, type, onClose }) => {
     useEffect(() => {
@@ -150,7 +153,7 @@ const ActivityForm = ({ isOpen, onClose, onSubmit, initialData, extendedTeachers
                     teacherId: parseInt(form.teacherId),
                     sectionId: parseInt(form.sectionId),
                     sectionName: selectedSection.section_name,
-                    teacherName: selectedTeacher.name,
+                    teacherName: selectedTeacher.name || `${selectedTeacher.lastName || ''} ${selectedTeacher.firstName || ''} ${selectedTeacher.middleName || ''}`.trim(),
                     teacherColor: selectedTeacher.color || selectedSection.section_color || '#21435A',
                     days: form.days,
                     startTime: form.startTime,
@@ -190,7 +193,7 @@ const ActivityForm = ({ isOpen, onClose, onSubmit, initialData, extendedTeachers
             teacherId,
             sectionId: '',
             sectionName: '',
-            teacherName: selectedTeacher?.name || '',
+            teacherName: selectedTeacher?.name || `${selectedTeacher?.lastName || ''} ${selectedTeacher?.firstName || ''} ${selectedTeacher?.middleName || ''}`.trim() || '',
             teacherColor: selectedTeacher?.color || '#21435A'
         }));
         if (errors.teacherId) setErrors(prev => ({ ...prev, teacherId: null }));
@@ -250,7 +253,9 @@ const ActivityForm = ({ isOpen, onClose, onSubmit, initialData, extendedTeachers
                             >
                                 <option value="">Выберите преподавателя</option>
                                 {uniqueTeachers.map(t => (
-                                    <option key={t.id} value={t.id}>{t.name}</option>
+                                    <option key={t.id} value={t.id}>
+                                        {t.name || `${t.lastName || ''} ${t.firstName || ''} ${t.middleName || ''}`.trim() || 'Без имени'}
+                                    </option>
                                 ))}
                             </select>
                             {errors.teacherId && <span className={styles.errorText}>{errors.teacherId}</span>}
@@ -555,29 +560,68 @@ const ExtracurricularActivities = () => {
 
     const loadExtendedTeachers = async () => {
         try {
-            // ✅ ИСПРАВЛЕНО: загружаем педагогов доп. образования из superadmin
             const token = localStorage.getItem('token');
-            const response = await fetch('/api/superadmin/extended-teachers', {
+            // ✅ ИСПРАВЛЕНО: используем полный URL с API_URL
+            const response = await axios.get(`${API_URL}/superadmin/extended-teachers`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
             
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
+            const data = response.data;
             console.log('✅ Загружены педагоги доп. образования:', data);
-            setExtendedTeachers(data);
+            
+            // Трансформируем данные: создаем поле name из ФИО и структурируем секции
+            const transformedTeachers = data.map(teacher => {
+                // Формируем полное имя
+                const fullName = `${teacher.last_name || ''} ${teacher.first_name || ''} ${teacher.middle_name || ''}`.trim();
+                
+                // Создаем секцию для этого педагога
+                const section = {
+                    id: teacher.id,
+                    section_name: teacher.section_name || '',
+                    section_color: teacher.section_color || '#ff6b6b'
+                };
+                
+                return {
+                    id: teacher.id,
+                    name: fullName || 'Без имени',
+                    lastName: teacher.last_name || '',
+                    firstName: teacher.first_name || '',
+                    middleName: teacher.middle_name || '',
+                    color: teacher.section_color || teacher.color || '#ff6b6b',
+                    sectionName: teacher.section_name || '',
+                    sectionColor: teacher.section_color || '#ff6b6b',
+                    schoolTeacherId: teacher.school_teacher_id || null,
+                    isSchoolTeacher: !!teacher.school_teacher_id,
+                    // Секции - массив с одной секцией (у каждого педагога может быть несколько)
+                    sections: teacher.sections || [section]
+                };
+            });
+            
+            setExtendedTeachers(transformedTeachers);
         } catch (error) {
             console.error('❌ Error loading extended teachers:', error);
             // Fallback: используем данные из extracurricularAPI
             try {
                 const teachers = await extracurricularAPI.getExtendedTeachers();
                 console.log('📋 Fallback teachers:', teachers);
-                setExtendedTeachers(teachers);
+                const transformedFallback = teachers.map(teacher => {
+                    const fullName = teacher.name || `${teacher.last_name || ''} ${teacher.first_name || ''} ${teacher.middle_name || ''}`.trim();
+                    const section = {
+                        id: teacher.id,
+                        section_name: teacher.section_name || '',
+                        section_color: teacher.section_color || '#ff6b6b'
+                    };
+                    return {
+                        ...teacher,
+                        name: fullName || 'Без имени',
+                        color: teacher.section_color || teacher.color || '#ff6b6b',
+                        sections: teacher.sections || [section]
+                    };
+                });
+                setExtendedTeachers(transformedFallback);
             } catch (fallbackError) {
                 console.error('❌ Fallback also failed:', fallbackError);
                 setExtendedTeachers([]);
@@ -726,14 +770,19 @@ const ExtracurricularActivities = () => {
         }, 300);
     };
 
-    // ✅ Создаем список учителей из extendedTeachers
+    // Создаем список учителей из extendedTeachers
     const teachersList = useMemo(() => {
         const seen = new Set();
-        return (extendedTeachers || []).filter(t => {
-            if (seen.has(t.id)) return false;
-            seen.add(t.id);
-            return true;
-        });
+        return (extendedTeachers || [])
+            .filter(t => {
+                if (seen.has(t.id)) return false;
+                seen.add(t.id);
+                return true;
+            })
+            .map(t => ({
+                ...t,
+                name: t.name || `${t.lastName || ''} ${t.firstName || ''} ${t.middleName || ''}`.trim() || 'Без имени'
+            }));
     }, [extendedTeachers]);
 
     const filteredActivities = useMemo(() => {
@@ -872,7 +921,9 @@ const ExtracurricularActivities = () => {
                             >
                                 <option value="">Все преподаватели</option>
                                 {teachersList.map(t => (
-                                    <option key={t.id} value={t.id}>{t.name}</option>
+                                    <option key={t.id} value={t.id}>
+                                        {t.name || `${t.lastName || ''} ${t.firstName || ''} ${t.middleName || ''}`.trim() || 'Без имени'}
+                                    </option>
                                 ))}
                             </select>
                         </div>

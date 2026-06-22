@@ -8,7 +8,6 @@ const router = express.Router();
 // ========== ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ СОЗДАНИЯ ТАБЛИЦЫ ==========
 async function ensureTablesExist() {
     try {
-        // Создаем таблицу extended_teachers если её нет
         await db.query(`
             CREATE TABLE IF NOT EXISTS extended_teachers (
                 id SERIAL PRIMARY KEY,
@@ -22,7 +21,6 @@ async function ensureTablesExist() {
             )
         `);
         
-        // Создаем таблицу extracurricular_activities без внешних ключей
         await db.query(`
             CREATE TABLE IF NOT EXISTS extracurricular_activities (
                 id SERIAL PRIMARY KEY,
@@ -42,7 +40,6 @@ async function ensureTablesExist() {
             )
         `);
         
-        // Удаляем внешний ключ если он существует
         try {
             await db.query(`
                 ALTER TABLE extracurricular_activities 
@@ -59,11 +56,31 @@ async function ensureTablesExist() {
     }
 }
 
-// ========== ПОЛУЧИТЬ СПИСОК ПЕДАГОГОВ ДОП. ОБРАЗОВАНИЯ ==========
+// ========== ТЕСТОВЫЙ МАРШРУТ ДЛЯ ОТЛАДКИ ==========
+router.get('/test-auth', authenticateToken, async (req, res) => {
+    console.log('=== TEST AUTH ===');
+    console.log('User:', req.user);
+    res.json({
+        success: true,
+        message: 'Authentication works!',
+        user: req.user
+    });
+});
 
+// ========== ПОЛУЧИТЬ СПИСОК ПЕДАГОГОВ ДОП. ОБРАЗОВАНИЯ ==========
+// ✅ Добавляем проверку роли
 router.get('/extended-teachers', authenticateToken, async (req, res) => {
     try {
         console.log('=== GET /extended-teachers ===');
+        console.log('User:', req.user);
+        
+        // ✅ Проверяем роль
+        if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+            console.log('❌ Access denied for role:', req.user.role);
+            return res.status(403).json({ 
+                message: `Доступ запрещен. Требуются роли: admin, superadmin. Ваша роль: ${req.user.role}` 
+            });
+        }
         
         await ensureTablesExist();
         
@@ -84,7 +101,6 @@ router.get('/extended-teachers', authenticateToken, async (req, res) => {
         
         console.log(`Found ${result.rows.length} extended teachers`);
         
-        // Группируем учителей и их секции
         const teachersMap = new Map();
         
         result.rows.forEach(row => {
@@ -118,11 +134,119 @@ router.get('/extended-teachers', authenticateToken, async (req, res) => {
     }
 });
 
-// ========== ПОЛУЧИТЬ ВСЕ ЗАНЯТИЯ ==========
+// ========== ПОЛУЧИТЬ ВСЕХ ПЕДАГОГОВ ==========
+router.get('/teachers', authenticateToken, async (req, res) => {
+    try {
+        console.log('=== GET /extracurricular/teachers ===');
+        console.log('User:', req.user);
+        
+        await ensureTablesExist();
+        
+        const result = await db.query(`
+            SELECT 
+                et.id,
+                et.last_name,
+                et.first_name,
+                et.middle_name,
+                et.section_name,
+                et.section_color,
+                et.school_teacher_id,
+                CONCAT(et.last_name, ' ', et.first_name, ' ', COALESCE(et.middle_name, '')) as name,
+                COALESCE(et.section_color, '#21435A') as color
+            FROM extended_teachers et
+            ORDER BY et.last_name, et.first_name
+        `);
+        
+        console.log(`Found ${result.rows.length} teachers`);
+        
+        const teachersMap = new Map();
+        
+        result.rows.forEach(row => {
+            if (!teachersMap.has(row.id)) {
+                teachersMap.set(row.id, {
+                    id: row.id,
+                    name: row.name,
+                    firstName: row.first_name,
+                    lastName: row.last_name,
+                    middleName: row.middle_name || '',
+                    color: row.color,
+                    sections: []
+                });
+            }
+            
+            if (row.section_name) {
+                teachersMap.get(row.id).sections.push({
+                    id: row.id,
+                    section_name: row.section_name,
+                    section_color: row.section_color || row.color
+                });
+            }
+        });
+        
+        const teachers = Array.from(teachersMap.values());
+        res.json(teachers);
+        
+    } catch (err) {
+        console.error('Error getting teachers:', err);
+        res.status(500).json({ message: 'Ошибка получения педагогов', error: err.message });
+    }
+});
 
+// ========== ПОЛУЧИТЬ ВСЕ СЕКЦИИ ==========
+router.get('/sections', authenticateToken, async (req, res) => {
+    try {
+        console.log('=== GET /extracurricular/sections ===');
+        
+        await ensureTablesExist();
+        
+        const result = await db.query(`
+            SELECT DISTINCT 
+                id,
+                section_name, 
+                section_color 
+            FROM extended_teachers 
+            WHERE section_name IS NOT NULL AND section_name != ''
+            ORDER BY section_name
+        `);
+        
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error getting sections:', err);
+        res.status(500).json({ message: 'Ошибка получения секций' });
+    }
+});
+
+// ========== ПОЛУЧИТЬ СЕКЦИИ КОНКРЕТНОГО ПЕДАГОГА ==========
+router.get('/teachers/:id/sections', authenticateToken, async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({ message: 'Неверный ID' });
+        }
+        
+        console.log(`=== GET /extracurricular/teachers/${id}/sections ===`);
+        
+        const result = await db.query(`
+            SELECT 
+                id,
+                section_name,
+                section_color
+            FROM extended_teachers 
+            WHERE id = $1 AND section_name IS NOT NULL AND section_name != ''
+        `, [id]);
+        
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error getting teacher sections:', err);
+        res.status(500).json({ message: 'Ошибка получения секций педагога' });
+    }
+});
+
+// ========== ПОЛУЧИТЬ ВСЕ ЗАНЯТИЯ ==========
 router.get('/', authenticateToken, async (req, res) => {
     try {
         console.log('=== GET /extracurricular ===');
+        console.log('User:', req.user);
         
         await ensureTablesExist();
         
@@ -168,7 +292,6 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // ========== ПОЛУЧИТЬ ОДНО ЗАНЯТИЕ ==========
-
 router.get('/:id', authenticateToken, async (req, res) => {
     try {
         const id = parseInt(req.params.id);
@@ -208,7 +331,6 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // ========== СОЗДАТЬ НОВОЕ ЗАНЯТИЕ ==========
-
 router.post('/', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
         return res.status(403).json({ message: 'Доступ запрещен' });
@@ -216,6 +338,7 @@ router.post('/', authenticateToken, async (req, res) => {
     
     try {
         console.log('=== POST /extracurricular ===');
+        console.log('User:', req.user);
         console.log('Request body:', JSON.stringify(req.body, null, 2));
         
         await ensureTablesExist();
@@ -233,30 +356,10 @@ router.post('/', authenticateToken, async (req, res) => {
             description 
         } = req.body;
         
-        // Проверка обязательных полей
-        if (!teacherId) {
-            return res.status(400).json({ message: 'teacherId обязателен' });
-        }
-        if (!sectionId) {
-            return res.status(400).json({ message: 'sectionId обязателен' });
-        }
-        if (!sectionName) {
-            return res.status(400).json({ message: 'sectionName обязателен' });
-        }
-        if (!days || days.length === 0) {
-            return res.status(400).json({ message: 'days обязателен' });
-        }
-        if (!startTime) {
-            return res.status(400).json({ message: 'startTime обязателен' });
-        }
-        if (!endTime) {
-            return res.status(400).json({ message: 'endTime обязателен' });
-        }
-        if (!room) {
-            return res.status(400).json({ message: 'room обязателен' });
+        if (!teacherId || !sectionId || !sectionName || !days || days.length === 0 || !startTime || !endTime || !room) {
+            return res.status(400).json({ message: 'Не все обязательные поля заполнены' });
         }
         
-        // Преобразуем время в правильный формат
         const formattedStartTime = startTime.includes(':') ? startTime : `${startTime}:00`;
         const formattedEndTime = endTime.includes(':') ? endTime : `${endTime}:00`;
         
@@ -265,24 +368,8 @@ router.post('/', authenticateToken, async (req, res) => {
              (teacher_id, section_id, section_name, teacher_name, color, days, start_time, end_time, room, description, title)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
              RETURNING *`,
-            [
-                teacherId, 
-                sectionId, 
-                sectionName, 
-                teacherName || '', 
-                teacherColor || '#21435A', 
-                days, 
-                formattedStartTime, 
-                formattedEndTime, 
-                room, 
-                description || '', 
-                sectionName
-            ]
+            [teacherId, sectionId, sectionName, teacherName || '', teacherColor || '#21435A', days, formattedStartTime, formattedEndTime, room, description || '', sectionName]
         );
-        
-        if (result.rows.length === 0) {
-            throw new Error('Failed to create activity');
-        }
         
         const row = result.rows[0];
         
@@ -317,7 +404,6 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // ========== ОБНОВИТЬ ЗАНЯТИЕ ==========
-
 router.put('/:id', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
         return res.status(403).json({ message: 'Доступ запрещен' });
@@ -405,7 +491,6 @@ router.put('/:id', authenticateToken, async (req, res) => {
 });
 
 // ========== УДАЛИТЬ ЗАНЯТИЕ ==========
-
 router.delete('/:id', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
         return res.status(403).json({ message: 'Доступ запрещен' });
