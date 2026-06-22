@@ -328,18 +328,17 @@ router.get('/generation-rules', async (req, res) => {
 });
 
 // ============================================================
-// ⚡ ГЕНЕРАЦИЯ РАСПИСАНИЯ (C# ГЕНЕРАТОР С ТАЙМАУТОМ 15 МИНУТ)
+// ⚡ ГЕНЕРАЦИЯ РАСПИСАНИЯ
 // ============================================================
 
 router.post('/generate-schedule', async (req, res) => {
-    console.log('\n🚀 ========== ЗАПУСК ГЕНЕРАЦИИ (C#) ==========\n');
+    console.log('\n🚀 ========== ЗАПУСК ГЕНЕРАЦИИ ==========\n');
     
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) {
         return res.status(401).json({ success: false, message: 'Нет токена' });
     }
 
-    // ✅ ТАЙМАУТ 15 МИНУТ
     req.setTimeout(900000);
 
     try {
@@ -384,7 +383,7 @@ router.post('/generate-schedule', async (req, res) => {
                     token: token
                 }, {
                     headers: { 'Content-Type': 'application/json' },
-                    timeout: 900000  // ✅ 15 МИНУТ
+                    timeout: 900000
                 });
                 
                 if (!response.data?.success) {
@@ -443,7 +442,6 @@ router.post('/generate-schedule', async (req, res) => {
     } catch (error) {
         console.error('❌ Ошибка генерации:', error);
         
-        // Последняя попытка - локальная генерация
         try {
             console.log('🔄 Последняя попытка - локальная генерация...');
             const localResult = await generateLocalSchedule();
@@ -490,11 +488,16 @@ async function saveScheduleToDB(schedule) {
         console.log('📝 Начинаем сохранение расписания...');
         console.log('📋 Классы в расписании:', Object.keys(schedule));
         
+        // ✅ Получаем все классы из БД
         const allClasses = await client.query('SELECT id, CONCAT(number, letter) as name, number, letter FROM classes');
+        console.log('📋 Классы в БД:', allClasses.rows.map(r => r.name));
+        
         const classMap = {};
         for (const cls of allClasses.rows) {
             classMap[cls.name] = cls.id;
             classMap[cls.name.toLowerCase()] = cls.id;
+            // Добавляем с пробелом
+            classMap[`${cls.name} класс`] = cls.id;
         }
         
         for (const [className, days] of Object.entries(schedule)) {
@@ -503,14 +506,18 @@ async function saveScheduleToDB(schedule) {
             let classId = null;
             const cleanName = className.replace(/\s/g, '');
             
+            // Пробуем найти класс
             if (classMap[className]) {
                 classId = classMap[className];
             } else if (classMap[cleanName]) {
                 classId = classMap[cleanName];
             } else if (classMap[className.toLowerCase()]) {
                 classId = classMap[className.toLowerCase()];
+            } else if (classMap[`${className} класс`]) {
+                classId = classMap[`${className} класс`];
             }
             
+            // Если не нашли — пробуем по номеру и букве
             if (!classId) {
                 const match = className.match(/^(\d+)([А-ЯA-Z])/);
                 if (match) {
@@ -521,15 +528,6 @@ async function saveScheduleToDB(schedule) {
                             classId = cls.id;
                             break;
                         }
-                    }
-                }
-            }
-            
-            if (!classId) {
-                for (const cls of allClasses.rows) {
-                    if (className.includes(cls.name) || cls.name.includes(className)) {
-                        classId = cls.id;
-                        break;
                     }
                 }
             }
@@ -692,6 +690,5 @@ async function generateLocalSchedule() {
     
     return { schedule, totalLessons, classesProcessed };
 }
-
 
 module.exports = router;
