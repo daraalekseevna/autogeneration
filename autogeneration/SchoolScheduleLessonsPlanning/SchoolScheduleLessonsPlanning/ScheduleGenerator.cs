@@ -104,7 +104,6 @@ namespace SchoolScheduleLessonsPlanning
         private List<SubjectDifficulty> _subjectDifficulty = new();
         private ScheduleSettings _settings = new();
         
-        // Кэши
         private Dictionary<int, Teacher> _teacherMap = new();
         private Dictionary<int, Room> _roomMap = new();
         private Dictionary<int, Lesson> _lessonMap = new();
@@ -137,7 +136,6 @@ namespace SchoolScheduleLessonsPlanning
                 
                 var data = JsonSerializer.Deserialize<Dictionary<string, object>>(json, options);
                 
-                // ✅ ЗАГРУЗКА САНПИН (часы)
                 if (data?.ContainsKey("subjectHours") == true)
                 {
                     var tempOptions = new JsonSerializerOptions 
@@ -151,7 +149,6 @@ namespace SchoolScheduleLessonsPlanning
                         data["subjectHours"].ToString()!, tempOptions) ?? new();
                 }
                 
-                // ✅ ЗАГРУЗКА САНПИН (сложность)
                 if (data?.ContainsKey("subjectDifficulty") == true)
                 {
                     _subjectDifficulty = JsonSerializer.Deserialize<List<SubjectDifficulty>>(
@@ -169,12 +166,10 @@ namespace SchoolScheduleLessonsPlanning
                 if (data?.ContainsKey("scheduleSettings") == true)
                     _settings = JsonSerializer.Deserialize<ScheduleSettings>(data["scheduleSettings"].ToString()!, options) ?? new();
                 
-                // Строим кэши
                 _teacherMap = _teachers.ToDictionary(t => t.Id, t => t);
                 _roomMap = _rooms.ToDictionary(r => r.Id, r => r);
                 _lessonMap = _lessons.ToDictionary(l => l.Id, l => l);
                 
-                // Группируем учителей по классам
                 _teachersByClass = new Dictionary<int, List<Teacher>>();
                 foreach (var cls in _classes)
                 {
@@ -209,18 +204,13 @@ namespace SchoolScheduleLessonsPlanning
             var workDays = (_settings.WorkDays?.Any() == true ? _settings.WorkDays : new List<string> { "Пн", "Вт", "Ср", "Чт", "Пт" })
                 .Select(d => daysMap.ContainsKey(d) ? daysMap[d] : d).ToList();
             
-            var roomNumbers = _rooms.Select(r => r.Number).ToList();
-            if (!roomNumbers.Any()) roomNumbers.Add("101");
-            
             int totalLessons = 0;
             int classesProcessed = 0;
             
-            // Группируем часы по классам
             var hoursByGrade = _subjectHours
                 .GroupBy(h => h.Grade)
                 .ToDictionary(g => g.Key, g => g.ToList());
             
-            // ✅ Группируем сложность по классам и предметам
             var difficultyMap = _subjectDifficulty
                 .GroupBy(d => new { d.Grade, d.SubjectId })
                 .ToDictionary(g => g.Key, g => g.First());
@@ -229,7 +219,6 @@ namespace SchoolScheduleLessonsPlanning
             {
                 Console.WriteLine($"\n📚 Класс {cls.Name}");
                 
-                // ✅ Учителя для этого класса
                 var classTeachers = _teachersByClass.GetValueOrDefault(cls.Id, new List<Teacher>());
                 if (!classTeachers.Any())
                 {
@@ -239,7 +228,6 @@ namespace SchoolScheduleLessonsPlanning
                 
                 Console.WriteLine($"   👨‍🏫 {classTeachers.Count} учителей в классе");
                 
-                // ✅ Часы нагрузки для этого класса
                 var classHours = hoursByGrade.GetValueOrDefault(cls.Number, new List<SubjectHours>());
                 if (!classHours.Any())
                 {
@@ -253,7 +241,6 @@ namespace SchoolScheduleLessonsPlanning
                 foreach (var day in workDays)
                     classSchedule[day] = new List<Dictionary<string, object>>();
                 
-                // ✅ Сортируем по нагрузке (сначала больше) и сложности
                 var sortedHours = classHours
                     .OrderByDescending(h => h.HoursPerWeek)
                     .ThenByDescending(h => {
@@ -267,7 +254,6 @@ namespace SchoolScheduleLessonsPlanning
                     var lesson = _lessonMap.GetValueOrDefault(hour.SubjectId);
                     if (lesson == null) continue;
                     
-                    // ✅ Ищем учителей для этого предмета в этом классе
                     var cacheKey = (cls.Id, hour.SubjectId);
                     if (!_teacherCache.ContainsKey(cacheKey))
                     {
@@ -297,7 +283,6 @@ namespace SchoolScheduleLessonsPlanning
                             continue;
                         }
                         
-                        // ✅ Выбираем учителя с учётом ограничений
                         var availableForDay = availableTeachers
                             .Where(t => t.UnavailableDays == null || !t.UnavailableDays.Contains(day))
                             .ToList();
@@ -309,12 +294,10 @@ namespace SchoolScheduleLessonsPlanning
                         
                         var teacher = availableForDay[_random.Next(availableForDay.Count)];
                         
-                        // ✅ Проверяем ограничение по подряд идущим урокам
                         var dayLessons = classSchedule[day];
                         var consecutiveCount = 1;
                         if (dayLessons.Count > 0)
                         {
-                            // Проверяем, сколько подряд уроков у этого учителя
                             var lastLessons = dayLessons
                                 .TakeLast(Math.Min(5, dayLessons.Count))
                                 .Where(l => l.ContainsKey("teacherId") && (int)l["teacherId"] == teacher.Id)
@@ -329,7 +312,7 @@ namespace SchoolScheduleLessonsPlanning
                             continue;
                         }
                         
-                        // ✅ Ищем кабинет
+                        // ✅ Ищем кабинет ТОЛЬКО из привязанных к учителю
                         var room = "";
                         if (teacher.RoomIds != null && teacher.RoomIds.Any())
                         {
@@ -338,8 +321,13 @@ namespace SchoolScheduleLessonsPlanning
                                 room = roomData.Number;
                         }
                         
-                        if (string.IsNullOrEmpty(room) && roomNumbers.Any())
-                            room = roomNumbers[_random.Next(roomNumbers.Count)];
+                        // ❌ НЕ БЕРЕМ СЛУЧАЙНЫЙ КАБИНЕТ!
+                        if (string.IsNullOrEmpty(room))
+                        {
+                            Console.WriteLine($"   ⚠️ У учителя {teacher.LastName} нет кабинета для урока {lesson.Name}");
+                            dayIndex++;
+                            continue;
+                        }
                         
                         var lessonDict = new Dictionary<string, object>
                         {
@@ -364,7 +352,6 @@ namespace SchoolScheduleLessonsPlanning
                     }
                 }
                 
-                // Обновляем номера уроков
                 foreach (var day in workDays)
                 {
                     var lessons = classSchedule[day];
