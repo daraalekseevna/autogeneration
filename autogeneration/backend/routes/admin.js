@@ -375,7 +375,8 @@ router.post('/generate-schedule', async (req, res) => {
             console.log('📡 Отправка запроса к C# генератору...');
             
             try {
-                const rulesUrl = `${req.protocol}://${req.get('host')}/api/admin/generation-rules`;
+                // ✅ ИСПРАВЛЕНО: принудительно https
+                const rulesUrl = `https://autogeneration.onrender.com/api/admin/generation-rules`;
                 console.log(`📋 URL правил: ${rulesUrl}`);
                 
                 const response = await axios.post(`${generatorUrl}/api/generate`, {
