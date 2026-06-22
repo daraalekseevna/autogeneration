@@ -1,29 +1,11 @@
 // src/frontend/services/extracurricularAPI.js
 
-// ✅ Умное определение BASE_URL
-const getBaseUrl = () => {
-    // Если переменная окружения задана - используем её
-    if (import.meta.env.VITE_API_URL) {
-        console.log('🔍 Using VITE_API_URL:', import.meta.env.VITE_API_URL);
-        return import.meta.env.VITE_API_URL;
-    }
-    
-    // Если мы на продакшн (не localhost) - используем продакшн URL
-    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        console.log('🔍 Using production URL');
-        return 'https://autogeneration.onrender.com/api';
-    }
-    
-    // По умолчанию - localhost для разработки
-    console.log('🔍 Using localhost URL');
-    return 'http://localhost:5000/api';
-};
-
-const BASE_URL = getBaseUrl();
+// ✅ ПРАВИЛЬНО - используем переменную окружения
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const API_URL = `${BASE_URL}/extracurricular`;
 
-console.log('🔍 Extracurricular API using BASE_URL:', BASE_URL);
-console.log('🔍 Extracurricular API using API_URL:', API_URL);
+console.log('🔍 BASE_URL:', BASE_URL);
+console.log('🔍 API_URL:', API_URL);
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem('token');

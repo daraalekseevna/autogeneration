@@ -1,3 +1,4 @@
+// src/frontend/components/Login.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -5,10 +6,11 @@ import '../styles/MainContent.css';
 import '../styles/Login.css';
 
 // Импорт конфигураций
-import { getRouteByRole, authenticateUser } from '../config/usersConfig';
+import { getRouteByRole } from '../config/usersConfig';
 import { loginConfig, getPasswordFieldType, getPasswordToggleConfig } from '../config/loginConfig';
 import { appConfig, getCopyrightInfo } from '../config/appConfig';
 
+// ✅ ПРАВИЛЬНО - используем переменную окружения
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const Login = () => {
@@ -47,6 +49,9 @@ const Login = () => {
         e.preventDefault();
         updateFormState({ error: '' });
         
+        console.log('📡 API_URL:', API_URL);
+        console.log('📡 Full URL:', `${API_URL}/auth/login`);
+        
         if (!formState.username.trim() || !formState.password.trim()) {
             updateFormState({ error: 'Введите логин и пароль' });
             return;
@@ -60,14 +65,12 @@ const Login = () => {
                 password: formState.password
             });
 
-            const { token, user } = response.data;
+            console.log('✅ Login response:', response.data);
 
-            console.log('User data from backend:', user);
+            const { token, user } = response.data;
 
             // Сохраняем токен
             localStorage.setItem('token', token);
-            
-            // Сохраняем ВСЕ данные пользователя целиком
             localStorage.setItem('user', JSON.stringify(user));
 
             // Если "Запомнить меня" включено - сохраняем логин и пароль
@@ -76,7 +79,6 @@ const Login = () => {
                 localStorage.setItem('savedPassword', formState.password);
                 localStorage.setItem('rememberMe', 'true');
             } else {
-                // Если не включено - удаляем сохраненные данные
                 localStorage.removeItem('savedUsername');
                 localStorage.removeItem('savedPassword');
                 localStorage.removeItem('rememberMe');
@@ -90,11 +92,15 @@ const Login = () => {
             navigate(route);
             
         } catch (err) {
-            console.error('Login error:', err);
+            console.error('❌ Login error:', err);
+            console.error('❌ Config:', err.config);
+            console.error('❌ Response:', err.response);
             
             if (err.response) {
                 if (err.response.status === 401) {
                     updateFormState({ error: 'Неверный логин или пароль' });
+                } else if (err.response.status === 405) {
+                    updateFormState({ error: 'Метод не разрешен. Проверьте настройки сервера.' });
                 } else if (err.response.status === 500) {
                     updateFormState({ error: 'Ошибка сервера. Попробуйте позже.' });
                 } else {
@@ -190,7 +196,6 @@ const Login = () => {
                             </div>
                         </div>
 
-                        {/* Чекбокс "Запомнить меня" */}
                         <div className="form-group remember-me-group">
                             <label className="remember-me-label">
                                 <input
