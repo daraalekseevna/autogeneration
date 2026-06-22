@@ -1,4 +1,3 @@
-// backend/server.js
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
@@ -17,7 +16,7 @@ const db = require('./models/database');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// === ТОЧНАЯ НАСТРОЙКА CORS ===
+// === CORS ===
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
@@ -48,9 +47,12 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// ✅ Обработка OPTIONS
+app.options('*', cors());
+
 app.use(express.json());
 
-// Логирование запросов
+// Логирование
 if (process.env.NODE_ENV !== 'production') {
     app.use((req, res, next) => {
         console.log(`→ ${req.method} ${req.url}`);
@@ -78,19 +80,7 @@ app.get('/', (req, res) => {
         version: '1.0.0',
         status: 'running',
         timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development',
-        endpoints: {
-            auth: '/api/auth',
-            superadmin: '/api/superadmin',
-            admin: '/api/admin',
-            teacher: '/api/teacher',
-            extracurricular: '/api/extracurricular',
-            schedule: '/api/schedule',
-            activity: '/api/activity',
-            scheduleGenerator: '/api/schedule-generator',
-            health: '/api/health',
-            healthz: '/healthz'
-        }
+        environment: process.env.NODE_ENV || 'development'
     });
 });
 
@@ -108,122 +98,48 @@ app.get('/', (req, res) => {
     }
 })();
 
-// ============================================================
-// === РЕГИСТРАЦИЯ МАРШРУТОВ - ВАЖНЫЙ ПОРЯДОК! ===
-// ============================================================
+// === РЕГИСТРАЦИЯ МАРШРУТОВ ===
+console.log('📌 Registering routes...');
 
-// ✅ 1. Сначала основные роуты
+// ✅ AUTH - ПЕРВЫЙ И САМЫЙ ВАЖНЫЙ
 app.use('/api/auth', authRoutes);
+console.log('✅ /api/auth registered');
+
+// ✅ Остальные роуты
 app.use('/api/admin', adminRoutes);
 app.use('/api/teacher', teacherRoutes);
-
-// ✅ 2. Extracurricular регистрируем ПЕРВЫМ (до superadmin)
-//    Это важно, чтобы /api/superadmin/extended-teachers не перехватывался superadminRoutes
 app.use('/api/extracurricular', extracurricularRoutes);
-app.use('/api/superadmin', extracurricularRoutes); // ДЛЯ /api/superadmin/extended-teachers
-
-// ✅ 3. Superadmin регистрируем ПОСЛЕ extracurricular
 app.use('/api/superadmin', superadminRoutes);
 app.use('/api/superadmin', newSchoolYearRoutes);
-
-// ✅ 4. Остальные роуты
+app.use('/api/superadmin', extracurricularRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/activity', activityRoutes.router);
 app.use('/api/schedule-generator', scheduleGeneratorRoutes);
 
-// ============================================================
-// === ТЕСТОВЫЙ МАРШРУТ ДЛЯ ПРОВЕРКИ ТОКЕНА ===
-// ============================================================
-app.get('/api/verify-token', async (req, res) => {
-    try {
-        const authHeader = req.headers['authorization'];
-        const token = authHeader && authHeader.split(' ')[1];
-        
-        if (!token) {
-            return res.status(401).json({ valid: false, message: 'No token provided' });
-        }
-        
-        const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key');
-        
-        const result = await db.query(
-            'SELECT id, login, role FROM users WHERE id = $1',
-            [decoded.userId || decoded.id]
-        );
-        
-        if (result.rows.length === 0) {
-            return res.status(401).json({ valid: false, message: 'User not found' });
-        }
-        
-        res.json({ 
-            valid: true, 
-            user: result.rows[0],
-            decoded: decoded
-        });
-    } catch (err) {
-        res.status(403).json({ 
-            valid: false, 
-            message: err.message 
-        });
-    }
-});
-
-// === ОБРАБОТКА 404 ===
+// === 404 ===
 app.use((req, res) => {
     console.log(`❌ 404: ${req.method} ${req.url}`);
-    res.status(404).json({ 
-        success: false, 
+    res.status(404).json({
+        success: false,
         error: 'not_found',
-        message: `Route ${req.method} ${req.url} not found`,
-        timestamp: new Date().toISOString()
+        message: `Route ${req.method} ${req.url} not found`
     });
 });
 
-// === ГЛОБАЛЬНАЯ ОБРАБОТКА ОШИБОК ===
+// === ОБРАБОТКА ОШИБОК ===
 app.use((err, req, res, next) => {
-    console.error('❌ Server error:', {
-        message: err.message,
-        stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
-        url: req.url,
-        method: req.method
-    });
-    
-    if (err.message && err.message.includes('CORS')) {
-        res.status(403).json({ 
-            success: false, 
-            error: 'cors_error',
-            message: err.message 
-        });
-        return;
-    }
-    
-    res.status(500).json({ 
-        success: false, 
-        error: 'internal_server_error',
-        message: process.env.NODE_ENV === 'production' 
-            ? 'Внутренняя ошибка сервера' 
-            : err.message,
-        timestamp: new Date().toISOString()
+    console.error('❌ Server error:', err.message);
+    res.status(500).json({
+        success: false,
+        error: 'internal_error',
+        message: err.message
     });
 });
 
-// === ЗАПУСК СЕРВЕРА ===
+// === ЗАПУСК ===
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server started successfully`);
     console.log(`📍 Port: ${PORT}`);
-    console.log(`📍 Bind: 0.0.0.0`);
-    console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`📍 Health check: /healthz`);
     console.log(`📍 API base: /api`);
-});
-
-// === GRACEFUL SHUTDOWN ===
-process.on('SIGTERM', () => {
-    console.log('🛑 SIGTERM received, shutting down gracefully...');
-    process.exit(0);
-});
-
-process.on('SIGINT', () => {
-    console.log('🛑 SIGINT received, shutting down gracefully...');
-    process.exit(0);
+    console.log(`📍 Auth: /api/auth/login`);
 });
