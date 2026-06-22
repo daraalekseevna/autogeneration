@@ -1,3 +1,4 @@
+// backend/server.js
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
@@ -14,51 +15,35 @@ const scheduleGeneratorRoutes = require('./routes/scheduleGenerator');
 const db = require('./models/database');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
-// === CORS ===
-const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://autogeneration.vercel.app',
-    'https://sosh20-schedule.vercel.app',
-    'https://school-n20-schedule.vercel.app',
-    'https://autogeneration.onrender.com',
-    'https://schedule-generator-j794.onrender.com'
-];
+// === CORS - РАСШИРЕННЫЙ ===
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
 
 app.use(cors({
-    origin: function(origin, callback) {
-        if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-        
-        if (origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com')) {
-            return callback(null, true);
-        }
-        
-        console.warn(`⚠️ CORS blocked origin: ${origin}`);
-        callback(new Error(`CORS policy: ${origin} not allowed`));
-    },
+    origin: '*',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 }));
 
-// ✅ Обработка OPTIONS
-app.options('*', cors());
-
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Логирование
-if (process.env.NODE_ENV !== 'production') {
-    app.use((req, res, next) => {
-        console.log(`→ ${req.method} ${req.url}`);
-        next();
-    });
-}
+app.use((req, res, next) => {
+    console.log(`→ ${req.method} ${req.url}`);
+    next();
+});
 
 // === HEALTH CHECKS ===
 app.get('/healthz', (req, res) => {
@@ -70,17 +55,6 @@ app.get('/api/health', (req, res) => {
         status: 'ok', 
         timestamp: new Date().toISOString(),
         uptime: process.uptime()
-    });
-});
-
-// === КОРНЕВОЙ МАРШРУТ ===
-app.get('/', (req, res) => {
-    res.json({ 
-        name: 'School Management System API',
-        version: '1.0.0',
-        status: 'running',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
     });
 });
 
@@ -102,6 +76,9 @@ app.get('/', (req, res) => {
 console.log('📌 Registering routes...');
 
 // ✅ AUTH - ПЕРВЫЙ И САМЫЙ ВАЖНЫЙ
+console.log('📦 authRoutes type:', typeof authRoutes);
+console.log('📦 authRoutes:', authRoutes ? 'loaded' : 'NOT loaded');
+
 app.use('/api/auth', authRoutes);
 console.log('✅ /api/auth registered');
 
