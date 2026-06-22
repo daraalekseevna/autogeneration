@@ -108,26 +108,32 @@ app.get('/', (req, res) => {
     }
 })();
 
-// === РЕГИСТРАЦИЯ МАРШРУТОВ ===
-// ✅ ВАЖНО: сначала регистрируем основные роуты
+// ============================================================
+// === РЕГИСТРАЦИЯ МАРШРУТОВ - ВАЖНЫЙ ПОРЯДОК! ===
+// ============================================================
+
+// ✅ 1. Сначала основные роуты
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/teacher', teacherRoutes);
 
-// ✅ Для superadmin используем один базовый путь
-app.use('/api/superadmin', superadminRoutes);
-app.use('/api/superadmin', newSchoolYearRoutes);
-
-// ✅ Для extracurricular регистрируем оба пути
+// ✅ 2. Extracurricular регистрируем ПЕРВЫМ (до superadmin)
+//    Это важно, чтобы /api/superadmin/extended-teachers не перехватывался superadminRoutes
 app.use('/api/extracurricular', extracurricularRoutes);
 app.use('/api/superadmin', extracurricularRoutes); // ДЛЯ /api/superadmin/extended-teachers
 
-// ✅ Остальные роуты
+// ✅ 3. Superadmin регистрируем ПОСЛЕ extracurricular
+app.use('/api/superadmin', superadminRoutes);
+app.use('/api/superadmin', newSchoolYearRoutes);
+
+// ✅ 4. Остальные роуты
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/activity', activityRoutes.router);
 app.use('/api/schedule-generator', scheduleGeneratorRoutes);
 
+// ============================================================
 // === ТЕСТОВЫЙ МАРШРУТ ДЛЯ ПРОВЕРКИ ТОКЕНА ===
+// ============================================================
 app.get('/api/verify-token', async (req, res) => {
     try {
         const authHeader = req.headers['authorization'];
@@ -164,6 +170,7 @@ app.get('/api/verify-token', async (req, res) => {
 
 // === ОБРАБОТКА 404 ===
 app.use((req, res) => {
+    console.log(`❌ 404: ${req.method} ${req.url}`);
     res.status(404).json({ 
         success: false, 
         error: 'not_found',

@@ -1,6 +1,5 @@
 // src/frontend/services/extracurricularAPI.js
 
-// ✅ Исправлено: используем переменную окружения или localhost для разработки
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const API_URL = `${BASE_URL}/extracurricular`;
 
@@ -106,40 +105,27 @@ export const extracurricularAPI = {
         }
     },
 
-    // ✅ ПОЛУЧИТЬ ВСЕХ ПЕДАГОГОВ
+    // ✅ ПОЛУЧИТЬ ВСЕХ ПЕДАГОГОВ - ИСПОЛЬЗУЕМ ТОЛЬКО /extracurricular/teachers
     getExtendedTeachers: async () => {
         try {
-            console.log('📡 GET extended teachers from:', `${BASE_URL}/superadmin/extended-teachers`);
+            console.log('📡 GET teachers from:', `${BASE_URL}/extracurricular/teachers`);
             
-            // Пробуем через superadmin эндпоинт
-            const response = await fetch(`${BASE_URL}/superadmin/extended-teachers`, {
+            const response = await fetch(`${BASE_URL}/extracurricular/teachers`, {
                 method: 'GET',
                 ...getAuthHeaders()
             });
             
             if (!response.ok) {
-                console.warn('⚠️ Superadmin endpoint failed, trying fallback...');
-                // Если не работает, пробуем через extracurricular
-                const fallbackResponse = await fetch(`${BASE_URL}/extracurricular/teachers`, {
-                    method: 'GET',
-                    ...getAuthHeaders()
-                });
-                if (!fallbackResponse.ok) {
-                    const text = await fallbackResponse.text();
-                    console.error('Fallback response error:', text);
-                    throw new Error('Failed to fetch teachers');
-                }
-                const data = await fallbackResponse.json();
-                console.log('✅ Teachers loaded via extracurricular endpoint:', data);
-                return data;
+                const text = await response.text();
+                console.error('Response error:', text);
+                throw new Error('Failed to fetch teachers');
             }
             
             const data = await response.json();
-            console.log('✅ Teachers loaded via superadmin endpoint:', data);
+            console.log('✅ Teachers loaded:', data.length, 'teachers');
             return data;
         } catch (error) {
             console.error('❌ Error fetching extended teachers:', error);
-            // Возвращаем пустой массив вместо ошибки
             return [];
         }
     },
@@ -147,29 +133,20 @@ export const extracurricularAPI = {
     // ✅ ПОЛУЧИТЬ ВСЕХ ПЕДАГОГОВ С ИХ СЕКЦИЯМИ
     getTeachersWithSections: async () => {
         try {
-            console.log('📡 GET teachers with sections from:', `${BASE_URL}/extracurricular/teachers-with-sections`);
+            console.log('📡 GET teachers with sections from:', `${BASE_URL}/extracurricular/teachers`);
             
-            const response = await fetch(`${BASE_URL}/extracurricular/teachers-with-sections`, {
+            const response = await fetch(`${BASE_URL}/extracurricular/teachers`, {
                 method: 'GET',
                 ...getAuthHeaders()
             });
             
             if (!response.ok) {
-                // Пробуем альтернативный эндпоинт
-                const altResponse = await fetch(`${BASE_URL}/superadmin/extended-teachers`, {
-                    method: 'GET',
-                    ...getAuthHeaders()
-                });
-                if (!altResponse.ok) {
-                    throw new Error('Failed to fetch teachers with sections');
-                }
-                return await altResponse.json();
+                throw new Error('Failed to fetch teachers with sections');
             }
             
             return await response.json();
         } catch (error) {
             console.error('❌ Error fetching teachers with sections:', error);
-            // Возвращаем пустой массив
             return [];
         }
     },
@@ -185,15 +162,7 @@ export const extracurricularAPI = {
             });
             
             if (!response.ok) {
-                // Пробуем альтернативный эндпоинт
-                const altResponse = await fetch(`${BASE_URL}/superadmin/extended-teachers/${teacherId}/sections`, {
-                    method: 'GET',
-                    ...getAuthHeaders()
-                });
-                if (!altResponse.ok) {
-                    throw new Error('Failed to fetch teacher sections');
-                }
-                return await altResponse.json();
+                throw new Error('Failed to fetch teacher sections');
             }
             
             return await response.json();
