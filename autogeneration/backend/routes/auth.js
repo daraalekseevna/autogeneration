@@ -1,3 +1,4 @@
+// backend/routes/auth.js
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -17,27 +18,50 @@ const englishToRussianLetter = (letter) => {
     return mapping[letter.toUpperCase()] || letter;
 };
 
+// ✅ Тестовый маршрут для проверки
+router.get('/test', (req, res) => {
+    console.log('✅ GET /auth/test called');
+    res.json({ 
+        success: true, 
+        message: 'Auth route is working!',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// ✅ Основной POST маршрут
 router.post('/login', async (req, res) => {
+    console.log('📡 POST /login called!');
+    console.log('📦 Request headers:', req.headers);
+    console.log('📦 Request body:', req.body);
+    
     const { login, password } = req.body;
 
     if (!login || !password) {
+        console.log('❌ Missing login or password');
         return res.status(400).json({ message: 'Логин и пароль обязательны' });
     }
 
     try {
+        console.log(`🔍 Looking for user: ${login}`);
+        
         const result = await db.query(
             'SELECT id, login, password_hash, role FROM users WHERE login = $1',
             [login]
         );
 
         if (result.rows.length === 0) {
+            console.log('❌ User not found:', login);
             return res.status(401).json({ message: 'Неверный логин или пароль' });
         }
 
         const user = result.rows[0];
+        console.log(`✅ User found: ${user.login}, role: ${user.role}`);
+        
         const isValidPassword = await bcrypt.compare(password, user.password_hash);
+        console.log(`🔍 Password valid: ${isValidPassword}`);
 
         if (!isValidPassword) {
+            console.log('❌ Invalid password for:', login);
             return res.status(401).json({ message: 'Неверный логин или пароль' });
         }
 
@@ -47,14 +71,16 @@ router.post('/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        console.log('✅ Token created for user:', user.login);
+
         let responseUser = {
             id: user.id,
             login: user.login,
             role: user.role
         };
 
+        // ... остальной код для получения имени пользователя ...
         if (user.role === 'class') {
-            // ✅ ПЕРВЫЙ СПОСОБ: из логина формата class1A, class4B и т.д.
             const match = user.login.match(/class(\d+)([A-Za-z]+)/i);
             if (match) {
                 const number = match[1];
@@ -65,15 +91,11 @@ router.post('/login', async (req, res) => {
                 responseUser.name = `${number}${russianLetter}`;
                 responseUser.className = `${number}${russianLetter}`;
             } else {
-                // ✅ ВТОРОЙ СПОСОБ: Ищем класс в БД по user_id
                 try {
                     const classResult = await db.query(
-                        `SELECT c.number, c.letter 
-                         FROM classes c 
-                         WHERE c.user_id = $1`,
+                        `SELECT c.number, c.letter FROM classes c WHERE c.user_id = $1`,
                         [user.id]
                     );
-                    
                     if (classResult.rows.length > 0) {
                         const number = classResult.rows[0].number;
                         const letter = classResult.rows[0].letter;
@@ -81,9 +103,7 @@ router.post('/login', async (req, res) => {
                         responseUser.gradeLetter = letter;
                         responseUser.name = `${number}${letter}`;
                         responseUser.className = `${number}${letter}`;
-                        console.log('✅ Найден класс в БД:', `${number}${letter}`);
                     } else {
-                        // ❌ Если класс не найден - используем логин
                         responseUser.name = user.login;
                         responseUser.className = user.login;
                     }
@@ -153,7 +173,8 @@ router.post('/login', async (req, res) => {
             `Успешная авторизация`
         );
 
-        console.log('✅ Login response:', responseUser);
+        console.log('✅ Login successful for:', user.login);
+        console.log('✅ Response user:', responseUser);
 
         res.json({
             token,
@@ -161,7 +182,11 @@ router.post('/login', async (req, res) => {
         });
     } catch (err) {
         console.error('❌ Login error:', err);
-        res.status(500).json({ message: 'Ошибка сервера' });
+        console.error('❌ Error stack:', err.stack);
+        res.status(500).json({ 
+            message: 'Ошибка сервера',
+            error: process.env.NODE_ENV === 'production' ? undefined : err.message
+        });
     }
 });
 
