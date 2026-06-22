@@ -555,12 +555,33 @@ const ExtracurricularActivities = () => {
 
     const loadExtendedTeachers = async () => {
         try {
-            const teachers = await extracurricularAPI.getExtendedTeachers();
-            console.log('Loaded extended teachers:', teachers);
-            setExtendedTeachers(teachers);
+            // ✅ ИСПРАВЛЕНО: загружаем педагогов доп. образования из superadmin
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/superadmin/extended-teachers', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('✅ Загружены педагоги доп. образования:', data);
+            setExtendedTeachers(data);
         } catch (error) {
-            console.error('Error loading extended teachers:', error);
-            setExtendedTeachers([]);
+            console.error('❌ Error loading extended teachers:', error);
+            // Fallback: используем данные из extracurricularAPI
+            try {
+                const teachers = await extracurricularAPI.getExtendedTeachers();
+                console.log('📋 Fallback teachers:', teachers);
+                setExtendedTeachers(teachers);
+            } catch (fallbackError) {
+                console.error('❌ Fallback also failed:', fallbackError);
+                setExtendedTeachers([]);
+            }
         }
     };
 
@@ -705,6 +726,16 @@ const ExtracurricularActivities = () => {
         }, 300);
     };
 
+    // ✅ Создаем список учителей из extendedTeachers
+    const teachersList = useMemo(() => {
+        const seen = new Set();
+        return (extendedTeachers || []).filter(t => {
+            if (seen.has(t.id)) return false;
+            seen.add(t.id);
+            return true;
+        });
+    }, [extendedTeachers]);
+
     const filteredActivities = useMemo(() => {
         let filtered = [...activities];
         
@@ -727,15 +758,6 @@ const ExtracurricularActivities = () => {
         
         return filtered;
     }, [activities, search, filterTeacher, filterDay]);
-
-    const teachersList = useMemo(() => {
-        const seen = new Set();
-        return (extendedTeachers || []).filter(t => {
-            if (seen.has(t.id)) return false;
-            seen.add(t.id);
-            return true;
-        });
-    }, [extendedTeachers]);
 
     const clearFilters = () => {
         setSearch('');
